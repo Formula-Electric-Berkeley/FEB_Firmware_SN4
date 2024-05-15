@@ -107,3 +107,153 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 
 	free(cmd);
 }
+
+/* Helper function to initialize CFG variables */
+void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
+					  cell_asic *ic //A two dimensional array that stores the data
+					  )
+{
+	for (uint8_t current_ic = 0; current_ic<total_ic;current_ic++)
+	{
+		for (int j =0; j<6; j++)
+		{
+		  ic[current_ic].configa.tx_data[j] = 0;
+          ic[current_ic].configb.tx_data[j] = 0;
+		}
+	}
+}
+
+/* Helper Function to reset PEC counters */
+void ADBMS6830B_reset_crc_count(uint8_t total_ic, //Number of ICs in the system
+							 cell_asic *ic //A two dimensional array that stores the data
+							 )
+{
+	for (int current_ic = 0 ; current_ic < total_ic; current_ic++)
+	{
+		ic[current_ic].crc_count.pec_count = 0;
+		ic[current_ic].crc_count.cfgr_pec = 0;
+		for (int i=0; i<6; i++)
+		{
+			ic[current_ic].crc_count.cell_pec[i]=0;
+
+		}
+		for (int i=0; i<4; i++)
+		{
+			ic[current_ic].crc_count.aux_pec[i]=0;
+		}
+		for (int i=0; i<2; i++)
+		{
+			ic[current_ic].crc_count.stat_pec[i]=0;
+		}
+	}
+}
+
+/* Helper function to set CFGR variable */
+void ADBMS6830B_set_cfgr(uint8_t nIC, // Current IC
+					 cell_asic *ic, // A two dimensional array that stores the data
+					 bool refon, // The REFON bit
+					 bool cth[3], // The ADCOPT bit
+					 bool gpio[5], // The GPIO bits
+					 bool dcc[12], // The DCC bits
+					 bool dcto[4], // The Dcto bits
+					 uint16_t uv, // The UV value
+					 uint16_t  ov // The OV value
+					 )
+{
+	ADBMS6830B_set_cfgr_refon(nIC,ic,refon);
+	ADBMS6830B_set_cfgr_cth(nIC,ic,cth);
+	ADBMS6830B_set_cfgr_gpio(nIC,ic,gpio);
+	ADBMS6830B_set_cfgr_dis(nIC,ic,dcc);
+	ADBMS6830B_set_cfgr_dcto(nIC,ic,dcto);
+	ADBMS6830B_set_cfgr_uv(nIC, ic, uv);
+	ADBMS6830B_set_cfgr_ov(nIC, ic, ov);
+}
+
+/* Helper function to set the REFON bit */
+void ADBMS6830B_set_cfgr_refon(uint8_t nIC, cell_asic *ic, bool refon)
+{
+	if (refon) ic[nIC].configa.tx_data[0] = ic[nIC].configa.tx_data[0]|0x80; 
+	else ic[nIC].configa.tx_data[0] = ic[nIC].configa.tx_data[0]&0x7F;
+}
+
+/* Helper function to set the ADCOPT bit */
+void ADBMS6830B_set_cfgr_cth(uint8_t nIC, cell_asic *ic, bool cth[3])
+{
+	for (int i = 0; i < 3; i++) {
+        if (cth[i]) {
+            ic[nIC].configa.tx_data[0] = ic[nIC].configa.tx_data[0] | (0b01 << i);
+        } else {
+            ic[nIC].configa.tx_data[0] = ic[nIC].configa.tx_data[0] & ~(0b01 << i);            
+        }
+    }
+}
+
+/* Helper function to set GPIO bits */
+void LTC681x_set_cfgr_gpio(uint8_t nIC, cell_asic *ic,bool gpio[10])
+{
+	for (int i = 0; i < 8; i++) {
+		if (gpio[i]) {
+            ic[nIC].configa.tx_data[3] = ic[nIC].configa.tx_data[3] | (0b01 << i);
+        } else {
+             ic[nIC].configa.tx_data[3] = ic[nIC].configa.tx_data[3] & ~(0b01 << i);           
+        }
+	}
+
+    for (int i = 0; i < 2; i++) {
+        if (gpio[i + 8]) {
+            ic[nIC].configa.tx_data[4] = ic[nIC].configa.tx_data[4] | (0b01 << i);
+        } else {
+             ic[nIC].configa.tx_data[4] = ic[nIC].configa.tx_data[4] & ~(0b01 << i);           
+        }
+    }
+}
+
+/* Helper function to control discharge */
+void LTC681x_set_cfgr_dis(uint8_t nIC, cell_asic *ic,bool dcc[12])
+{
+	for (int i = 0; i < 8; i++) {
+		if (dcc[i]) {
+            ic[nIC].configb.tx_data[4] = ic[nIC].configb.tx_data[4] | (0b01 << i);
+        } else {
+             ic[nIC].configb.tx_data[4] = ic[nIC].configb.tx_data[4] & ~(0b01 << i);           
+        }
+	}
+
+    for (int i = 0; i < 8; i++) {
+        if (dcc[i + 8]) {
+            ic[nIC].configb.tx_data[5] = ic[nIC].configb.tx_data[5] | (0b01 << i);
+        } else {
+             ic[nIC].configb.tx_data[5] = ic[nIC].configb.tx_data[5] & ~(0b01 << i);           
+        }
+    }
+}
+
+/* Helper function to control discharge time value */
+void LTC681x_set_cfgr_dcto(uint8_t nIC, cell_asic *ic,bool dcto[4])
+{
+	for (int i = 0; i < 6; i++) {
+		if (dcto[i]) {
+            ic[nIC].configb.tx_data[3] = ic[nIC].configb.tx_data[3] | (0b01 << i);
+        } else {
+             ic[nIC].configb.tx_data[3] = ic[nIC].configb.tx_data[3] & ~(0b01 << i);           
+        }
+	}
+}
+
+/* Helper Function to set UV value in CFG register */
+void LTC681x_set_cfgr_uv(uint8_t nIC, cell_asic *ic,uint16_t uv)
+{
+	uint16_t tmp = (uv/16)-1;
+	ic[nIC].configb.tx_data[0] = 0x00FF & tmp;
+	ic[nIC].configb.tx_data[1] = ic[nIC].configb.tx_data[1]&0xF0;
+	ic[nIC].configb.tx_data[1] = ic[nIC].configb.tx_data[1]|((0x0F00 & tmp)>>8);
+}
+
+/* Helper function to set OV value in CFG register */
+void LTC681x_set_cfgr_ov(uint8_t nIC, cell_asic *ic,uint16_t ov)
+{
+	uint16_t tmp = (ov/16);
+	ic[nIC].configb.tx_data[2] = 0x00FF & (tmp>>4);
+	ic[nIC].configb.tx_data[1] = ic[nIC].configb.tx_data[1]&0x0F;
+	ic[nIC].configb.tx_data[1] = ic[nIC].configb.tx_data[1]|((0x000F & tmp)<<4);
+}

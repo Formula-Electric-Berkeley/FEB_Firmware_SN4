@@ -60,7 +60,7 @@ typedef struct
 /*! Cell variable structure */
 typedef struct
 {
-  ic_register config;
+  ic_register configa;
   ic_register configb;
   cv  cells;
   ax  aux;
@@ -86,5 +86,109 @@ uint16_t pec15_calc(uint8_t len, //!< The length of the data array being passed 
                     uint8_t *data //!< The array of data that the PEC will be generated from
                    );
 
+/*!
+ Sends a command to the BMS IC. This code will calculate the PEC code for the transmitted command
+ @return void
+ */
+void cmd_68(uint8_t tx_cmd[2]); //!< 2 byte array containing the BMS command to be sent
+
+/*!
+ Writes an array of data to the daisy chain
+ @return void
+ */
+void write_68(uint8_t total_ic , //!< Number of ICs in the daisy chain
+              uint8_t tx_cmd[2], //!< 2 byte array containing the BMS command to be sent
+              uint8_t data[] //!< Array containing the data to be written to the BMS ICs
+             );
+
+/*!
+ Helper Function to initialize the CFGR data structures
+ @return void
+ */
+void ADBMS6830B_init_cfg(uint8_t total_ic, //!< Number of ICs in the daisy chain
+                      cell_asic *ic //!< A two dimensional array that will store the data
+					           );          
+
+/*!
+ Helper Function that resets the PEC error counters
+ @return void
+ */
+void ADBMS6830B_reset_crc_count(uint8_t total_ic, //!< Number of ICs in the daisy chain
+                             cell_asic *ic //!< A two dimensional array that will store the data
+							 );
+
+void ADBMS6830B_set_cfgr(uint8_t nIC, //!< Current IC
+                      cell_asic *ic, //!< A two dimensional array that will store the data
+                      bool refon,  //!< The REFON bit
+                      bool cth[3], //!< The ADCOPT bit
+                      bool gpio[5],//!< The GPIO bits
+                      bool dcc[12],//!< The DCC bits
+					  bool dcto[4],//!< The Dcto bits
+					  uint16_t uv, //!< The UV value
+					  uint16_t ov  //!< The OV value
+					  );
+
+/*!
+ Helper function to turn the REFON bit HIGH or LOW
+ @return void
+ */
+void ADBMS6830B_set_cfgr_refon(uint8_t nIC, //!< Current IC
+                            cell_asic *ic, //!< A two dimensional array that will store the data
+                            bool refon //!< The REFON bit
+							);
+
+/*!
+ Helper function to turn the ADCOPT bit HIGH or LOW
+ @return void
+ */
+void ADBMS6830B_set_cfgr_cth(uint8_t nIC, //!< Current IC
+                             cell_asic *ic, //!< A two dimensional array that will store the data
+                             bool cth[3] //!< The ADCOPT bit
+							 );
+
+/*!
+ Helper function to turn the GPIO bits HIGH or LOW
+ @return void
+ */
+void ADBMS6830B_set_cfgr_gpio(uint8_t nIC, //!< Current IC
+                           cell_asic *ic, //!< A two dimensional array that will store the data
+                           bool gpio[] //!< The GPIO bits
+						   );
+
+/*!
+ Helper function to turn the DCC bits HIGH or LOW
+ @return void
+ */
+void ADBMS6830B_set_cfgr_dis(uint8_t nIC, //!< Current IC
+                          cell_asic *ic, //!< A two dimensional array that will store the data
+                          bool dcc[] //!< The DCC bits
+						  );
+
+/*!
+ Helper function to control discharge time value
+ @return void
+ */
+void ADBMS6830B_set_cfgr_dcto(uint8_t nIC,  //!< Current IC
+						   cell_asic *ic, //!< A two dimensional array that will store the data
+						   bool dcto[] //!< The Dcto bits
+						   );
+
+/*!
+ Helper function to set uv field in CFGRA register
+ @return void
+ */
+void ADBMS6830B_set_cfgr_uv(uint8_t nIC, //!< Current IC
+                         cell_asic *ic, //!< A two dimensional array that will store the data
+                         uint16_t uv //!< The UV value
+						 );
+
+/*!
+ Helper function to set ov field in CFGRA register
+ @return void
+ */
+void ADBMS6830B_set_cfgr_ov(uint8_t nIC, //!< Current IC
+                         cell_asic *ic, //!< A two dimensional array that will store the data
+                         uint16_t ov //!< The OV value
+						 );
 
 #endif
