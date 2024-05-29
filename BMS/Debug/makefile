@@ -64,8 +64,8 @@ all: main-build
 main-build: BMS.elf secondary-outputs
 
 # Tool invocations
-BMS.elf BMS.map: $(OBJS) $(USER_OBJS) /Users/andyyang/STM32CubeIDE/workspace_1.13.1/BMS/STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "BMS.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/andyyang/STM32CubeIDE/workspace_1.13.1/BMS/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BMS.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+BMS.elf BMS.map: $(OBJS) $(USER_OBJS) /Users/andyyang/Desktop/FEB/FEB_Firmware_SN4/BMS/STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "BMS.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/andyyang/Desktop/FEB/FEB_Firmware_SN4/BMS/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BMS.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

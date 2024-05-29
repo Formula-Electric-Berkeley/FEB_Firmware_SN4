@@ -6,6 +6,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../Core/Src/FEB_ADBMS6830B.c \
+../Core/Src/FEB_ADBMS6830B_Driver.c \
 ../Core/Src/FEB_CAN.c \
 ../Core/Src/FEB_CB.c \
 ../Core/Src/FEB_CT.c \
@@ -13,6 +14,7 @@ C_SRCS += \
 ../Core/Src/FEB_Hw.c \
 ../Core/Src/FEB_IVT.c \
 ../Core/Src/FEB_Main.c \
+../Core/Src/FEB_SM.c \
 ../Core/Src/freertos.c \
 ../Core/Src/main.c \
 ../Core/Src/stm32f4xx_hal_msp.c \
@@ -24,6 +26,7 @@ C_SRCS += \
 
 OBJS += \
 ./Core/Src/FEB_ADBMS6830B.o \
+./Core/Src/FEB_ADBMS6830B_Driver.o \
 ./Core/Src/FEB_CAN.o \
 ./Core/Src/FEB_CB.o \
 ./Core/Src/FEB_CT.o \
@@ -31,6 +34,7 @@ OBJS += \
 ./Core/Src/FEB_Hw.o \
 ./Core/Src/FEB_IVT.o \
 ./Core/Src/FEB_Main.o \
+./Core/Src/FEB_SM.o \
 ./Core/Src/freertos.o \
 ./Core/Src/main.o \
 ./Core/Src/stm32f4xx_hal_msp.o \
@@ -42,6 +46,7 @@ OBJS += \
 
 C_DEPS += \
 ./Core/Src/FEB_ADBMS6830B.d \
+./Core/Src/FEB_ADBMS6830B_Driver.d \
 ./Core/Src/FEB_CAN.d \
 ./Core/Src/FEB_CB.d \
 ./Core/Src/FEB_CT.d \
@@ -49,6 +54,7 @@ C_DEPS += \
 ./Core/Src/FEB_Hw.d \
 ./Core/Src/FEB_IVT.d \
 ./Core/Src/FEB_Main.d \
+./Core/Src/FEB_SM.d \
 ./Core/Src/freertos.d \
 ./Core/Src/main.d \
 ./Core/Src/stm32f4xx_hal_msp.d \
@@ -66,7 +72,7 @@ Core/Src/%.o Core/Src/%.su Core/Src/%.cyclo: ../Core/Src/%.c Core/Src/subdir.mk
 clean: clean-Core-2f-Src
 
 clean-Core-2f-Src:
-	-$(RM) ./Core/Src/FEB_ADBMS6830B.cyclo ./Core/Src/FEB_ADBMS6830B.d ./Core/Src/FEB_ADBMS6830B.o ./Core/Src/FEB_ADBMS6830B.su ./Core/Src/FEB_CAN.cyclo ./Core/Src/FEB_CAN.d ./Core/Src/FEB_CAN.o ./Core/Src/FEB_CAN.su ./Core/Src/FEB_CB.cyclo ./Core/Src/FEB_CB.d ./Core/Src/FEB_CB.o ./Core/Src/FEB_CB.su ./Core/Src/FEB_CT.cyclo ./Core/Src/FEB_CT.d ./Core/Src/FEB_CT.o ./Core/Src/FEB_CT.su ./Core/Src/FEB_CV.cyclo ./Core/Src/FEB_CV.d ./Core/Src/FEB_CV.o ./Core/Src/FEB_CV.su ./Core/Src/FEB_Hw.cyclo ./Core/Src/FEB_Hw.d ./Core/Src/FEB_Hw.o ./Core/Src/FEB_Hw.su ./Core/Src/FEB_IVT.cyclo ./Core/Src/FEB_IVT.d ./Core/Src/FEB_IVT.o ./Core/Src/FEB_IVT.su ./Core/Src/FEB_Main.cyclo ./Core/Src/FEB_Main.d ./Core/Src/FEB_Main.o ./Core/Src/FEB_Main.su ./Core/Src/freertos.cyclo ./Core/Src/freertos.d ./Core/Src/freertos.o ./Core/Src/freertos.su ./Core/Src/main.cyclo ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/stm32f4xx_hal_msp.cyclo ./Core/Src/stm32f4xx_hal_msp.d ./Core/Src/stm32f4xx_hal_msp.o ./Core/Src/stm32f4xx_hal_msp.su ./Core/Src/stm32f4xx_hal_timebase_tim.cyclo ./Core/Src/stm32f4xx_hal_timebase_tim.d ./Core/Src/stm32f4xx_hal_timebase_tim.o ./Core/Src/stm32f4xx_hal_timebase_tim.su ./Core/Src/stm32f4xx_it.cyclo ./Core/Src/stm32f4xx_it.d ./Core/Src/stm32f4xx_it.o ./Core/Src/stm32f4xx_it.su ./Core/Src/syscalls.cyclo ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.cyclo ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32f4xx.cyclo ./Core/Src/system_stm32f4xx.d ./Core/Src/system_stm32f4xx.o ./Core/Src/system_stm32f4xx.su
+	-$(RM) ./Core/Src/FEB_ADBMS6830B.cyclo ./Core/Src/FEB_ADBMS6830B.d ./Core/Src/FEB_ADBMS6830B.o ./Core/Src/FEB_ADBMS6830B.su ./Core/Src/FEB_ADBMS6830B_Driver.cyclo ./Core/Src/FEB_ADBMS6830B_Driver.d ./Core/Src/FEB_ADBMS6830B_Driver.o ./Core/Src/FEB_ADBMS6830B_Driver.su ./Core/Src/FEB_CAN.cyclo ./Core/Src/FEB_CAN.d ./Core/Src/FEB_CAN.o ./Core/Src/FEB_CAN.su ./Core/Src/FEB_CB.cyclo ./Core/Src/FEB_CB.d ./Core/Src/FEB_CB.o ./Core/Src/FEB_CB.su ./Core/Src/FEB_CT.cyclo ./Core/Src/FEB_CT.d ./Core/Src/FEB_CT.o ./Core/Src/FEB_CT.su ./Core/Src/FEB_CV.cyclo ./Core/Src/FEB_CV.d ./Core/Src/FEB_CV.o ./Core/Src/FEB_CV.su ./Core/Src/FEB_Hw.cyclo ./Core/Src/FEB_Hw.d ./Core/Src/FEB_Hw.o ./Core/Src/FEB_Hw.su ./Core/Src/FEB_IVT.cyclo ./Core/Src/FEB_IVT.d ./Core/Src/FEB_IVT.o ./Core/Src/FEB_IVT.su ./Core/Src/FEB_Main.cyclo ./Core/Src/FEB_Main.d ./Core/Src/FEB_Main.o ./Core/Src/FEB_Main.su ./Core/Src/FEB_SM.cyclo ./Core/Src/FEB_SM.d ./Core/Src/FEB_SM.o ./Core/Src/FEB_SM.su ./Core/Src/freertos.cyclo ./Core/Src/freertos.d ./Core/Src/freertos.o ./Core/Src/freertos.su ./Core/Src/main.cyclo ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/stm32f4xx_hal_msp.cyclo ./Core/Src/stm32f4xx_hal_msp.d ./Core/Src/stm32f4xx_hal_msp.o ./Core/Src/stm32f4xx_hal_msp.su ./Core/Src/stm32f4xx_hal_timebase_tim.cyclo ./Core/Src/stm32f4xx_hal_timebase_tim.d ./Core/Src/stm32f4xx_hal_timebase_tim.o ./Core/Src/stm32f4xx_hal_timebase_tim.su ./Core/Src/stm32f4xx_it.cyclo ./Core/Src/stm32f4xx_it.d ./Core/Src/stm32f4xx_it.o ./Core/Src/stm32f4xx_it.su ./Core/Src/syscalls.cyclo ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.cyclo ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32f4xx.cyclo ./Core/Src/system_stm32f4xx.d ./Core/Src/system_stm32f4xx.o ./Core/Src/system_stm32f4xx.su
 
 .PHONY: clean-Core-2f-Src
 
