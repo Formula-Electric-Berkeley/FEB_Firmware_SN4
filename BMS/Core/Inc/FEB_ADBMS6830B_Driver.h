@@ -27,7 +27,7 @@ typedef struct
 /*! AUX Reg Voltage Data structure */
 typedef struct
 {
-  uint16_t a_codes[9]; //!< Aux Voltage Codes
+  uint16_t a_codes[10]; //!< Aux Voltage Codes
   uint8_t pec_match[4]; //!< If a PEC error was detected during most recent read cmd
 } ax;
 
@@ -228,6 +228,34 @@ int8_t parse_cells(uint8_t current_ic, //!< Current IC
                    uint8_t *ic_pec //!< PEC error
 				   );
 
+// ******************************** Temperature Functions ********************************
+
+/*!
+ Write the ADBMS6830B CFGRA register
+ This command will write the configuration registers of the LTC681xs connected in a daisy chain stack.
+ The configuration is written in descending order so the last device's configuration is written first.
+ @return void
+ */
+void ADBMS6830B_wrcfga(uint8_t total_ic, //!< The number of ICs being written to
+                   cell_asic *ic //!< A two dimensional array of the configuration data that will be written
+                  );
+
+/*!
+ Write the ADBMS6830B CFGRB register
+ This command will write the configuration registers of the LTC681xs connected in a daisy chain stack.
+ The configuration is written in descending order so the last device's configuration is written first.
+ @return void
+ */
+void ADBMS6830B_wrcfgb(uint8_t total_ic, //!< The number of ICs being written to
+                    cell_asic *ic //!< A two dimensional array of the configuration data that will be written
+                   );
+
+/* Start ADC Conversion for GPIO and Vref2  */
+void ADBMS6830B_adax(uint8_t OW, //Open Wire Detection
+				  uint8_t PUP, //Pull up/pull down current sources during measurement
+				  uint8_t CH //GPIO Channels to be measured
+				  );
+
 // ******************************** Auxilary Functions ********************************
 
 /*!
@@ -235,6 +263,14 @@ int8_t parse_cells(uint8_t current_ic, //!< Current IC
  @returns The calculated pec15 as an unsigned int
   */
 uint16_t pec15_calc(uint8_t len, //!< The length of the data array being passed to the function
+                    uint8_t *data //!< The array of data that the PEC will be generated from
+                   );
+
+/*!
+ Calculates  and returns the CRC15
+ @returns The calculated pec15 as an unsigned int
+  */
+uint16_t pec10_calc(uint8_t len, //!< The length of the data array being passed to the function
                     uint8_t *data //!< The array of data that the PEC will be generated from
                    );
 

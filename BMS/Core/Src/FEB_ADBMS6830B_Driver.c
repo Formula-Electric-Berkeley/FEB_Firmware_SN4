@@ -339,7 +339,139 @@ int8_t parse_cells(uint8_t current_ic, // Current IC
 
 // ******************************** Temperature ********************************
 
+/* Write the ADBMS6830B CFGRA */
+void ADBMS6830B_wrcfga(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  )
+{
+	uint8_t cmd[2] = {0x00 , 0x01} ;
+	uint8_t write_buffer[256];
+	uint8_t write_count = 0;
+	uint8_t c_ic = 0;
 
+	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
+	{
+		if (ic->isospi_reverse == false)
+		{
+			c_ic = current_ic;
+		}
+		else
+		{
+			c_ic = total_ic - current_ic - 1;
+		}
+
+		for (uint8_t data = 0; data<6; data++)
+		{
+			write_buffer[write_count] = ic[c_ic].configa.tx_data[data];
+			write_count++;
+		}
+	}
+	write_68(total_ic, cmd, write_buffer);
+}
+
+/* Write the ADBMS6830B CFGRB */
+void ADBMS6830B_wrcfgb(uint8_t total_ic, //The number of ICs being written to
+                    cell_asic ic[] // A two dimensional array of the configuration data that will be written
+                   )
+{
+	uint8_t cmd[2] = {0x00 , 0x24} ;
+	uint8_t write_buffer[256];
+	uint8_t write_count = 0;
+	uint8_t c_ic = 0;
+
+	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
+	{
+		if (ic->isospi_reverse == false)
+		{
+			c_ic = current_ic;
+		}
+		else
+		{
+			c_ic = total_ic - current_ic - 1;
+		}
+
+		for (uint8_t data = 0; data<6; data++)
+		{
+			write_buffer[write_count] = ic[c_ic].configb.tx_data[data];
+			write_count++;
+		}
+	}
+	write_68(total_ic, cmd, write_buffer);
+}
+
+/* Start ADC Conversion for GPIO and Vref2  */
+void ADBMS6830B_adax(uint8_t OW, //Open Wire Detection
+				  uint8_t PUP, //Pull up/pull down current sources during measurement
+				  uint8_t CH //GPIO Channels to be measured
+				  )
+{
+	uint8_t cmd[4];
+
+	cmd[0] = OW + 0x04;
+	cmd[1] = (PUP << 7) + ((CH & 0x10) << 2) + (CH & 0xF) + 0x10;
+
+	cmd_68(cmd);
+}
+
+/*
+The function is used to read the  parsed GPIO codes of the ADBMS6830B.
+This function will send the requested read commands parse the data
+and store the gpio voltages in a_codes variable.
+*/
+
+uint8_t ADBMS6830B_rdaux(uint8_t total_ic, // The number of ICs in the system
+                     	   cell_asic *ic // Array of the parsed cell codes
+                    	  )
+{
+	const uint8_t REG_LEN = 8; //Number of bytes in each ICs register + 2 bytes for the PEC
+
+	int8_t pec_error = 0;
+	uint8_t *cell_data;
+	uint8_t c_ic = 0;
+	cell_data = (uint8_t *) malloc((NUM_RX_BYT * total_ic) * sizeof(uint8_t));
+
+	for (uint8_t cell_reg = 1; cell_reg <= ic[0].ic_reg.num_cv_reg; cell_reg++) {
+		uint8_t cmd[4];
+		switch(cell_reg) {
+			case 1: //Reg A
+				cmd[0] = 0x00;
+				cmd[1] = 0x19;
+				break;
+			case 2: //Reg B
+				cmd[0] = 0x00;
+				cmd[1] = 0x1A;
+				break;
+			case 3: //Reg C
+				cmd[0] = 0x00;
+				cmd[1] = 0x1B;
+				break;
+			case 4: //Reg D
+				cmd[0] = 0x00;
+				cmd[1] = 0x1F;
+				break;
+		}
+		uint16_t cmd_pec = pec15_calc(2, cmd);
+		cmd[2] = (uint8_t)(cmd_pec >> 8);
+		cmd[3] = (uint8_t)(cmd_pec);
+		FEB_cs_low();
+		FEB_spi_write_read(cmd, 4, cell_data, (REG_LEN * total_ic));
+		FEB_cs_high();
+
+		//parse data
+		for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
+			if (ic->isospi_reverse == false) {
+				c_ic = curr_ic;
+			} else {
+				c_ic = total_ic - curr_ic - 1;
+			}
+			pec_error += parse_cells(c_ic, cell_reg, cell_data, &ic[c_ic].aux.a_codes[0], &ic[c_ic].aux.pec_match[0]);
+		}
+	}
+
+	ADBMS6830B_check_pec(total_ic, CELL, ic);
+	free(cell_data);
+	return(pec_error);
+}
 
 // ******************************** Auxilary Functions ********************************
 
@@ -478,7 +610,7 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 			cmd_index = cmd_index + 1;
 		}
 
-		data_pec = (uint16_t)pec15_calc(BYTES_IN_REG, &data[(current_ic-1)*6]);    // Calculating the PEC for each ICs configuration register data
+		data_pec = (uint16_t)pec10_calc(BYTES_IN_REG, &data[(current_ic-1)*6]);    // Calculating the PEC for each ICs configuration register data
 		cmd[cmd_index] = (uint8_t)(data_pec >> 8);
 		cmd[cmd_index + 1] = (uint8_t)data_pec;
 		cmd_index = cmd_index + 2;
