@@ -256,6 +256,16 @@ void ADBMS6830B_adax(uint8_t OW, //Open Wire Detection
 				  uint8_t CH //GPIO Channels to be measured
 				  );
 
+/*
+The function is used to read the parsed GPIO codes of the ADBMS6830B.
+This function will send the requested read commands parse the data
+and store the gpio voltages in a_codes variable.
+*/
+
+uint8_t ADBMS6830B_rdaux(uint8_t total_ic, // The number of ICs in the system
+                     	   cell_asic *ic // Array of the parsed cell codes
+                    	  );
+
 // ******************************** Auxilary Functions ********************************
 
 /*!
