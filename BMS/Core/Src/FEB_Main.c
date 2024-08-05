@@ -1,18 +1,19 @@
 // ******************************** Includes ********************************
 
 #include "FEB_Main.h"
+#include "FEB_ADBMS6830B.h"
 
 // ******************************** Functions ********************************
 
 void FEB_Main_Setup() {
 	//SM setup
-	//ADBMS6830 setup
+	FEB_ADBMS_Init();
 	//CAN Filter Config Setup
 	//IVT Setup
 }
 
 void FEB_Main_Task1_VT() {
-
+	FEB_ADBMS_AcquireData();
 }
 
 void FEB_Main_Task2_SM() {

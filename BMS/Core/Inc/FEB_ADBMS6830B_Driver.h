@@ -100,6 +100,11 @@ void ADBMS6830B_init_cfg(uint8_t total_ic, //!< Number of ICs in the daisy chain
                       cell_asic *ic //!< A two dimensional array that will store the data
 					           );
 
+/* Initialize the Register limits */
+void ADBMS6830B_init_reg_limits(uint8_t total_ic, //The number of ICs in the system
+							cell_asic *ic  //A two dimensional array where data will be written
+							);
+
 /*!
  Helper Function that resets the PEC error counters
  @return void
