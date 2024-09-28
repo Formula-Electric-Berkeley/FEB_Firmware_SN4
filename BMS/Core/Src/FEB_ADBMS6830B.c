@@ -55,7 +55,7 @@ static uint8_t get_cell(uint8_t sensor) {
 }
 
 static uint8_t get_channel(uint8_t sensor) {
-	return cell % 8;
+	return sensor % 8;
 }
 
 static uint8_t get_mux(uint8_t sensor) {
@@ -172,8 +172,8 @@ void read_aux_voltages() {
 void store_cell_temps(uint8_t mux, uint8_t channel) {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t sensor = 0; sensor < FEB_NUM_TEMP_SENSE_PER_BANK; sensor++) {
-			if (get_mux(cell) == mux && get_channel(cell) == channel) {
-				uint16_t raw_voltage = accumulator.IC_Config.aux.a_codes[mux];
+			if (get_mux(sensor) == mux && get_channel(sensor) == channel) {
+				uint16_t raw_voltage = accumulator.IC_Config->aux.a_codes[mux];
 				uint8_t cell = get_cell(sensor);
 				if (sensor % 2 == 0) {
 					accumulator.banks[bank].cells[cell].temp_C[0] = raw_voltage; /* Need to figure out conversion */

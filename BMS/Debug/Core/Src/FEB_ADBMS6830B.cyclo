@@ -1,0 +1,14 @@
+../Core/Src/FEB_ADBMS6830B.c:53:16:get_cell	1
+../Core/Src/FEB_ADBMS6830B.c:57:16:get_channel	1
+../Core/Src/FEB_ADBMS6830B.c:61:16:get_mux	4
+../Core/Src/FEB_ADBMS6830B.c:71:14:convert_voltage	1
+../Core/Src/FEB_ADBMS6830B.c:77:6:FEB_ADBMS_Init	2
+../Core/Src/FEB_ADBMS6830B.c:86:6:FEB_ADBMS_AcquireData	3
+../Core/Src/FEB_ADBMS6830B.c:108:6:start_adc_cell_voltage_measurements	1
+../Core/Src/FEB_ADBMS6830B.c:114:6:read_cell_voltages	1
+../Core/Src/FEB_ADBMS6830B.c:119:6:store_cell_voltages	3
+../Core/Src/FEB_ADBMS6830B.c:130:6:validate_voltages	3
+../Core/Src/FEB_ADBMS6830B.c:145:6:configure_gpio_bits	2
+../Core/Src/FEB_ADBMS6830B.c:161:6:start_aux_voltage_measurements	1
+../Core/Src/FEB_ADBMS6830B.c:167:6:read_aux_voltages	1
+../Core/Src/FEB_ADBMS6830B.c:172:6:store_cell_temps	6

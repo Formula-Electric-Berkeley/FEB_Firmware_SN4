@@ -1,6 +1,9 @@
 #ifndef INC_FEB_ADBMS6830B_H_
 #define INC_FEB_ADBMS6830B_H_
 
+// ******************************** Includes ********************************
+
+#include <stdint.h>
 
 // ********************************** ADBMS6830B Configuration **********************************
 
@@ -77,8 +80,9 @@ void validate_voltages();
 
 // ******************************** Temperature ********************************
 
+void configure_gpio_bits(uint8_t mux, uint8_t channel);
 void start_aux_voltage_measurements();
 void read_aux_voltages();
-void store_cell_temps();
+void store_cell_temps(uint8_t mux, uint8_t channel);
 
 #endif /* INC_FEB_ADBMS6830B_H_ */
