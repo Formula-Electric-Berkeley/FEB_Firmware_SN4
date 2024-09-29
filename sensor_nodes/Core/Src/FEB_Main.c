@@ -7,6 +7,8 @@ void FEB_Main_Setup(void){
 }
 
 void FEB_Main_Loop(void){
-	FEB_CAN_Linear_Potentiometer_Transmit(&hcan1);
+
+	get_linear_potentiometer_reading();
+//	FEB_CAN_Linear_Potentiometer_Transmit(&hcan1);
 	HAL_Delay(1000);
 }

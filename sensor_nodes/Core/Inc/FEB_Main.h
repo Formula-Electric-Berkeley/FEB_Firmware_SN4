@@ -10,7 +10,9 @@
 
 #include "main.h"
 #include "FEB_CAN_linear_potentiometer.h"
+#include "FEB_linear_potentiometer.h"
 #include "FEB_CAN.h"
+
 
 void FEB_Main_Setup(void);
 
