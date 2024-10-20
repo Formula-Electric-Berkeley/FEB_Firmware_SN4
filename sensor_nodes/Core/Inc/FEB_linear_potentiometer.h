@@ -5,6 +5,8 @@
 #include <string.h>
 #include "stm32f4xx_hal.h"
 
-uint16_t get_linear_potentiometer_reading(void);
+#include "main.h"
+
+uint32_t get_linear_potentiometer_reading(void);
 
 #endif /* INC_FEB_LINEAR_POTENTIOMETER_H_ */

@@ -48,6 +48,8 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
+HAL_StatusTypeDef status;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -100,16 +102,20 @@ int main(void)
   /* USER CODE BEGIN 2 */
   FEB_Main_Setup();
 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+//  uint32_t linear_potentiometer_reading = 0;
+//  char buf[256];
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 	  FEB_Main_Loop();
+
   }
   /* USER CODE END 3 */
 }
