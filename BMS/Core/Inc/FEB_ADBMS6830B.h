@@ -85,4 +85,8 @@ void start_aux_voltage_measurements();
 void read_aux_voltages();
 void store_cell_temps(uint8_t mux, uint8_t channel);
 
+// ******************************** UART ********************************
+
+void FEB_ADBMS_UART_Transmit();
+
 #endif /* INC_FEB_ADBMS6830B_H_ */

@@ -9,11 +9,11 @@
 
 typedef struct {
 	float voltage_V;
-	float temp_C[2];
 } cell_t;
 
 typedef struct {
 	float total_voltage_V;
+	float temp_sensor_readings_V[FEB_NUM_TEMP_SENSE_PER_BANK];
 	cell_t cells[FEB_NUM_CELLS_PER_BANK];
 } bank_t;
 
@@ -27,6 +27,7 @@ typedef struct {
 // ******************************** Global Variabls ********************************
 
 accumulator_t accumulator = {0};
+extern UART_HandleTypeDef huart2;
 
 // ******************************** Config Bits ********************************
 
@@ -58,13 +59,24 @@ static uint8_t get_channel(uint8_t sensor) {
 	return sensor % 8;
 }
 
-static uint8_t get_mux(uint8_t sensor) {
-	if (sensor >= 0 && sensor <= 15) {
+static uint8_t get_mux(uint8_t sensor) { /* Chip Layer */
+	if (sensor >= 0 && sensor <= 7 || sensor >= 16 && sensor <= 23) {
 		return 0;
-	} else if (sensor >= 16 && sensor <= 31) {
+	} else if (sensor >= 8 && sensor <= 15 || sensor <= 24 && sensor <= 31) {
 		return 1;
 	} else {
 		return -1; /* Error */
+	}
+}
+
+static void get_sensors(uint8_t mux, uint8_t channel, uint8_t *pSensor1, uint8_t *pSensor2) {
+	uint8_t sensors = {0, 0};
+	if (mux == 0) {
+		*pSensor1 = channel;
+		*pSensor2 = 16 + channel;
+	} else {
+		*pSensor1 = 8 + channel;
+		*pSensor2 = 24 + channel;
 	}
 }
 
@@ -121,7 +133,7 @@ void store_cell_voltages() {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
 			uint8_t ic = bank;
-			float actual_voltage = convert_voltage(accumulator.IC_Config->cells.c_codes[ic]);
+			float actual_voltage = convert_voltage(accumulator.IC_Config[bank]->cells.c_codes[ic]);
 			accumulator.banks[bank].cells[cell].voltage_V = actual_voltage;
 		}
 	}
@@ -170,19 +182,31 @@ void read_aux_voltages() {
 }
 
 void store_cell_temps(uint8_t mux, uint8_t channel) {
-	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
+	uint8_t sensor1;
+	uint8_t sensor2;
+	get_sensors(mux, channel, &sensor1, &sensor2);
+	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
+		uint16_t raw_voltage1 = accumulator.IC_Config[bank]->aux.a_codes[0]; // From ADC 1
+		uint16_t raw_voltage1 = accumulator.IC_Config[bank]->aux.a_codes[1]; // From ADC 2
+		accumulator.banks[bank].temp_sensor_readings_V[sensor1] = raw_voltage1;
+		accumulator.banks[bank].temp_sensor_readings_V[sensor2] = raw_voltage1;
+	}
+
+}
+
+void FEB_ADBMS_UART_Transmit() {
+	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
+		char UART_str[128];
+		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell++) {
+			sprintf(UART_str, "Bank: %d, Cell: %d, Voltage: %f\n", bank, cell, accumulator.banks[bank].cells[cell].voltage_V);
+			HAL_UART_Transmit(&huart2, (uint8_t*) UART_str, 1024, 100);
+		}
+
 		for (uint8_t sensor = 0; sensor < FEB_NUM_TEMP_SENSE_PER_BANK; sensor++) {
-			if (get_mux(sensor) == mux && get_channel(sensor) == channel) {
-				uint16_t raw_voltage = accumulator.IC_Config->aux.a_codes[mux];
-				uint8_t cell = get_cell(sensor);
-				if (sensor % 2 == 0) {
-					accumulator.banks[bank].cells[cell].temp_C[0] = raw_voltage; /* Need to figure out conversion */
-				} else {
-					accumulator.banks[bank].cells[cell].temp_C[1] = raw_voltage; /* Need to figure out conversion */
-				}
-			}
+			sprintf(UART_str, "Bank: %d, Sensor: %d, Voltage: %f\n", bank, sensor, accumulator.banks[bank].temp_sensor_readings_V[sensor]);
+			HAL_UART_Transmit(&huart2, (uint8_t*) UART_str, 1024, 100);
 		}
 	}
 }
 
-//Functions Go Here
+
