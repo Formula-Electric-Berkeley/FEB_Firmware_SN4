@@ -4,6 +4,7 @@
 // ******************************** Includes ********************************
 
 #include <stdint.h>
+#include "stm32f4xx_hal.h"
 
 // ********************************** ADBMS6830B Configuration **********************************
 
@@ -80,10 +81,10 @@ void validate_voltages();
 
 // ******************************** Temperature ********************************
 
-void configure_gpio_bits(uint8_t mux, uint8_t channel);
+void configure_gpio_bits(uint8_t channel);
 void start_aux_voltage_measurements();
 void read_aux_voltages();
-void store_cell_temps(uint8_t mux, uint8_t channel);
+void store_cell_temps(uint8_t channel);
 
 // ******************************** UART ********************************
 

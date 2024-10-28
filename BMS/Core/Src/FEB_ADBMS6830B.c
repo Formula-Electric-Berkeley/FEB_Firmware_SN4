@@ -1,6 +1,7 @@
 // ******************************** Includes ********************************
 
 #include <stdbool.h>
+#include <stdio.h>
 #include "FEB_ADBMS6830B.h"
 #include "FEB_ADBMS6830B_Driver.h"
 #include "FEB_Const.h"
@@ -43,41 +44,29 @@ static uint16_t ov = 0x7FF;
 
 /*
 Sensor (- terminal)				00	01	02	03	04	05	06	07	08	09	10	11	12	13	14	15	16	17	18	19	20	21	22	23	24	25	26	27	28	29	30	31
-Multiplexer - Sensor Layer		0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	0	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1
-Multiplexer - Chip Layer		0	0	0	0	0	0	0	0	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0	1	1	1	1	1	1	1	1
+Multiplexer 					0	0	0	0	0	0	0	0	1	1	1	1	1	1	1	1	2	2	2	2	2	2	2	2	3	3	3	3	3	3	3	3
 Channel							0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7
 */
 
 
 // ******************************** Helper Functions ********************************
 
-static uint8_t get_cell(uint8_t sensor) {
-	return sensor / 2;
-}
-
-static uint8_t get_channel(uint8_t sensor) {
-	return sensor % 8;
-}
-
-static uint8_t get_mux(uint8_t sensor) { /* Chip Layer */
-	if (sensor >= 0 && sensor <= 7 || sensor >= 16 && sensor <= 23) {
-		return 0;
-	} else if (sensor >= 8 && sensor <= 15 || sensor <= 24 && sensor <= 31) {
-		return 1;
-	} else {
-		return -1; /* Error */
-	}
-}
-
-static void get_sensors(uint8_t mux, uint8_t channel, uint8_t *pSensor1, uint8_t *pSensor2) {
-	uint8_t sensors = {0, 0};
+static uint8_t get_gpio_pin(uint8_t mux) {
 	if (mux == 0) {
-		*pSensor1 = channel;
-		*pSensor2 = 16 + channel;
+		return 0;
+	} else if (mux == 1) {
+		return 1;
+	} else if (mux == 2) {
+		return 5;
+	} else if (mux == 3) {
+		return 6;
 	} else {
-		*pSensor1 = 8 + channel;
-		*pSensor2 = 24 + channel;
+		return -1;
 	}
+}
+
+static uint8_t get_sensor(uint8_t mux, uint8_t channel) {
+	return mux * 8 + channel;
 }
 
 static float convert_voltage(uint16_t raw_code) {
@@ -104,13 +93,11 @@ void FEB_ADBMS_AcquireData() {
 	validate_voltages();
 
 	/* Temperature */
-	for (uint8_t mux = 0; mux < 2; mux++) {
-		for (uint8_t channel = 0; channel < 8; channel++) {
-			configure_gpio_bits(mux, channel);
-			start_aux_voltage_measurements();
-			read_aux_voltages();
-			store_cell_temps(mux, channel);
-		}
+	for (uint8_t channel = 0; channel < 8; channel++) {
+		configure_gpio_bits(channel);
+		start_aux_voltage_measurements();
+		read_aux_voltages();
+		store_cell_temps(channel);
 	}
 
 }
@@ -133,7 +120,7 @@ void store_cell_voltages() {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
 			uint8_t ic = bank;
-			float actual_voltage = convert_voltage(accumulator.IC_Config[bank]->cells.c_codes[ic]);
+			float actual_voltage = convert_voltage(accumulator.IC_Config[bank].cells.c_codes[ic]);
 			accumulator.banks[bank].cells[cell].voltage_V = actual_voltage;
 		}
 	}
@@ -154,13 +141,14 @@ void validate_voltages() {
 
 
 
-void configure_gpio_bits(uint8_t mux, uint8_t channel) {
-	gpio_bits[0] = 0b1;
-	gpio_bits[1] = 0b1;
-	gpio_bits[2] = (channel >> 0) & 0b1;
-	gpio_bits[3] = (channel >> 1) & 0b1;
-	gpio_bits[4] = (channel >> 2) & 0b1;
-	gpio_bits[5] = mux & 0b1;
+void configure_gpio_bits(uint8_t channel) {
+	gpio_bits[0] = 0b1; /* ADC Channel */
+	gpio_bits[1] = 0b1; /* ADC Channel */
+	gpio_bits[2] = (channel >> 0) & 0b1; /* MUX Sel 1 */
+	gpio_bits[3] = (channel >> 1) & 0b1; /* MUX Sel 1 */
+	gpio_bits[4] = (channel >> 2) & 0b1; /* MUX Sel 1 */
+	gpio_bits[5] = 0b1; /* ADC Channel */
+	gpio_bits[6] = 0b1; /* ADC Channel */
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
 		ADBMS6830B_set_cfgr(ic, accumulator.IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
 	}
@@ -181,17 +169,15 @@ void read_aux_voltages() {
 	ADBMS6830B_rdaux(FEB_NUM_IC, accumulator.IC_Config);
 }
 
-void store_cell_temps(uint8_t mux, uint8_t channel) {
-	uint8_t sensor1;
-	uint8_t sensor2;
-	get_sensors(mux, channel, &sensor1, &sensor2);
+void store_cell_temps(uint8_t channel) {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
-		uint16_t raw_voltage1 = accumulator.IC_Config[bank]->aux.a_codes[0]; // From ADC 1
-		uint16_t raw_voltage1 = accumulator.IC_Config[bank]->aux.a_codes[1]; // From ADC 2
-		accumulator.banks[bank].temp_sensor_readings_V[sensor1] = raw_voltage1;
-		accumulator.banks[bank].temp_sensor_readings_V[sensor2] = raw_voltage1;
+		for (uint8_t mux = 0; mux < 4; mux++) {
+			uint8_t gpio = get_gpio_pin(mux);
+			uint16_t raw_code = accumulator.IC_Config[bank].aux.a_codes[gpio];
+			uint8_t sensor = get_sensor(mux, channel);
+			accumulator.banks[bank].temp_sensor_readings_V[sensor] = convert_voltage(raw_code);
+		}
 	}
-
 }
 
 void FEB_ADBMS_UART_Transmit() {
