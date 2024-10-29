@@ -41,6 +41,9 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CAN_HandleTypeDef hcan1;
+CAN_HandleTypeDef hcan2;
+
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim6;
@@ -60,6 +63,9 @@ uint16_t wss_counter_left = 0;
 uint8_t wss_right = 0;
 uint8_t wss_left = 0;
 
+char direction_right = '+';
+char direction_left = '+';
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,12 +75,47 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM5_Init(void);
 static void MX_TIM6_Init(void);
+static void MX_CAN1_Init(void);
+static void MX_CAN2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void UART_transmit(const char *string)
+{
+    HAL_UART_Transmit(&huart2, (uint8_t*)string, strlen(string), 1000);
+}
+
+void CAN_transmit()
+{
+	CAN_TxHeaderTypeDef TxHeader;
+	uint8_t TxData[8];
+	uint32_t TxMailbox;
+
+	TxHeader.DLC = 8; // Data length
+	TxHeader.IDE = CAN_ID_STD; // Standard ID
+	TxHeader.RTR = CAN_RTR_DATA; // Data frame
+	TxHeader.StdId = 0x545; // CAN ID
+	TxHeader.ExtId = 0; // Not used with standard ID
+
+	// Fill the data
+	TxData[0] = wss_right;
+	TxData[1] = wss_left;
+
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+
+	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+	{
+		// Transmission request error
+		char msg[50];
+		sprintf(msg, "CAN transmit error");
+		transmit_uart(msg);
+		Error_Handler();
+	}
+}
 
 void update_WSS_ticks(int32_t *ticks, uint16_t *prev_counter, TIM_HandleTypeDef *htim)
 {
@@ -104,13 +145,24 @@ void update_WSS_ticks(int32_t *ticks, uint16_t *prev_counter, TIM_HandleTypeDef 
 	}
 
 	*prev_counter = counter;
-
 }
 
+void handle_reverse_ticks(int32_t *ticks, char *direction)
+{
+	if (*ticks < 0)
+	{
+		*ticks = 0 - *ticks; // Make the ticks positive
+		*direction = '-';
+	}
+	else
+	{
+		*direction = '+';
+	}
+}
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	// Once the timer for WSS elapses
+	// Once the 1KHz timer for sending sensor data elapses
 	if (htim->Instance == TIM6)
 	{
 
@@ -118,12 +170,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		update_WSS_ticks(&ticks_right, &wss_counter_right, &htim3);
 		update_WSS_ticks(&ticks_left, &wss_counter_left, &htim3);
 
+		handle_reverse_ticks(&ticks_right, &direction_right);
+		handle_reverse_ticks(&ticks_left, &direction_left);
+
 		// Set the current wheel speed
 		wss_right = (uint8_t) ((float) ticks_right * TIMER_ELAPSED_HZ / WHEEL_TEETH * 60);
 		wss_left = (uint8_t) ((float) ticks_left * TIMER_ELAPSED_HZ / WHEEL_TEETH * 60);
 
 		// Send the wheel speed data
+		char send[50];
+		sprintf(send, "Right: %c%d rpm\tLeft: %c%d\r\n", direction_right, wss_right, direction_left, wss_left);
+		transmit_uart(send);
 
+		CAN_transmit();
 
 
 	}
@@ -168,6 +227,8 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM5_Init();
   MX_TIM6_Init();
+  MX_CAN1_Init();
+  MX_CAN2_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -228,6 +289,80 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CAN1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN1_Init(void)
+{
+
+  /* USER CODE BEGIN CAN1_Init 0 */
+
+  /* USER CODE END CAN1_Init 0 */
+
+  /* USER CODE BEGIN CAN1_Init 1 */
+
+  /* USER CODE END CAN1_Init 1 */
+  hcan1.Instance = CAN1;
+  hcan1.Init.Prescaler = 16;
+  hcan1.Init.Mode = CAN_MODE_NORMAL;
+  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_1TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan1.Init.TimeTriggeredMode = DISABLE;
+  hcan1.Init.AutoBusOff = DISABLE;
+  hcan1.Init.AutoWakeUp = DISABLE;
+  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.ReceiveFifoLocked = DISABLE;
+  hcan1.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN1_Init 2 */
+
+  /* USER CODE END CAN1_Init 2 */
+
+}
+
+/**
+  * @brief CAN2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN2_Init(void)
+{
+
+  /* USER CODE BEGIN CAN2_Init 0 */
+
+  /* USER CODE END CAN2_Init 0 */
+
+  /* USER CODE BEGIN CAN2_Init 1 */
+
+  /* USER CODE END CAN2_Init 1 */
+  hcan2.Instance = CAN2;
+  hcan2.Init.Prescaler = 16;
+  hcan2.Init.Mode = CAN_MODE_NORMAL;
+  hcan2.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan2.Init.TimeSeg1 = CAN_BS1_1TQ;
+  hcan2.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan2.Init.TimeTriggeredMode = DISABLE;
+  hcan2.Init.AutoBusOff = DISABLE;
+  hcan2.Init.AutoWakeUp = DISABLE;
+  hcan2.Init.AutoRetransmission = DISABLE;
+  hcan2.Init.ReceiveFifoLocked = DISABLE;
+  hcan2.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN2_Init 2 */
+
+  /* USER CODE END CAN2_Init 2 */
+
 }
 
 /**
