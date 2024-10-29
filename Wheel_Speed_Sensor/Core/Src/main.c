@@ -33,6 +33,7 @@
 /* USER CODE BEGIN PD */
 #define TIMER_ELAPSED_HZ 1000 // # of times TIM6 elapses per second
 #define WHEEL_TEETH 84
+#define RPM_to_MPH 0.06098555871
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -179,7 +180,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 		// Send the wheel speed data
 		char send[50];
-		sprintf(send, "Right: %c%d rpm\tLeft: %c%d\r\n", direction_right, wss_right, direction_left, wss_left);
+		sprintf(send, "Right: %c%d rpm  %d mph\tLeft: %c%d  %d mph\r\n", direction_right, wss_right, direction_left, wss_left, (wss_right * RPM_to_MPH), (wss_left * RPM_to_MPH));
 		transmit_uart(send);
 
 		CAN_transmit();
