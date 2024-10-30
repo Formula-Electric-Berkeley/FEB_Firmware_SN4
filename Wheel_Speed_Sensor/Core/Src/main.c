@@ -32,7 +32,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define TIMER_ELAPSED_HZ 1000 // # of times TIM6 elapses per second
-#define WHEEL_TEETH 84
+#define TICKS_PER_ROTATION 84 * 4
 #define RPM_to_MPH 0.06098555871
 /* USER CODE END PD */
 
@@ -175,8 +175,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		handle_reverse_ticks(&ticks_left, &direction_left);
 
 		// Set the current wheel speed
-		wss_right = (uint8_t) ((float) ticks_right * TIMER_ELAPSED_HZ / WHEEL_TEETH * 60);
-		wss_left = (uint8_t) ((float) ticks_left * TIMER_ELAPSED_HZ / WHEEL_TEETH * 60);
+		wss_right = (uint8_t) ((float) ticks_right * TIMER_ELAPSED_HZ / TICKS_PER_ROTATION * 60);
+		wss_left = (uint8_t) ((float) ticks_left * TIMER_ELAPSED_HZ / TICKS_PER_ROTATION * 60);
 
 		// Send the wheel speed data
 		char send[50];
