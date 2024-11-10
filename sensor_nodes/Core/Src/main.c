@@ -596,8 +596,8 @@ static void Steer_ENC_I2C_Full_Read(void) {
 	i2c_data.i2c_updt = 	(uint8_t)	(buf[12] & 0xFE);
 	i2c_data.raw_angle = 	(uint16_t)	(((uint16_t)buf[14] & 0x0F) << 8 | buf[15]);
 	i2c_data.angle = 		(uint16_t)	(((uint16_t)buf[17] & 0x0F) << 8 | buf[18]);
-	i2c_data.status =		(uint8_t)	(buf[20] & 0xFE);
-	i2c_data.agc =			(uint8_t)	(buf[21] & 0xFE);
+	i2c_data.status =		(uint8_t)	(buf[20] & 0x38);
+	i2c_data.agc =			(uint8_t)	(buf[21] & 0xFF);
 	i2c_data.magnitude = 	(uint16_t)	(((uint16_t)buf[23] & 0x0F) << 8 | buf[24]);
 }
 
