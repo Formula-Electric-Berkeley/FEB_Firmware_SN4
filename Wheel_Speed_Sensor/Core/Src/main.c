@@ -169,7 +169,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 		// Update the tick values
 		update_WSS_ticks(&ticks_right, &wss_counter_right, &htim3);
-		update_WSS_ticks(&ticks_left, &wss_counter_left, &htim3);
+		update_WSS_ticks(&ticks_left, &wss_counter_left, &htim5);
 
 		handle_reverse_ticks(&ticks_right, &direction_right);
 		handle_reverse_ticks(&ticks_left, &direction_left);
@@ -231,6 +231,10 @@ int main(void)
   MX_CAN1_Init();
   MX_CAN2_Init();
   /* USER CODE BEGIN 2 */
+
+  // Start Encoder Timers for the Wheel Speed Sensors
+  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL);
 
   /* USER CODE END 2 */
 
