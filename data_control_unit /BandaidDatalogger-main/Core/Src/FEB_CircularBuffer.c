@@ -78,7 +78,7 @@ char strToWrite[128];
 char messToWrite[128];
 
 // Check if maximum cappacity hasn't been reached. Copy string input, item, to heap and add pointer to buffer. Increment count of pointers and write index.
-void FEB_circBuf_write(circBuffer *cb, uint32_t rec_id , uint32_t rec_timestamp, uint8_t *rec_data)
+void FEB_circBuf_write(circBuffer *cb, uint32_t rec_id , uint8_t *rec_data)
 {
   if (cb->count == cb->capacity) {
     printf("Error! No space to write.");
@@ -87,8 +87,8 @@ void FEB_circBuf_write(circBuffer *cb, uint32_t rec_id , uint32_t rec_timestamp,
 
   memcpy(cb->buffer[cb->write].data, rec_data, 8);
   cb->buffer[cb->write].id = rec_id;
-//  cb->buffer[cb->write].timestamp = HAL_GetTick();
-  cb->buffer[cb->write].timestamp = rec_timestamp; // uses global Timestamp (TransmitGlobalClock enabled)
+  cb->buffer[cb->write].timestamp = HAL_GetTick();
+//  cb->buffer[cb->write].timestamp = rec_timestamp; // uses global Timestamp (TransmitGlobalClock enabled)
   cb->write = (cb->write + 1) % cb->capacity;
   cb->count++;
 }

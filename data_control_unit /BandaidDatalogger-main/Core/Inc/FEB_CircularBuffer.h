@@ -32,7 +32,7 @@ typedef struct circBuffer {
 
 void FEB_circBuf_init(circBuffer *cb);
 
-void FEB_circBuf_write(circBuffer *cb, uint32_t rec_id, uint32_t rec_timestamp, uint8_t *rec_data);
+void FEB_circBuf_write(circBuffer *cb, uint32_t rec_id, uint8_t *rec_data);
 void FEB_circBuf_read(circBuffer *cb);
 
 #endif /* FEB_CIRCULARBUFFER_H */

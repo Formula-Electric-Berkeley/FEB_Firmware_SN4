@@ -44,11 +44,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 
 	//Case 1: Std Id
 	if(FEB_CAN_Rx_Header.IDE == CAN_ID_STD){ 
-		FEB_circBuf_write(&FEBBuffer, FEB_CAN_Rx_Header.StdId, FEB_CAN_Rx_Header.Timestamp, FEB_CAN_Rx_Data);
+		FEB_circBuf_write(&FEBBuffer, FEB_CAN_Rx_Header.StdId, FEB_CAN_Rx_Data);
 
 	//Case 2: Ext Id
 	}else if(FEB_CAN_Rx_Header.IDE == CAN_ID_EXT){
-		FEB_circBuf_write(&FEBBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Header.Timestamp, FEB_CAN_Rx_Data);
+		FEB_circBuf_write(&FEBBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Data);
 
 
 	}
@@ -94,8 +94,8 @@ void FEB_CAN_Transmit_Test_Data(CAN_HandleTypeDef* hcan) {
 	FEB_CAN_Tx_Header.StdId = 0x1;
 	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
-//	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
-	FEB_CAN_Tx_Header.TransmitGlobalTime = ENABLE;
+	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
+//	FEB_CAN_Tx_Header.TransmitGlobalTime = ENABLE;
 
 	FEB_CAN_Tx_Data[0] = 0x11;
 	FEB_CAN_Tx_Data[1] = 0x22;
@@ -130,8 +130,8 @@ void FEB_CAN_Transmit_Test_Data_ExtId(CAN_HandleTypeDef* hcan) {
 	FEB_CAN_Tx_Header.ExtId = 0x2;
 	FEB_CAN_Tx_Header.IDE = CAN_ID_EXT;
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
-//	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
-	FEB_CAN_Tx_Header.TransmitGlobalTime = ENABLE;
+	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
+//	FEB_CAN_Tx_Header.TransmitGlobalTime = ENABLE;
 	FEB_CAN_Tx_Data[0] = 0x01;
 	FEB_CAN_Tx_Data[1] = 0x02;
 	FEB_CAN_Tx_Data[2] = 0x03;
