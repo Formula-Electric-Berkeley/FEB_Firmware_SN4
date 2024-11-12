@@ -31,9 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
-#define IS_REAR 0 // 0 is for the rear sensor node
-
+#define TIRE_TEMP_BASE_CANID 1200
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -110,6 +108,32 @@ void Configure_Tire_Temp_Sensor(uint16_t currentCANID, uint16_t newCANID, float 
 
 }
 
+void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
+{
+	// Calculate the first channel in the message
+	uint8_t channelStart = ((RxHeader.ExtId - TIRE_TEMP_BASE_CANID) % 4) * 4 + 1;
+
+	// Calculate the temperature from all four channels and transmit them
+	for (int i = 0; i < 4; i++)
+	{
+		int16_t temp_raw = (RxData[2 * i] << 8) | RxData[2 * i + 1];
+		float temperature = temp_raw * 0.01 - 100;
+
+		char msg[50];
+		sprintf(msg, "Channel %d Temperature: %d C\n", channelStart + i, temperature);
+		UART_Transmit(msg);
+	}
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
+    CAN_RxHeaderTypeDef RxHeader;
+    uint8_t RxData[8];
+
+    // Retrieve the message
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK) {
+    	Read_Tire_Temp_Data(RxHeader, RxData);
+    }
+}
 
 /* USER CODE END 0 */
 
