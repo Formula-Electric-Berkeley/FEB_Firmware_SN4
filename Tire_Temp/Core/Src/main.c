@@ -132,9 +132,9 @@ void Configure_Tire_Temp_Sensor(uint16_t currentCAN_ID, uint16_t newCAN_ID, floa
 	TxData[2] = (newCAN_ID >> 8) & 0xFF; // New CAN Base ID MSB
 	TxData[3] = newCAN_ID & 0xFF; // New CAN Base ID LSB
 	TxData[4] = uint8_t (emissivity * 100); // Emissivity (0.01–1.00 scaled to 1–100)
-	TxData[5] = sampleFrequency; // Sampling frequency (1–8)
+	TxData[5] = sampleFrequency; // Sampling frequency (8=100Hz)
 	TxData[6] = channels; // Channels (40=4, 80=8, 160=16)
-	TxData[7] = bitrate; // Bit rate (1, 2, 3, or 4)
+	TxData[7] = bitrate; // Bit rate (1=1Mbit/s, 2=500kbit/s, 3=250kbit/s, or 4=100kbit/s)
 
 	// Transmit the message at 1Hz for 10 seconds
 	for (int i = 0; i < 10; i++)
@@ -196,7 +196,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     	Error_Handler();
     }
 
-    if ((RxHeader.ExtId >> 4) == (TIRE_TEMP_BASE_CAN_ID >> 4))
+    if ((RxHeader.ExtId >> 4) == (TIRE_TEMP_BASE_CAN_ID >> 4)) // Check if the message is from one of the tire temp sensors
     {
     	Read_Tire_Temp_Data(RxHeader, RxData);
     }
@@ -273,10 +273,10 @@ int main(void)
   }
 
   // Configure Tire Temp Sensors
-  Configure_Tire_Temp_Sensor(0x4B0, 0x4B0, 0.85, 8, 160, 4);
-  Configure_Tire_Temp_Sensor(0x4B4, 0x4B4, 0.85, 8, 160, 4);
-  Configure_Tire_Temp_Sensor(0x4B8, 0x4B8, 0.85, 8, 160, 4);
-  Configure_Tire_Temp_Sensor(0x4BC, 0x4BC, 0.85, 8, 160, 4);
+  Configure_Tire_Temp_Sensor(0x4B0, 0x4B0, 0.85, 8, 160, 2);
+  Configure_Tire_Temp_Sensor(0x4B4, 0x4B4, 0.85, 8, 160, 2);
+  Configure_Tire_Temp_Sensor(0x4B8, 0x4B8, 0.85, 8, 160, 2);
+  Configure_Tire_Temp_Sensor(0x4BC, 0x4BC, 0.85, 8, 160, 2);
 
   /* USER CODE END 2 */
 
