@@ -31,7 +31,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TIRE_TEMP_BASE_CANID 1200
+#define IS_FRONT_NODE 1
+#define TIRE_TEMP_BASE_CANID 0x4B0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,6 +47,9 @@ CAN_HandleTypeDef hcan2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+
+uint16_t tire_temp_left[4];
+uint16_t tire_temp_right[4];
 
 /* USER CODE END PV */
 
@@ -112,17 +116,34 @@ void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
 {
 	// Calculate the first channel in the message
 	uint8_t channelStart = ((RxHeader.ExtId - TIRE_TEMP_BASE_CANID) % 4) * 4 + 1;
+	uint16_t average_temp = 0;
 
 	// Calculate the temperature from all four channels and transmit them
 	for (int i = 0; i < 4; i++)
 	{
+		// Get data from one channel and add it to average temp (subtract 1000 to account for the 100 degree celsius offset
 		int16_t temp_raw = (RxData[2 * i] << 8) | RxData[2 * i + 1];
-		float temperature = temp_raw * 0.01 - 100;
+		average_temp += temp_raw - 1000;
 
+		// Send data through UART
+		float temperature = temp_raw * 0.01 - 100;
 		char msg[50];
 		sprintf(msg, "Channel %d Temperature: %d C\n", channelStart + i, temperature);
 		UART_Transmit(msg);
 	}
+
+	average_temp /= 4;
+	if (RxHeader.ExtId % 16 < 4 || (RxHeader.ExtId % 16 >= 8 && RxHeader.ExtId % 16 < 12)) // Check if it is the right wheel
+	{
+		tire_temp_right[RxHeader.ExtId % 4] = average_temp >> 8 & 0xFF;
+		tire_temp_right[RxHeader.ExtId % 4 + 1] = average_temp & 0xFF;
+	}
+	else
+	{
+		tire_temp_left[RxHeader.ExtId % 4] = average_temp >> 8 & 0xFF;
+		tire_temp_left[RxHeader.ExtId % 4 + 1] = average_temp & 0xFF;
+	}
+
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
@@ -130,7 +151,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     uint8_t RxData[8];
 
     // Retrieve the message
-    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK) {
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK) {
+    	Error_Handler();
+    }
+
+    if ((RxHeader.ExtId >> 4) == (TIRE_TEMP_BASE_CANID >> 4))
+    {
     	Read_Tire_Temp_Data(RxHeader, RxData);
     }
 }
@@ -170,6 +196,12 @@ int main(void)
   MX_CAN1_Init();
   MX_CAN2_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_CAN_Start(&hcan2);
+  if (HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+  {
+	  Error_Handler();
+  }
 
   /* USER CODE END 2 */
 
