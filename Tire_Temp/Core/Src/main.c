@@ -32,7 +32,14 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define IS_FRONT_NODE 1
-#define TIRE_TEMP_BASE_CANID 0x4B0
+#define TIRE_TEMP_BASE_CAN_ID 0x4B0
+
+// Add to FEB_CAN_ID.h
+#define FEB_CAN_ID_FRONT_LEFT_TIRE_TEMP 0x1A
+#define FEB_CAN_ID_FRONT_RIGHT_TIRE_TEMP 0x1B
+#define FEB_CAN_ID_REAR_LEFT_TIRE_TEMP 0x1C
+#define FEB_CAN_ID_REAR_RIGHT_TIRE_TEMP 0x1D
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,6 +50,8 @@
 /* Private variables ---------------------------------------------------------*/
 CAN_HandleTypeDef hcan1;
 CAN_HandleTypeDef hcan2;
+
+TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart2;
 
@@ -59,6 +68,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_CAN1_Init(void);
 static void MX_CAN2_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -71,7 +81,38 @@ void UART_Transmit(const char *string)
 	HAL_UART_Transmit(&huart2, (uint8_t*)string, strlen(string), 1000);
 }
 
-void Configure_Tire_Temp_Sensor(uint16_t currentCANID, uint16_t newCANID, float emissivity,
+void CAN_Transmit_Tire_Temp(uint16_t CAN_ID, uint16_t *tire_temp)
+{
+
+	// Set up the CAN message
+	CAN_TxHeaderTypeDef TxHeader;
+	uint8_t TxData[8];
+	uint32_t TxMailbox;
+
+	TxHeader.DLC = 8; // Data length
+	TxHeader.IDE = CAN_ID_STD;
+	TxHeader.RTR = CAN_RTR_DATA; // Data frame
+	TxHeader.StdId = CAN_ID; // Current CAN ID of the sensor
+	TxHeader.ExtId = 0; // Not used with standard ID
+
+	for (int i = 0; i < 4; i++)
+	{
+		TxData[i * 2] = (tire_temp[i] >> 8) & 0xFF;
+		TxData[i * 2 + 1] = tire_temp[i] & 0xFF;
+	}
+
+	if (HAL_CAN_AddTxMessage(&hcan2, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+	{
+		// Transmission request error
+		char msg[50];
+		sprintf(msg, "CAN transmit error");
+		UART_Transmit(msg);
+		Error_Handler();
+	}
+
+}
+
+void Configure_Tire_Temp_Sensor(uint16_t currentCAN_ID, uint16_t newCAN_ID, float emissivity,
 		uint8_t sampleFrequency, uint8_t channels, uint8_t bitrate)
 {
 	// Set up the CAN message
@@ -82,17 +123,17 @@ void Configure_Tire_Temp_Sensor(uint16_t currentCANID, uint16_t newCANID, float 
 	TxHeader.DLC = 8; // Data length
 	TxHeader.IDE = CAN_ID_STD;
 	TxHeader.RTR = CAN_RTR_DATA; // Data frame
-	TxHeader.StdId = currentCANID; // Current CAN ID of the sensor
+	TxHeader.StdId = currentCAN_ID; // Current CAN ID of the sensor
 	TxHeader.ExtId = 0; // Not used with standard ID
 
 	// Add the configuration settings
 	TxData[0] = 0x75; // Programming Constant MSB
 	TxData[1] = 0x30; // Programming Constant LSB
-	TxData[2] = (newCANID >> 8) & 0xFF; // New CAN Base ID MSB
-	TxData[3] = newCANID & 0xFF; // New CAN Base ID LSB
+	TxData[2] = (newCAN_ID >> 8) & 0xFF; // New CAN Base ID MSB
+	TxData[3] = newCAN_ID & 0xFF; // New CAN Base ID LSB
 	TxData[4] = uint8_t (emissivity * 100); // Emissivity (0.01–1.00 scaled to 1–100)
 	TxData[5] = sampleFrequency; // Sampling frequency (1–8)
-	TxData[6] = channels; // Channels (4=40, 8=80, 16=160)
+	TxData[6] = channels; // Channels (40=4, 80=8, 160=16)
 	TxData[7] = bitrate; // Bit rate (1, 2, 3, or 4)
 
 	// Transmit the message at 1Hz for 10 seconds
@@ -115,7 +156,7 @@ void Configure_Tire_Temp_Sensor(uint16_t currentCANID, uint16_t newCANID, float 
 void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
 {
 	// Calculate the first channel in the message
-	uint8_t channelStart = ((RxHeader.ExtId - TIRE_TEMP_BASE_CANID) % 4) * 4 + 1;
+	uint8_t channelStart = ((RxHeader.ExtId - TIRE_TEMP_BASE_CAN_ID) % 4) * 4 + 1;
 	uint16_t average_temp = 0;
 
 	// Calculate the temperature from all four channels and transmit them
@@ -133,12 +174,12 @@ void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
 	}
 
 	average_temp /= 4;
-	if (RxHeader.ExtId % 16 < 4 || (RxHeader.ExtId % 16 >= 8 && RxHeader.ExtId % 16 < 12)) // Check if it is the right wheel
+	if (RxHeader.ExtId % 16 < 4 || (RxHeader.ExtId % 16 >= 8 && RxHeader.ExtId % 16 < 12)) // Check if it is the right tire
 	{
 		tire_temp_right[RxHeader.ExtId % 4] = average_temp >> 8 & 0xFF;
 		tire_temp_right[RxHeader.ExtId % 4 + 1] = average_temp & 0xFF;
 	}
-	else
+	else // Check case if it is the left tire
 	{
 		tire_temp_left[RxHeader.ExtId % 4] = average_temp >> 8 & 0xFF;
 		tire_temp_left[RxHeader.ExtId % 4 + 1] = average_temp & 0xFF;
@@ -155,10 +196,29 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     	Error_Handler();
     }
 
-    if ((RxHeader.ExtId >> 4) == (TIRE_TEMP_BASE_CANID >> 4))
+    if ((RxHeader.ExtId >> 4) == (TIRE_TEMP_BASE_CAN_ID >> 4))
     {
     	Read_Tire_Temp_Data(RxHeader, RxData);
     }
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Instance == TIM6)
+	{
+
+		if (IS_FRONT_NODE)
+		{
+			CAN_Transmit_Tire_Temp(FEB_CAN_ID_FRONT_LEFT_TIRE_TEMP, tire_temp_left);
+			CAN_Transmit_Tire_Temp(FEB_CAN_ID_FRONT_RIGHT_TIRE_TEMP, tire_temp_right);
+		}
+		else
+		{
+			CAN_Transmit_Tire_Temp(FEB_CAN_ID_REAR_LEFT_TIRE_TEMP, tire_temp_left);
+			CAN_Transmit_Tire_Temp(FEB_CAN_ID_REAR_RIGHT_TIRE_TEMP, tire_temp_right);
+		}
+
+	}
 }
 
 /* USER CODE END 0 */
@@ -195,13 +255,28 @@ int main(void)
   MX_USART2_UART_Init();
   MX_CAN1_Init();
   MX_CAN2_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
+  if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
+  {
+	  char msg[50];
+	  sprintf(msg, "TIM1 fault");
+	  transmit_uart(msg);
+  }
+
+  // Start CAN
   HAL_CAN_Start(&hcan2);
   if (HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
   {
 	  Error_Handler();
   }
+
+  // Configure Tire Temp Sensors
+  Configure_Tire_Temp_Sensor(0x4B0, 0x4B0, 0.85, 8, 160, 4);
+  Configure_Tire_Temp_Sensor(0x4B4, 0x4B4, 0.85, 8, 160, 4);
+  Configure_Tire_Temp_Sensor(0x4B8, 0x4B8, 0.85, 8, 160, 4);
+  Configure_Tire_Temp_Sensor(0x4BC, 0x4BC, 0.85, 8, 160, 4);
 
   /* USER CODE END 2 */
 
@@ -334,6 +409,44 @@ static void MX_CAN2_Init(void)
   /* USER CODE BEGIN CAN2_Init 2 */
 
   /* USER CODE END CAN2_Init 2 */
+
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 84 - 1;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 10000 - 1;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
 
 }
 
