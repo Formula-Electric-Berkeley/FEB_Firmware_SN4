@@ -1,0 +1,4 @@
+../Core/Src/FEB_CAN_ICS.c:21:9:FEB_CAN_ICS_Filter	1
+../Core/Src/FEB_CAN_ICS.c:46:6:FEB_CAN_ICS_Rx_Handler	1
+../Core/Src/FEB_CAN_ICS.c:50:6:FEB_CAN_ICS_Transmit	2
+../Core/Src/FEB_CAN_ICS.c:76:9:FEB_CAN_ICS_Get_Speed	1

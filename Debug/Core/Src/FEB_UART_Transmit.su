@@ -1,0 +1,2 @@
+../Core/Src/FEB_UART_Transmit.c:13:6:FEB_UART_Transmit_Process	1032	static
+../Core/Src/FEB_UART_Transmit.c:23:6:FEB_UART_Transmit_Speed	1032	static
