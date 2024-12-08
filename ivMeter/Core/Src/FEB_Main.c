@@ -18,11 +18,15 @@
 #define LOW_RANGE_SENSITIVITY 100
 #define HIGH_RANGE_SENSITIVITY 250
 
+#define I2C_ID 0b0110100
+#define HV_DIV 1006200 / 6200
+
 extern hadc;
 extern hi2c1;
 extern hcan;
 
 uint16_t ivData[3];
+uint8_t i2c_buf[2];
 
 enum HECS_Sensor
 {
@@ -87,11 +91,32 @@ void Process_HECS(HECS_Sensor sensor, uint16_t reading)
 
 void Voltage_I2C_Init(void)
 {
+	uint8_t i2c_init[2];
 
+	if (HAL_I2C_Master_Transmit(&hi2c1, I2C_ID, i2c_init, 2, HAL_MAX_DELAY) != HAL_OK)
+	{
+		// Transmission request error
+		char msg[50];
+		sprintf(msg, "CAN transmit error");
+		UART_Transmit(msg);
+		Error_Handler();
+	}
 }
 
 void Process_Voltage_I2C(void)
 {
+	if (HAL_I2C_Master_Receive(&hi2c1, I2C_ID, i2c_buf, 2, HAL_MAX_DELAY) != HAL_OK)
+	{
+		// Transmission request error
+		char msg[50];
+		sprintf(msg, "CAN transmit error");
+		UART_Transmit(msg);
+		Error_Handler();
+	}
+
+	uint16_t HV_reading = (i2c_buf[0] & 0xFFFF) << 8 | i2c_buf[1];
+
+	ivData[3] = HV_reading * HV_DIV / 100;
 
 }
 
