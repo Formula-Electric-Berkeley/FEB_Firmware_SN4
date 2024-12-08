@@ -92,6 +92,8 @@ void Process_HECS(HECS_Sensor sensor, uint16_t reading)
 void Voltage_I2C_Init(void)
 {
 	uint8_t i2c_init[2];
+	i2c_init[0] = 0b11010010;
+	i2c_init[1] = 0b00000011;
 
 	if (HAL_I2C_Master_Transmit(&hi2c1, I2C_ID, i2c_init, 2, HAL_MAX_DELAY) != HAL_OK)
 	{
