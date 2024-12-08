@@ -5,6 +5,11 @@
  *      Author: rahilpasha
  */
 #include "FEB_Main.h"
+#include "main.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 #define FEB_CAN_ID_IV_METER 0x21
 
@@ -21,9 +26,10 @@
 #define I2C_ID 0b0110100
 #define HV_DIV 1006200 / 6200
 
-extern hadc;
-extern hi2c1;
-extern hcan;
+extern ADC_HandleTypeDef hadc;
+extern I2C_HandleTypeDef hi2c1;
+extern CAN_HandleTypeDef hcan;
+extern UART_HandleTypeDef huart2;
 
 uint16_t ivData[3];
 uint8_t i2c_buf[2];
@@ -33,6 +39,7 @@ enum HECS_Sensor
 	LOW_RANGE,
 	HIGH_RANGE
 };
+typedef enum HECS_Sensor HECS_Sensor;
 
 void UART_Transmit(const char *string)
 {
@@ -59,9 +66,9 @@ void CAN_Transmit_ivMeter(void)
 	TxData[4] = (ivData[2] >> 8) & 0xFF;
 	TxData[5] = ivData[2] & 0xFF;
 
-	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan) == 0) {}
 
-	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+	if (HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox) != HAL_OK)
 	{
 		// Transmission request error
 		char msg[50];
