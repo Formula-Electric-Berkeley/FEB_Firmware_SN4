@@ -13,7 +13,7 @@ uint8_t FEB_CAN_ICS_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uin
 
 void FEB_CAN_ICS_Rx_Handler(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_CAN_Rx_Data[]);
 
-void FEB_CAN_ICS_Transmit(void);
+int FEB_CAN_ICS_Transmit(void);
 
 uint8_t FEB_CAN_ICS_Get_Speed(void);
 

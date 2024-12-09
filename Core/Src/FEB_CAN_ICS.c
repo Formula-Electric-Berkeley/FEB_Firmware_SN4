@@ -47,7 +47,7 @@ void FEB_CAN_ICS_Rx_Handler(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_
 	speed = FEB_CAN_Rx_Data[0];
 }
 
-void FEB_CAN_ICS_Transmit(void) {
+int FEB_CAN_ICS_Transmit(void) {
 	FEB_CAN_Tx_Header.DLC = 8;
 	FEB_CAN_Tx_Header.StdId = FEB_CAN_ID_ICS_HIL;
 	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
@@ -63,13 +63,13 @@ void FEB_CAN_ICS_Transmit(void) {
 	FEB_CAN_Tx_Data[5] = (uint8_t) 0xA6;
 	FEB_CAN_Tx_Data[6] = (uint8_t) 0xA7;
 	FEB_CAN_Tx_Data[7] = (uint8_t) 0xA8;
-
+	uint32_t timeout=HAL_GetTick()+500;
 	// Delay until mailbox available
-	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {if(HAL_GetTick()>timeout)return 1;}
 
 	// Add Tx data to mailbox
 	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
-		//
+		return 1;
 	}
 }
 

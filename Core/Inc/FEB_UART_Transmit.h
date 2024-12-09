@@ -14,7 +14,7 @@
 #include "FEB_CAN_ICS.h"
 
 // **************************************** Functions ****************************************
-void FEB_UART_Transmit_Process(void);
+void FEB_UART_Transmit_Process(int);
 
 void FEB_UART_Transmit_Speed(void);
 

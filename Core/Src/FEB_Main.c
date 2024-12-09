@@ -11,11 +11,10 @@ void FEB_Main_Setup(void) {
 }
 
 void FEB_Main_Loop(void) {
-	FEB_UART_Transmit_Process();
+
+	FEB_UART_Transmit_Process(FEB_CAN_Dummy_Transmit());
 
 	FEB_UART_Transmit_Speed();
-
-	FEB_CAN_ICS_Transmit();
 
 	HAL_GPIO_TogglePin(GPIOA, LD2_Pin);
 

@@ -40,6 +40,32 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 	}
 }
 
+int FEB_CAN_Dummy_Transmit(void) {
+	FEB_CAN_Tx_Header.DLC = 8;
+	FEB_CAN_Tx_Header.StdId = 0x19;
+	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
+	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
+	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
+
+	// Copy data to Tx buffer
+	FEB_CAN_Tx_Data[0] = (uint8_t) 0xA1;
+	FEB_CAN_Tx_Data[1] = (uint8_t) 0xA2;
+	FEB_CAN_Tx_Data[2] = (uint8_t) 0xA3;
+	FEB_CAN_Tx_Data[3] = (uint8_t) 0xA4;
+	FEB_CAN_Tx_Data[4] = (uint8_t) 0xA5;
+	FEB_CAN_Tx_Data[5] = (uint8_t) 0xA6;
+	FEB_CAN_Tx_Data[6] = (uint8_t) 0xA7;
+	FEB_CAN_Tx_Data[7] = (uint8_t) 0xA8;
+	uint32_t timeout=HAL_GetTick()+200;
+	// Delay until mailbox available
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {if(HAL_GetTick()>timeout)return 1;}
+
+	// Add Tx data to mailbox
+	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
+		return 1;
+	}
+}
+
 // **************************************** Template Code [Other Files] ****************************************
 
 uint8_t FEB_CAN_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uint8_t filter_bank) {

@@ -43,4 +43,7 @@
 //ICS
 #define FEB_CAN_ID_ICS_HIL 0x10
 
+//PINGPONG
+#define FEB_CAN_PINGER 0x11
+
 #endif /* INC_FEB_CAN_ID_H_ */
