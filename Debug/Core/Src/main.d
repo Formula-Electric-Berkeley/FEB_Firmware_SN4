@@ -29,7 +29,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
  ../Core/Inc/FEB_Main.h ../Core/Inc/FEB_UART_Transmit.h \
- ../Core/Inc/FEB_CAN_ICS.h ../Core/Inc/FEB_CAN_ID.h ../Core/Inc/FEB_CAN.h
+ ../Core/Inc/FEB_CAN.h ../Core/Inc/FEB_CAN_ID.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -62,6 +62,5 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 ../Core/Inc/FEB_Main.h:
 ../Core/Inc/FEB_UART_Transmit.h:
-../Core/Inc/FEB_CAN_ICS.h:
-../Core/Inc/FEB_CAN_ID.h:
 ../Core/Inc/FEB_CAN.h:
+../Core/Inc/FEB_CAN_ID.h:

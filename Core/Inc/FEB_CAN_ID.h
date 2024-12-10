@@ -44,6 +44,9 @@
 #define FEB_CAN_ID_ICS_HIL 0x10
 
 //PINGPONG
-#define FEB_CAN_PINGER 0x11
+#define FEB_CAN_PINGER_A 0xA0001
+#define FEB_CAN_PINGER_B 0xB001
+#define FEB_CAN_PINGER_C 0xC01
+#define FEB_CAN_PINGER_D 0xD1
 
 #endif /* INC_FEB_CAN_ID_H_ */

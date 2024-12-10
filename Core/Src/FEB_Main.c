@@ -11,12 +11,15 @@ void FEB_Main_Setup(void) {
 }
 
 void FEB_Main_Loop(void) {
+	if(FEB_CAN_PINGPONG_MODE){
+		FEB_CAN_PING();
 
-	FEB_UART_Transmit_Process(FEB_CAN_Dummy_Transmit());
+		FEB_UART_Transmit_Process();
 
-	FEB_UART_Transmit_Speed();
+		FEB_UART_Transmit_PingPong_Members();
 
-	HAL_GPIO_TogglePin(GPIOA, LD2_Pin);
+		HAL_GPIO_TogglePin(GPIOA, LD2_Pin);
 
-	HAL_Delay(1000);
+		HAL_Delay(1000);
+	}
 }
