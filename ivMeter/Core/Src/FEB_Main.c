@@ -152,8 +152,8 @@ void FEB_Main_Loop(void)
 
 	Process_Voltage_I2C();
 
-	char send[50];
-	sprintf(send, "Low Range: %d \n High Range: %d \n Voltage: %d");
+	char send[100];
+	sprintf(send, "Low Range: %d \n High Range: %d \n Voltage: %d", ivData[0], ivData[1], ivData[2]);
 	UART_Transmit(send);
 
 	CAN_Transmit_ivMeter();
