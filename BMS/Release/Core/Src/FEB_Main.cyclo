@@ -1,0 +1,7 @@
+../Core/Src/FEB_Main.c:8:6:FEB_Main_Setup	1
+../Core/Src/FEB_Main.c:15:6:FEB_Main_Task1_VT	1
+../Core/Src/FEB_Main.c:20:6:FEB_Main_Task2_SM	1
+../Core/Src/FEB_Main.c:24:6:FEB_Main_Task3_Charge	1
+../Core/Src/FEB_Main.c:28:6:FEB_Main_Task4_Balance	1
+../Core/Src/FEB_Main.c:32:6:FEB_Main_Task5_IVT	1
+../Core/Src/FEB_Main.c:36:6:FEB_Main_Task6_CAN	1

@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include "stm32f4xx_hal.h"
+#include "FEB_Hw.h"
 
 // ********************************** ADBMS6830B Configuration **********************************
 

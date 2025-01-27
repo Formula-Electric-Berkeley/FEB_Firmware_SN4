@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "FEB_ADBMS6830B_Driver.h"
 #include "FEB_Hw.h"
+#include "FEB_CMDCODES.h"
 
 // ******************************** Initialization ********************************
 
@@ -194,6 +195,7 @@ void ADBMS6830B_adcv( uint8_t RD, //ADC Mode
 uint32_t ADBMS6830B_pollAdc()
 {
 	uint32_t counter = 0;
+	/*
 	uint8_t finished = 0;
 	uint8_t current_time = 0;
 	uint8_t cmd[4];
@@ -207,7 +209,8 @@ uint32_t ADBMS6830B_pollAdc()
 
 	FEB_cs_low();
 	FEB_spi_write_array(4, cmd);
-	while ((counter < 200000) && (finished == 0))
+
+	while ((counter < 2000) && (finished == 0))
 	{
 		current_time = FEB_spi_read_byte(0xff);
 		if (current_time > 0)
@@ -219,7 +222,9 @@ uint32_t ADBMS6830B_pollAdc()
 			counter = counter + 10;
 		}
 	}
-	FEB_cs_high();
+
+	*///TODO: divine the arcane arts above
+	//FEB_cs_high();
 
 	return(counter);
 }
@@ -240,9 +245,10 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 	uint8_t *cell_data;
 	uint8_t c_ic = 0;
 	cell_data = (uint8_t *) malloc((NUM_RX_BYT * total_ic) * sizeof(uint8_t));
-
+	/*
 	for (uint8_t cell_reg = 1; cell_reg <= ic[0].ic_reg.num_cv_reg; cell_reg++) {
 		uint8_t cmd[4];
+
 		switch(cell_reg) {
 			case 1: //Reg A
 				cmd[0] = 0x00;
@@ -268,7 +274,12 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 				cmd[0] = 0x00;
 				cmd[1] = 0x0B;
 				break;
-		}
+		}*/
+
+		/*
+		uint8_t cmd[4];
+		cmd[0]=0b00000000;
+		cmd[1]=0b00001100;
 		uint16_t cmd_pec = pec15_calc(2, cmd);
 		cmd[2] = (uint8_t)(cmd_pec >> 8);
 		cmd[3] = (uint8_t)(cmd_pec);
@@ -285,7 +296,8 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 			}
 			pec_error += parse_cells(c_ic, cell_reg, cell_data, &ic[c_ic].cells.c_codes[0], &ic[c_ic].cells.pec_match[0]);
 		}
-	}
+		*/
+	//}
 
 	ADBMS6830B_check_pec(total_ic, CELL, ic);
 	free(cell_data);
@@ -627,7 +639,7 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 {
 	for (int i = 0; i < total_ic; i++) {
-	   FEB_cs_low();
+	   FEB_cs_high(); //TODO: changed  from low
 	   FEB_delay_u(300); // Guarantees the ADBMS6830B will be in standby
 	   FEB_cs_high();
 	   FEB_delay_u(10);

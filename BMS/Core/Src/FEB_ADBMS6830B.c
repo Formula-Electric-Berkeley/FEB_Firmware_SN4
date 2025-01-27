@@ -51,6 +51,12 @@ Channel							0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7
 
 // ******************************** Helper Functions ********************************
 
+static void transmitCMD(uint16_t cmdcode){
+	uint8_t cmd[4];
+	cmd[0]=(cmdcode/0x100);//selects first byte
+	cmd[1]=(cmdcode%0x100);//selects second byte
+	cmd_68(cmd);
+}
 static uint8_t get_gpio_pin(uint8_t mux) {
 	if (mux == 0) {
 		return 0;
@@ -76,8 +82,9 @@ static float convert_voltage(uint16_t raw_code) {
 // ******************************** Functions ********************************
 
 void FEB_ADBMS_Init() {
+	FEB_cs_high();
 	ADBMS6830B_init_cfg(FEB_NUM_IC, accumulator.IC_Config);
-	for (uint8_t ic; ic < FEB_NUM_IC; ic++) {
+	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
 		ADBMS6830B_set_cfgr(ic, accumulator.IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
 	}
 	ADBMS6830B_reset_crc_count(FEB_NUM_IC, accumulator.IC_Config);
@@ -182,16 +189,21 @@ void store_cell_temps(uint8_t channel) {
 
 void FEB_ADBMS_UART_Transmit() {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
-		char UART_str[128];
-		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell++) {
-			sprintf(UART_str, "Bank: %d, Cell: %d, Voltage: %f\n", bank, cell, accumulator.banks[bank].cells[cell].voltage_V);
-			HAL_UART_Transmit(&huart2, (uint8_t*) UART_str, 1024, 100);
-		}
+		char UART_head[256];
+		char UART_str[256];
+		int offset[2];
+		offset[0]=sprintf((char*)UART_head,"|Bnk %d|",bank);
+		offset[1]=sprintf((char*)UART_str,"|Vlt  |");
 
-		for (uint8_t sensor = 0; sensor < FEB_NUM_TEMP_SENSE_PER_BANK; sensor++) {
-			sprintf(UART_str, "Bank: %d, Sensor: %d, Voltage: %f\n", bank, sensor, accumulator.banks[bank].temp_sensor_readings_V[sensor]);
-			HAL_UART_Transmit(&huart2, (uint8_t*) UART_str, 1024, 100);
+
+		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell++) {
+			offset[0]+=sprintf((char*)(UART_head + offset[0]), (cell>=10)?"Cell  %d|":"Cell   %d|",cell);
+			offset[1]+=sprintf((char*)(UART_str + offset[1]), "%f|",accumulator.banks[bank].cells[cell].voltage_V);
 		}
+		offset[0]+=sprintf((char*)(UART_head + offset[0]), "\n\r");
+		offset[1]+=sprintf((char*)(UART_str + offset[1]), "\n\r\n\r\n\r");
+		HAL_UART_Transmit(&huart2, (uint8_t*) UART_head, offset[0]+1, 100);
+		HAL_UART_Transmit(&huart2, (uint8_t*) UART_str, offset[1]+1, 100);
 	}
 }
 
