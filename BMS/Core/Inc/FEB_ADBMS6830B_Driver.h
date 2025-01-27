@@ -186,7 +186,8 @@ void ADBMS6830B_set_cfgr_ov(uint8_t nIC, //!< Current IC
                          cell_asic *ic, //!< A two dimensional array that will store the data
                          uint16_t ov //!< The OV value
 						 );
-
+void transmitCMD(uint16_t cmdcode);
+void transmitCMDR(uint16_t cmdcode,uint8_t*data,uint8_t len);
 // ******************************** Voltage ********************************
 
 /*!
@@ -294,7 +295,7 @@ uint16_t pec10_calc(uint8_t len, //!< The length of the data array being passed 
  @return void
  */
 void cmd_68(uint8_t tx_cmd[2]); //!< 2 byte array containing the BMS command to be sent
-
+void cmd_68_r(uint8_t tx_cmd[2],uint8_t*data, uint8_t len)
 /*!
  Writes an array of data to the daisy chain
  @return void

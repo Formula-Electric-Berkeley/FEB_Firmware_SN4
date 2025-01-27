@@ -51,12 +51,7 @@ Channel							0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7
 
 // ******************************** Helper Functions ********************************
 
-static void transmitCMD(uint16_t cmdcode){
-	uint8_t cmd[4];
-	cmd[0]=(cmdcode/0x100);//selects first byte
-	cmd[1]=(cmdcode%0x100);//selects second byte
-	cmd_68(cmd);
-}
+
 static uint8_t get_gpio_pin(uint8_t mux) {
 	if (mux == 0) {
 		return 0;
@@ -89,12 +84,12 @@ void FEB_ADBMS_Init() {
 	}
 	ADBMS6830B_reset_crc_count(FEB_NUM_IC, accumulator.IC_Config);
 	ADBMS6830B_init_reg_limits(FEB_NUM_IC, accumulator.IC_Config);
+	start_adc_cell_voltage_measurements();
 }
 
 void FEB_ADBMS_AcquireData() {
 
 	/* Voltage */
-	start_adc_cell_voltage_measurements();
 	read_cell_voltages();
 	store_cell_voltages();
 	validate_voltages();
@@ -114,7 +109,6 @@ void FEB_ADBMS_AcquireData() {
 void start_adc_cell_voltage_measurements() {
 	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_adcv(RD_ON, DCP_ON, CONTINUOUS, RSTF_OFF, OW_OFF_ALL_CH);
-	ADBMS6830B_pollAdc();
 }
 
 void read_cell_voltages() {

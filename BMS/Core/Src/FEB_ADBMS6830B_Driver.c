@@ -173,6 +173,19 @@ void ADBMS6830B_init_reg_limits(uint8_t total_ic, //The number of ICs in the sys
   }
 }
 
+void transmitCMD(uint16_t cmdcode){
+	uint8_t cmd[4];
+	cmd[0]=(cmdcode/0x100);//selects first byte
+	cmd[1]=(cmdcode%0x100);//selects second byte
+	cmd_68(cmd);
+}
+void transmitCMDR(uint16_t cmdcode,uint8_t*data,uint8_t len){
+	uint8_t cmd[4];
+	cmd[0]=(cmdcode/0x100);//selects first byte
+	cmd[1]=(cmdcode%0x100);//selects second byte
+	cmd_68_r(cmd,data,len);
+}
+
 // ******************************** Voltage ********************************
 
 /* Starts ADC conversion for cell voltage */
@@ -239,65 +252,23 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
                      	   cell_asic *ic // Array of the parsed cell codes
                     	  )
 {
-	const uint8_t REG_LEN = 8; //Number of bytes in each ICs register + 2 bytes for the PEC
 
 	int8_t pec_error = 0;
 	uint8_t *cell_data;
-	uint8_t c_ic = 0;
-	cell_data = (uint8_t *) malloc((NUM_RX_BYT * total_ic) * sizeof(uint8_t));
-	/*
-	for (uint8_t cell_reg = 1; cell_reg <= ic[0].ic_reg.num_cv_reg; cell_reg++) {
-		uint8_t cmd[4];
+	cell_data = (uint8_t *) malloc(34 * sizeof(uint8_t));
+	transmitCMDR(RDCVALL,cell_data,34);
 
-		switch(cell_reg) {
-			case 1: //Reg A
-				cmd[0] = 0x00;
-				cmd[1] = 0x04;
-				break;
-			case 2: //Reg B
-				cmd[0] = 0x00;
-				cmd[1] = 0x06;
-				break;
-			case 3: //Reg C
-				cmd[0] = 0x00;
-				cmd[1] = 0x08;
-				break;
-			case 4: //Reg D
-				cmd[0] = 0x00;
-				cmd[1] = 0x0A;
-				break;
-			case 5: //Reg E
-				cmd[0] = 0x00;
-				cmd[1] = 0x09;
-				break;
-			case 6: //Reg F
-				cmd[0] = 0x00;
-				cmd[1] = 0x0B;
-				break;
-		}*/
-
-		/*
-		uint8_t cmd[4];
-		cmd[0]=0b00000000;
-		cmd[1]=0b00001100;
-		uint16_t cmd_pec = pec15_calc(2, cmd);
-		cmd[2] = (uint8_t)(cmd_pec >> 8);
-		cmd[3] = (uint8_t)(cmd_pec);
-		FEB_cs_low();
-		FEB_spi_write_read(cmd, 4, cell_data, (REG_LEN * total_ic));
-		FEB_cs_high();
-
-		//parse data
-		for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
-			if (ic->isospi_reverse == false) {
-				c_ic = curr_ic;
-			} else {
-				c_ic = total_ic - curr_ic - 1;
-			}
-			pec_error += parse_cells(c_ic, cell_reg, cell_data, &ic[c_ic].cells.c_codes[0], &ic[c_ic].cells.pec_match[0]);
+	//parse data
+	int8_t c_ic=0;
+	for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
+		if (ic->isospi_reverse == false) {
+			c_ic = curr_ic;
+		} else {
+			c_ic = total_ic - curr_ic - 1;
 		}
-		*/
-	//}
+		//pec_error += parse_cells(c_ic, CELL, cell_data, &ic[c_ic].cells.c_codes[0], &ic[c_ic].cells.pec_match[0]);
+		//TODO: Update to parse data together (1 PEC for all 16 registers when reading with RDVALL)
+	}
 
 	ADBMS6830B_check_pec(total_ic, CELL, ic);
 	free(cell_data);
@@ -589,6 +560,23 @@ void cmd_68(uint8_t tx_cmd[2]) //The command to be transmitted
 	FEB_spi_write_array(4,cmd);
 	FEB_cs_high();
 }
+
+void cmd_68_r(uint8_t tx_cmd[2],uint8_t*data, uint8_t len) //The command to be transmitted
+{
+	uint8_t cmd[4];
+	uint16_t cmd_pec;
+
+	cmd[0] = tx_cmd[0];
+	cmd[1] =  tx_cmd[1];
+	cmd_pec = pec15_calc(2, cmd);
+	cmd[2] = (uint8_t)(cmd_pec >> 8);
+	cmd[3] = (uint8_t)(cmd_pec);
+
+	FEB_cs_low();
+	FEB_spi_write_read(cmd, 4, data,len);
+	FEB_cs_high();
+}
+
 
 /*
 Generic function to write 68xx commands and write payload data.
