@@ -162,7 +162,7 @@ void configure_gpio_bits(uint8_t channel) {
 void start_aux_voltage_measurements() {
 	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_adax(AUX_OW_OFF, PUP_DOWN, AUX_ALL);
-	ADBMS6830B_pollAdc();
+	//ADBMS6830B_pollAdc();
 }
 
 void read_aux_voltages() {

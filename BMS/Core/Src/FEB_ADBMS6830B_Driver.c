@@ -208,7 +208,6 @@ void ADBMS6830B_adcv( uint8_t RD, //ADC Mode
 uint32_t ADBMS6830B_pollAdc()
 {
 	uint32_t counter = 0;
-	/*
 	uint8_t finished = 0;
 	uint8_t current_time = 0;
 	uint8_t cmd[4];
@@ -223,7 +222,7 @@ uint32_t ADBMS6830B_pollAdc()
 	FEB_cs_low();
 	FEB_spi_write_array(4, cmd);
 
-	while ((counter < 2000) && (finished == 0))
+	while ((counter < 200000) && (finished == 0))
 	{
 		current_time = FEB_spi_read_byte(0xff);
 		if (current_time > 0)
@@ -236,8 +235,7 @@ uint32_t ADBMS6830B_pollAdc()
 		}
 	}
 
-	*///TODO: divine the arcane arts above
-	//FEB_cs_high();
+	FEB_cs_high();
 
 	return(counter);
 }
@@ -252,27 +250,27 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
                      	   cell_asic *ic // Array of the parsed cell codes
                     	  )
 {
-
+	/* OLD CODE
+	 * //parse data
+		int8_t c_ic=0;
+		for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
+			if (ic->isospi_reverse == false) {
+				c_ic = curr_ic;
+			} else {
+				c_ic = total_ic - curr_ic - 1;
+			}
+			//pec_error += parse_cells(c_ic, CELL, cell_data, &ic[c_ic].cells.c_codes[0], &ic[c_ic].cells.pec_match[0]);
+			//TODO: Update to parse data together (1 PEC for all 16 registers when reading with RDVALL)
+		}*/
 	int8_t pec_error = 0;
 	uint8_t *cell_data;
 	cell_data = (uint8_t *) malloc(34 * sizeof(uint8_t));
 	transmitCMDR(RDCVALL,cell_data,34);
-
-	//parse data
-	int8_t c_ic=0;
-	for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
-		if (ic->isospi_reverse == false) {
-			c_ic = curr_ic;
-		} else {
-			c_ic = total_ic - curr_ic - 1;
-		}
-		//pec_error += parse_cells(c_ic, CELL, cell_data, &ic[c_ic].cells.c_codes[0], &ic[c_ic].cells.pec_match[0]);
-		//TODO: Update to parse data together (1 PEC for all 16 registers when reading with RDVALL)
-	}
-
-	ADBMS6830B_check_pec(total_ic, CELL, ic);
+	memcpy(ic->cells.c_codes,cell_data,32);
+	uint16_t data_pec=pec10_calc(32,cell_data);
+	uint16_t rx_pec=*static_cast<*uint16_t>(cell_data+32);
 	free(cell_data);
-	return(pec_error);
+	return(data_pec!=rx_pec);
 }
 
 /* Helper function that parses voltage measurement registers */
