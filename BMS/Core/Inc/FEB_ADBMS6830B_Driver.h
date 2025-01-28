@@ -295,7 +295,7 @@ uint16_t pec10_calc(uint8_t len, //!< The length of the data array being passed 
  @return void
  */
 void cmd_68(uint8_t tx_cmd[2]); //!< 2 byte array containing the BMS command to be sent
-void cmd_68_r(uint8_t tx_cmd[2],uint8_t*data, uint8_t len)
+void cmd_68_r(uint8_t tx_cmd[2],uint8_t*data, uint8_t len);
 /*!
  Writes an array of data to the daisy chain
  @return void

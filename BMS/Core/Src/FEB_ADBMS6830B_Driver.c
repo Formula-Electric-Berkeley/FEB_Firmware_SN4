@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include "FEB_ADBMS6830B_Driver.h"
 #include "FEB_Hw.h"
 #include "FEB_CMDCODES.h"
@@ -260,15 +261,13 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 				c_ic = total_ic - curr_ic - 1;
 			}
 			//pec_error += parse_cells(c_ic, CELL, cell_data, &ic[c_ic].cells.c_codes[0], &ic[c_ic].cells.pec_match[0]);
-			//TODO: Update to parse data together (1 PEC for all 16 registers when reading with RDVALL)
 		}*/
-	int8_t pec_error = 0;
 	uint8_t *cell_data;
 	cell_data = (uint8_t *) malloc(34 * sizeof(uint8_t));
 	transmitCMDR(RDCVALL,cell_data,34);
-	memcpy(ic->cells.c_codes,cell_data,32);
+	memcpy(&(ic->cells.c_codes),cell_data,(size_t)32);
 	uint16_t data_pec=pec10_calc(32,cell_data);
-	uint16_t rx_pec=*static_cast<*uint16_t>(cell_data+32);
+	uint16_t rx_pec=*(uint16_t*)(cell_data+32);
 	free(cell_data);
 	return(data_pec!=rx_pec);
 }
