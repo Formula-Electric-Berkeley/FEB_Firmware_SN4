@@ -3,6 +3,7 @@
 //**************** 16 bit CMD CODE NAMES *********************
 //						FEDCBA9876543210
 #define RDCVALL 	 (0b0000000000001100)
+#define RDACVALL 	 (0b0000000001001100)
 #define ADCV_SS 	 (0b0000001001100000)
 #define ADCV_CONT 	 (0b0000001011100000)
 #define ADCV_RD 	 (0b0000001101100000)

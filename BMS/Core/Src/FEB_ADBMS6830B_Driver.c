@@ -264,7 +264,7 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 		}*/
 	uint8_t *cell_data;
 	cell_data = (uint8_t *) malloc(34 * sizeof(uint8_t));
-	transmitCMDR(RDCVALL,cell_data,34);
+	transmitCMDR(RDACVALL,cell_data,34);
 	memcpy(&(ic->cells.c_codes),cell_data,(size_t)32);
 	uint16_t data_pec=pec10_calc(32,cell_data);
 	uint16_t rx_pec=*(uint16_t*)(cell_data+32);
@@ -624,7 +624,7 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 {
 	for (int i = 0; i < total_ic; i++) {
-	   FEB_cs_high(); //TODO: changed  from low
+	   FEB_cs_low(); //TODO: changed  from low
 	   FEB_delay_u(300); // Guarantees the ADBMS6830B will be in standby
 	   FEB_cs_high();
 	   FEB_delay_u(10);

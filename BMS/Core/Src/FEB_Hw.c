@@ -39,13 +39,23 @@ void FEB_spi_write_array(uint8_t len, uint8_t data[]) {
 }
 
 void FEB_spi_write_read(uint8_t tx_Data[], uint8_t tx_len, uint8_t *rx_data, uint8_t rx_len) {
+	/*int error=0;
 	for (uint8_t i = 0; i < tx_len; i++) {
-		HAL_SPI_Transmit(&hspi1, &tx_Data[i], 1, 100);
+		if(HAL_SPI_Transmit(&hspi1, &tx_Data[i], 1, 100) != HAL_OK){
+			 error=1;
+		}
 	}
 
 	for (uint8_t i = 0; i < rx_len; i++) {
-		HAL_SPI_Receive(&hspi1, &rx_data[i], 1, 100);
+		if(HAL_SPI_Receive(&hspi1, &rx_data[i], 1, 100)!= HAL_OK){
+			error=1;
+		}
 	}
+	*/
+
+	HAL_SPI_Transmit(&hspi1,tx_Data,tx_len,HAL_MAX_DELAY);
+	HAL_SPI_Receive(&hspi1,rx_data,rx_len,HAL_MAX_DELAY);
+	return;
 }
 
 uint8_t FEB_spi_read_byte(uint8_t tx_data) {

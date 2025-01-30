@@ -71,7 +71,7 @@ static uint8_t get_sensor(uint8_t mux, uint8_t channel) {
 }
 
 static float convert_voltage(uint16_t raw_code) {
-	return raw_code * 0.0001;
+	return raw_code * 0.000150f - 1.5f;
 }
 
 // ******************************** Functions ********************************
@@ -84,12 +84,13 @@ void FEB_ADBMS_Init() {
 	}
 	ADBMS6830B_reset_crc_count(FEB_NUM_IC, accumulator.IC_Config);
 	ADBMS6830B_init_reg_limits(FEB_NUM_IC, accumulator.IC_Config);
-	start_adc_cell_voltage_measurements();
+
 }
 
 void FEB_ADBMS_AcquireData() {
 
 	/* Voltage */
+	start_adc_cell_voltage_measurements();
 	read_cell_voltages();
 	store_cell_voltages();
 	validate_voltages();
@@ -109,6 +110,7 @@ void FEB_ADBMS_AcquireData() {
 void start_adc_cell_voltage_measurements() {
 	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_adcv(RD_ON, DCP_ON, CONTINUOUS, RSTF_OFF, OW_OFF_ALL_CH);
+	ADBMS6830B_pollAdc();
 }
 
 void read_cell_voltages() {
@@ -162,7 +164,7 @@ void configure_gpio_bits(uint8_t channel) {
 void start_aux_voltage_measurements() {
 	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_adax(AUX_OW_OFF, PUP_DOWN, AUX_ALL);
-	//ADBMS6830B_pollAdc();
+	ADBMS6830B_pollAdc();
 }
 
 void read_aux_voltages() {
@@ -185,19 +187,24 @@ void FEB_ADBMS_UART_Transmit() {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
 		char UART_head[256];
 		char UART_str[256];
-		int offset[2];
+		char UART_temp[256];
+		int offset[3];
 		offset[0]=sprintf((char*)UART_head,"|Bnk %d|",bank);
 		offset[1]=sprintf((char*)UART_str,"|Vlt  |");
+		offset[2]=sprintf((char*)UART_temp,"|Temp |");
 
 
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell++) {
 			offset[0]+=sprintf((char*)(UART_head + offset[0]), (cell>=10)?"Cell  %d|":"Cell   %d|",cell);
-			offset[1]+=sprintf((char*)(UART_str + offset[1]), "%f|",accumulator.banks[bank].cells[cell].voltage_V);
+			offset[1]+=sprintf((char*)(UART_str + offset[1]), "%.6f|",accumulator.banks[bank].cells[cell].voltage_V);
+			offset[2]+=sprintf((char*)(UART_temp + offset[2]), "%.6f|",accumulator.banks[bank].temp_sensor_readings_V[cell]);
 		}
 		offset[0]+=sprintf((char*)(UART_head + offset[0]), "\n\r");
-		offset[1]+=sprintf((char*)(UART_str + offset[1]), "\n\r\n\r\n\r");
+		offset[1]+=sprintf((char*)(UART_str + offset[1]), "\n\r");
+		offset[2]+=sprintf((char*)(UART_temp + offset[2]), "\n\r\n\r\n\r");
 		HAL_UART_Transmit(&huart2, (uint8_t*) UART_head, offset[0]+1, 100);
 		HAL_UART_Transmit(&huart2, (uint8_t*) UART_str, offset[1]+1, 100);
+		HAL_UART_Transmit(&huart2, (uint8_t*) UART_temp, offset[2]+1, 100);
 	}
 }
 
