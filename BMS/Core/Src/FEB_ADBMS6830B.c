@@ -1,29 +1,4 @@
-// ******************************** Includes ********************************
-
-#include <stdbool.h>
-#include <stdio.h>
 #include "FEB_ADBMS6830B.h"
-#include "FEB_ADBMS6830B_Driver.h"
-#include "FEB_Const.h"
-
-// ******************************** Struct ********************************
-
-typedef struct {
-	float voltage_V;
-} cell_t;
-
-typedef struct {
-	float total_voltage_V;
-	float temp_sensor_readings_V[FEB_NUM_TEMP_SENSE_PER_BANK];
-	cell_t cells[FEB_NUM_CELLS_PER_BANK];
-} bank_t;
-
-typedef struct {
-	float total_voltage_V;
-	bool balance_done;
-	bank_t banks[FEB_NUM_BANKS];
-	cell_asic IC_Config[FEB_NUM_IC];
-} accumulator_t;
 
 // ******************************** Global Variabls ********************************
 
@@ -37,8 +12,10 @@ static bool cth_bits[3] = {0, 0, 1};
 static bool gpio_bits[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static bool dcc_bits[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static bool dcto_bits[10] = {0, 0, 0, 0};
+static uint8_t gpio_map[4] = {0,1,5,6};
 static uint16_t uv = 0x800;
 static uint16_t ov = 0x7FF;
+
 
 // ******************************** Temp Mapping ********************************
 
@@ -53,17 +30,9 @@ Channel							0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7
 
 
 static uint8_t get_gpio_pin(uint8_t mux) {
-	if (mux == 0) {
-		return 0;
-	} else if (mux == 1) {
-		return 1;
-	} else if (mux == 2) {
-		return 5;
-	} else if (mux == 3) {
-		return 6;
-	} else {
-		return -1;
-	}
+	if(mux<0||mux>3)return -1;
+
+	return gpio_map[mux];
 }
 
 static uint8_t get_sensor(uint8_t mux, uint8_t channel) {
@@ -93,7 +62,7 @@ void FEB_ADBMS_AcquireData() {
 	start_adc_cell_voltage_measurements();
 	read_cell_voltages();
 	store_cell_voltages();
-	validate_voltages();
+	//validate_voltages();
 
 	/* Temperature */
 	for (uint8_t channel = 0; channel < 8; channel++) {
@@ -109,7 +78,7 @@ void FEB_ADBMS_AcquireData() {
 
 void start_adc_cell_voltage_measurements() {
 	wakeup_sleep(FEB_NUM_IC);
-	ADBMS6830B_adcv(RD_ON, DCP_ON, CONTINUOUS, RSTF_OFF, OW_OFF_ALL_CH);
+	ADBMS6830B_adcv(RDVR, DCPVR, CONTVR, RSTFVR, OWVR);
 	ADBMS6830B_pollAdc();
 }
 

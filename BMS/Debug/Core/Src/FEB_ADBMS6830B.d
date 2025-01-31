@@ -29,8 +29,8 @@ Core/Src/FEB_ADBMS6830B.o: ../Core/Src/FEB_ADBMS6830B.c \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/FEB_Hw.h ../Core/Inc/FEB_ADBMS6830B_Driver.h \
- ../Core/Inc/FEB_Const.h
+ ../Core/Inc/FEB_ADBMS6830B_Driver.h ../Core/Inc/FEB_CMDCODES.h \
+ ../Core/Inc/FEB_HW.h ../Core/Inc/FEB_Const.h
 ../Core/Inc/FEB_ADBMS6830B.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -61,6 +61,7 @@ Core/Src/FEB_ADBMS6830B.o: ../Core/Src/FEB_ADBMS6830B.c \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
-../Core/Inc/FEB_Hw.h:
 ../Core/Inc/FEB_ADBMS6830B_Driver.h:
+../Core/Inc/FEB_CMDCODES.h:
+../Core/Inc/FEB_HW.h:
 ../Core/Inc/FEB_Const.h:

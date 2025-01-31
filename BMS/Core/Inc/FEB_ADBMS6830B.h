@@ -4,8 +4,12 @@
 // ******************************** Includes ********************************
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include "stm32f4xx_hal.h"
-#include "FEB_Hw.h"
+#include "FEB_ADBMS6830B_Driver.h"
+#include "FEB_Const.h"
+#include "FEB_HW.h"
 
 // ********************************** ADBMS6830B Configuration **********************************
 
@@ -67,6 +71,31 @@ typedef enum {
 	VMV,
 	VRES
 } AUX_CH;
+
+// ******************************** Read Config ***************************
+#define CONTVR CONTINUOUS
+#define DCPVR DCP_OFF
+#define RSTFVR RSTF_OFF
+#define OWVR OW_OFF_ALL_CH
+#define RDVR RD_OFF
+// ******************************** Struct ********************************
+
+typedef struct {
+	float voltage_V;
+} cell_t;
+
+typedef struct {
+	float total_voltage_V;
+	float temp_sensor_readings_V[FEB_NUM_TEMP_SENSE_PER_BANK];
+	cell_t cells[FEB_NUM_CELLS_PER_BANK];
+} bank_t;
+
+typedef struct {
+	float total_voltage_V;
+	bool balance_done;
+	bank_t banks[FEB_NUM_BANKS];
+	cell_asic IC_Config[FEB_NUM_IC];
+} accumulator_t;
 
 // ******************************** Functions ********************************
 

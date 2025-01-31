@@ -5,6 +5,10 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+#include "FEB_CMDCODES.h"
+#include "FEB_HW.h"
 
 // ******************************** Macros ********************************
 
