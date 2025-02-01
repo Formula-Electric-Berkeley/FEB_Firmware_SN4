@@ -1,3 +1,4 @@
+"./Core/Src/FEB_AD68xx_Interface.o"
 "./Core/Src/FEB_ADBMS6830B.o"
 "./Core/Src/FEB_ADBMS6830B_Driver.o"
 "./Core/Src/FEB_CAN.o"

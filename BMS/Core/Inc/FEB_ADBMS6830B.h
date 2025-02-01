@@ -6,10 +6,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "stm32f4xx_hal.h"
 #include "FEB_ADBMS6830B_Driver.h"
 #include "FEB_Const.h"
-#include "FEB_HW.h"
 
 // ********************************** ADBMS6830B Configuration **********************************
 
