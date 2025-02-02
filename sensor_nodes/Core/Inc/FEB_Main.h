@@ -13,12 +13,14 @@
 #include <stm32f4xx_hal.h>
 #include <stdint.h>
 
-
+#include "FEB_WSS.h"
+#include "FEB_Steering.h"
+#include "FEB_Tire_Temp.h"
 
 // ******************************** Functions ********************************
 
 void FEB_Main_Setup(void);
 void FEB_Main_While(void);
-
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
 #endif /* INC_FEB_MAIN_H_ */
