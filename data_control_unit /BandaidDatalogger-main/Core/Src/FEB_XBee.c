@@ -1,38 +1,69 @@
 /*
  * FEB_XBee.c
  *
- *  Created on: Jun 1, 2024
- *      Author: sshashi
+ *  Created on: Feb 1, 2025
+ *      Author: mihirtakalkar
  */
 
 #include "FEB_XBee.h"
 
-extern SPI_HandleTypeDef hspi2;
+extern UART_HandleTypeDef huart1;  // TODO: Edit based on IOC
 
-void cs_low(uint8_t pin) {
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
+void xbee_transmit(const char *message) {
+    HAL_UART_Transmit(&huart1, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
 }
 
-void cs_high(uint8_t pin) {
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+void xbee_loop() {
+    uint32_t counter = 0;
+    char message[50];
+
+    while (1) {
+        snprintf(message, sizeof(message), "XBee TX: %lu\r\n", counter);
+        xbee_transmit(message);
+
+        counter++;  // Increment counter
+        HAL_Delay(1000);  // Delay 1 second before next transmission
+    }
 }
 
-void spi_write_array(uint8_t len, uint8_t data[]) {
-	HAL_SPI_Transmit(&hspi2, data, len, 100);
+// Transmit CAN data in circbuffer
+void xbee_transmit_can_data(circBuffer *cb) {
+    if (cb->count == 0) {
+        HAL_UART_Transmit(&huart2, (uint8_t*)"Error! No CAN data to send.\r\n", 29, HAL_MAX_DELAY);
+        return;
+    }
+
+    char can_message[128];
+    int len = snprintf(can_message, sizeof(can_message), "CAN TX: Time(ms): %lu, ID: %u, Data:",
+                       cb->buffer[cb->read].timestamp, cb->buffer[cb->read].id);
+
+    for (int i = 0; i < 8; i++) {
+        len += snprintf(can_message + len, sizeof(can_message) - len, " %02X", cb->buffer[cb->read].data[i]);
+    }
+    strcat(can_message, "\r\n");
+
+    xbee_transmit(can_message);
+
+    // Move to next entry in circ buf
+    cb->read = (cb->read + 1) % cb->capacity;
+    cb->count--;
 }
 
-void spi_write_read(uint8_t tx_Data[], uint8_t tx_len, uint8_t *rx_data, uint8_t rx_len) {
-	for (uint8_t i = 0; i < tx_len; i++) {
-		HAL_SPI_Transmit(&hspi2, &tx_Data[i], 1, 100);
-	}
+// Alternatively, transmit sd card data
+void xbee_transmit_sd_data() {
+    char sd_message[128];
 
-	for (uint8_t i = 0; i < rx_len; i++) {
-		HAL_SPI_Receive(&hspi2, &rx_data[i], 1, 100);
-	}
-}
+    fres = f_lseek(&fil, f_size(&fil) - sizeof(sd_message));  // last entry
+    if (fres != FR_OK) {
+        HAL_UART_Transmit(&huart2, (uint8_t*)"Error finding last SD entry.\r\n", 30, HAL_MAX_DELAY);
+        return;
+    }
 
-uint8_t spi_read_byte(uint8_t tx_dat) {
-	uint8_t data;
-	HAL_SPI_Receive(&hspi2, &data, 1, 100);
-	return data;
+    fres = f_read(&fil, sd_message, sizeof(sd_message), &br);
+    if (fres != FR_OK) {
+        HAL_UART_Transmit(&huart2, (uint8_t*)"Error reading SD data.\r\n", 24, HAL_MAX_DELAY);
+        return;
+    }
+
+    xbee_transmit(sd_message);
 }

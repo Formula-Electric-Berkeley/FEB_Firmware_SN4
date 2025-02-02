@@ -126,7 +126,6 @@ void FEB_circBuf_read(circBuffer *cb){
 
 
 
-
   if(fres != FR_OK){
     HAL_UART_Transmit(&huart2, "Can't write timestamp\n",19, HAL_MAX_DELAY);
     f_close(&fil);
@@ -151,14 +150,12 @@ void FEB_circBuf_read(circBuffer *cb){
 //  }
 
   
-
   fres = f_lseek(&fil, f_size(&fil));
   if(fres != FR_OK){
     HAL_UART_Transmit(&huart2, "Can't find eof\n",15, HAL_MAX_DELAY);
     f_close(&fil);
     return;
   } 
-
 
 //  fres = f_write(&fil,cb->buffer[cb->read].data, sizeof(cb->buffer[cb->read].data), &bw);
 //  if(fres != FR_OK){
