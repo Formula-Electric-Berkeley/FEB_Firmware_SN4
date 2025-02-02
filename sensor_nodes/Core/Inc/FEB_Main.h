@@ -16,6 +16,7 @@
 #include "FEB_WSS.h"
 #include "FEB_Steering.h"
 #include "FEB_Tire_Temp.h"
+#include "FEB_LinPot.h"
 
 // ******************************** Functions ********************************
 

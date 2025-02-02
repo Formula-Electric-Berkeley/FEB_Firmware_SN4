@@ -113,8 +113,6 @@ void Error_Handler(void);
 #define PGO_GPIO_Port GPIOC
 #define GPS_EN_Pin GPIO_PIN_2
 #define GPS_EN_GPIO_Port GPIOD
-#define SWO_Pin GPIO_PIN_3
-#define SWO_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
