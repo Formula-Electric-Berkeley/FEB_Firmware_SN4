@@ -39,8 +39,8 @@ static uint8_t get_sensor(uint8_t mux, uint8_t channel) {
 	return mux * 8 + channel;
 }
 
-static float convert_voltage(uint16_t raw_code) {
-	return raw_code * 0.000150f - 1.5f;
+static float convert_voltage(int16_t raw_code) {
+	return raw_code * 0.000150 + 1.5;
 }
 
 // ******************************** Functions ********************************
@@ -94,6 +94,7 @@ void store_cell_voltages() {
 			uint8_t ic = bank;
 			float actual_voltage = convert_voltage(accumulator.IC_Config[bank].cells.c_codes[ic]);
 			accumulator.banks[bank].cells[cell].voltage_V = actual_voltage;
+			accumulator.banks[bank].cells[cell].voltage_S = convert_voltage(accumulator.IC_Config[bank].cells.s_codes[ic]);
 		}
 	}
 }
@@ -166,7 +167,7 @@ void FEB_ADBMS_UART_Transmit() {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell++) {
 			offset[0]+=sprintf((char*)(UART_head + offset[0]), (cell>=10)?"Cell  %d|":"Cell   %d|",cell);
 			offset[1]+=sprintf((char*)(UART_str + offset[1]), "%.6f|",accumulator.banks[bank].cells[cell].voltage_V);
-			offset[2]+=sprintf((char*)(UART_temp + offset[2]), "%.6f|",accumulator.banks[bank].temp_sensor_readings_V[cell]);
+			offset[2]+=sprintf((char*)(UART_temp + offset[2]), "%.6f|",accumulator.banks[bank].cells[cell].voltage_S);
 		}
 		offset[0]+=sprintf((char*)(UART_head + offset[0]), "\n\r");
 		offset[1]+=sprintf((char*)(UART_str + offset[1]), "\n\r");

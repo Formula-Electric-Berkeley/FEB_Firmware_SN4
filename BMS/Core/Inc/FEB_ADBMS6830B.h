@@ -75,11 +75,12 @@ typedef enum {
 #define DCPVR DCP_OFF
 #define RSTFVR RSTF_OFF
 #define OWVR OW_OFF_ALL_CH
-#define RDVR RD_OFF
+#define RDVR RD_ON
 // ******************************** Struct ********************************
 
 typedef struct {
 	float voltage_V;
+	float voltage_S;
 } cell_t;
 
 typedef struct {

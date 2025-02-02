@@ -15,6 +15,7 @@ void FEB_Main_Setup() {
 void FEB_Main_Task1_VT() {
 	FEB_ADBMS_AcquireData();
 	FEB_ADBMS_UART_Transmit();
+	HAL_Delay(100);
 }
 
 void FEB_Main_Task2_SM() {

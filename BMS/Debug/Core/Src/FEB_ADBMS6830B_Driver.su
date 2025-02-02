@@ -12,10 +12,10 @@
 ../Core/Src/FEB_ADBMS6830B_Driver.c:172:6:ADBMS6830B_adcv	32	static
 ../Core/Src/FEB_ADBMS6830B_Driver.c:188:10:ADBMS6830B_pollAdc	24	static
 ../Core/Src/FEB_ADBMS6830B_Driver.c:229:9:ADBMS6830B_rdcv	24	static
-../Core/Src/FEB_ADBMS6830B_Driver.c:255:8:parse_cells	40	static
-../Core/Src/FEB_ADBMS6830B_Driver.c:302:6:ADBMS6830B_wrcfga	280	static
-../Core/Src/FEB_ADBMS6830B_Driver.c:332:6:ADBMS6830B_wrcfgb	280	static
-../Core/Src/FEB_ADBMS6830B_Driver.c:362:6:ADBMS6830B_adax	24	static
-../Core/Src/FEB_ADBMS6830B_Driver.c:381:9:ADBMS6830B_rdaux	56	static
-../Core/Src/FEB_ADBMS6830B_Driver.c:436:6:wakeup_sleep	24	static
-../Core/Src/FEB_ADBMS6830B_Driver.c:446:6:ADBMS6830B_check_pec	48	static
+../Core/Src/FEB_ADBMS6830B_Driver.c:257:8:parse_cells	40	static
+../Core/Src/FEB_ADBMS6830B_Driver.c:304:6:ADBMS6830B_wrcfga	280	static
+../Core/Src/FEB_ADBMS6830B_Driver.c:334:6:ADBMS6830B_wrcfgb	280	static
+../Core/Src/FEB_ADBMS6830B_Driver.c:364:6:ADBMS6830B_adax	24	static
+../Core/Src/FEB_ADBMS6830B_Driver.c:383:9:ADBMS6830B_rdaux	56	static
+../Core/Src/FEB_ADBMS6830B_Driver.c:438:6:wakeup_sleep	24	static
+../Core/Src/FEB_ADBMS6830B_Driver.c:448:6:ADBMS6830B_check_pec	48	static
