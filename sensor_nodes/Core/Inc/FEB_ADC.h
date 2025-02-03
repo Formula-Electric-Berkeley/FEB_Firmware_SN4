@@ -5,8 +5,8 @@
  *      Author: rahilpasha
  */
 
-#ifndef INC_FEB_LINPOT_H_
-#define INC_FEB_LINPOT_H_
+#ifndef INC_FEB_ADC_H_
+#define INC_FEB_ADC_H_
 
 // **************************************** Includes ****************************************
 
@@ -19,4 +19,4 @@
 
 uint32_t get_linear_potentiometer_reading(void);
 
-#endif /* INC_FEB_LINPOT_H_ */
+#endif /* INC_FEB_ADC_H_ */
