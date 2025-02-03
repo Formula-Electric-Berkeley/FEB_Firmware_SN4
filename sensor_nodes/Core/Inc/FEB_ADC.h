@@ -18,5 +18,6 @@
 // **************************************** Functions ****************************************
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
+void ADC2_Main(void);
 
 #endif /* INC_FEB_ADC_H_ */

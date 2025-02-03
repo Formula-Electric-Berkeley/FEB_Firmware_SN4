@@ -8,13 +8,10 @@
 // ********************************** Includes & External **********************************
 #include "FEB_Main.h"
 
-extern ADC_HandleTypeDef hadc2;
 extern CAN_HandleTypeDef hcan1;
 extern TIM_HandleTypeDef htim6;
 
 // ********************************** Variables **********************************
-
-uint32_t ADC2_Readings[4];
 
 // ********************************** Functions **********************************
 
@@ -37,8 +34,6 @@ void FEB_Main_Setup(void) {
 
 	HAL_TIM_Base_Start_IT(&htim6);  // Start 1 ms timer
 
-	HAL_ADC_Start_DMA(&hadc2, ADC2_Readings, 4);
-
 }
 
 void FEB_Main_While(void) {
@@ -50,6 +45,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		WSS_Main();
 		Steer_ENC_Main();
 		Tire_Temp_Main();
+		ADC2_Main();
 	}
 }
 
