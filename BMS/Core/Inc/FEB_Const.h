@@ -1,6 +1,8 @@
 #ifndef INC_FEB_CONST_H_
 #define INC_FEB_CONST_H_
 
+#define FEB_SM_ST_DEBUG true
+
 #define FEB_NUM_CELLS_PER_BANK 16
 #define FEB_NUM_TEMP_SENSE_PER_BANK 32
 #define FEB_NUM_BANKS 1

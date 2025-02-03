@@ -1,39 +1,47 @@
 #ifndef INC_FEB_SM_H_
 #define INC_FEB_SM_H_
 
-// ******************************** Includes and External ********************************
-
+// ******************************** Includes ********************************
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include "stm32f4xx_hal.h"
+#include "FEB_HW.h"
+#include "FEB_CAN.h"
+#include "FEB_Const.h"
+#include "FEB_Task_Queue.h"
 
-// ******************************** Arrays and Enums ********************************
-
-/* FEB_State_Code and FEB_States must be in sync */
+// States
 typedef enum {
-	FEB_STATE_STARTUP,
-	FEB_STATE_IDLE,
-	FEB_STATE_CHARGE,
-	FEB_STATE_BALANCE,
-	FEB_STATE_STANDBY,
-	FEB_STATE_PRECHARGE,
-	FEB_STATE_DRIVE,
-	FEB_STATE_FAULT,
-	FEB_STATE_DRIVE_STANDBY,
-	FEB_STATE_DRIVE_REGEN
-} FEB_State_Code;
+	FEB_SM_ST_BOOT,
+	FEB_SM_ST_LV,
+	FEB_SM_ST_ESC,
+	FEB_SM_ST_PRECHARGE,
+	FEB_SM_ST_ENERGIZED,
+	FEB_SM_ST_DRIVE,
+	FEB_SM_ST_FREE,
+	FEB_SM_ST_CHARGING,
+	FEB_SM_ST_BALANCE,
+	FEB_SM_ST_FAULT_BMS,
+	FEB_SM_ST_FAULT_BSPD,
+	FEB_SM_ST_FAULT_IMD,
+	FEB_SM_ST_FAULT_CHARGING,
+	FEB_SM_ST_DEFAULT
+} FEB_SM_ST_t;
 
-// ******************************** Struct ********************************
+void FEB_SM_Init(void);
+FEB_SM_ST_t FEB_SM_Get_Current_State(void);
+void FEB_SM_Transition(FEB_SM_ST_t next_state);
+void FEB_SM_Process(void);
+void FEB_SM_UART_Transmit(void);
+void FEB_SM_CAN_Transmit(void);
 
-typedef struct {
-	FEB_State_Code src_state;
-	uint8_t (*state_func) (void);
-	FEB_State_Code dest_state;
-} FEB_State_Transition_t;
-
-// ******************************** Functions ********************************
-
-void FEB_SM_Init();
-FEB_State_Code FEB_SM_Get_Current_State();
-uint8_t FEB_SM_Set_State(FEB_State_Code next_state);
-
+/* Faults
+CAN Initialization fails
+Under/Over cell voltage
+Under/Over cell temperature
+Under/Over pack current
+*/
 
 #endif /* INC_FEB_SM_H_ */

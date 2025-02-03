@@ -70,12 +70,6 @@ typedef enum {
 	VRES
 } AUX_CH;
 
-// ******************************** Read Config ***************************
-#define CONTVR CONTINUOUS
-#define DCPVR DCP_OFF
-#define RSTFVR RSTF_OFF
-#define OWVR OW_OFF_ALL_CH
-#define RDVR RD_ON
 // ******************************** Struct ********************************
 
 typedef struct {

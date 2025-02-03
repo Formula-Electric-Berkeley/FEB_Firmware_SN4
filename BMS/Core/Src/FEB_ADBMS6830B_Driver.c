@@ -439,9 +439,9 @@ void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 {
 	for (int i = 0; i < total_ic; i++) {
 	   FEB_cs_low();
-	   FEB_delay_u(300); // Guarantees the ADBMS6830B will be in standby
+	   FEB_delay_m(1); // Guarantees the ADBMS6830B will be in standby
 	   FEB_cs_high();
-	   FEB_delay_u(10);
+	   FEB_delay_m(1);
 	}
 }
 

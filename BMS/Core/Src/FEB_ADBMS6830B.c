@@ -92,8 +92,7 @@ void store_cell_voltages() {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
 			uint8_t ic = bank;
-			float actual_voltage = convert_voltage(accumulator.IC_Config[bank].cells.c_codes[ic]);
-			accumulator.banks[bank].cells[cell].voltage_V = actual_voltage;
+			accumulator.banks[bank].cells[cell].voltage_V = convert_voltage(accumulator.IC_Config[bank].cells.c_codes[ic]);
 			accumulator.banks[bank].cells[cell].voltage_S = convert_voltage(accumulator.IC_Config[bank].cells.s_codes[ic]);
 		}
 	}
@@ -152,26 +151,23 @@ void store_cell_temps(uint8_t channel) {
 
 void FEB_ADBMS_UART_Transmit() {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
-		char UART_head[256];
-		char UART_str[256];
-		char UART_temp[256];
+		char UART_line[3][256];
 		int offset[3];
-		offset[0]=sprintf((char*)UART_head,"|Bnk %d|",bank);
-		offset[1]=sprintf((char*)UART_str,"|Vlt  |");
-		offset[2]=sprintf((char*)UART_temp,"|Temp |");
+		offset[0]=sprintf((char*)(UART_line[0]),"|Bnk %d|",bank);
+		offset[1]=sprintf((char*)(UART_line[1]),"|Vlt C|");
+		offset[2]=sprintf((char*)(UART_line[2]),"|Vlt S|");
 
 
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell++) {
-			offset[0]+=sprintf((char*)(UART_head + offset[0]), (cell>=10)?"Cell  %d|":"Cell   %d|",cell);
-			offset[1]+=sprintf((char*)(UART_str + offset[1]), "%.6f|",accumulator.banks[bank].cells[cell].voltage_V);
-			offset[2]+=sprintf((char*)(UART_temp + offset[2]), "%.6f|",accumulator.banks[bank].cells[cell].voltage_S);
+			offset[0]+=sprintf(((char*)(UART_line[0]) + offset[0]), (cell>=10)?"Cell  %d|":"Cell   %d|",cell);
+			offset[1]+=sprintf(((char*)(UART_line[1]) + offset[1]), "%.6f|",accumulator.banks[bank].cells[cell].voltage_V);
+			offset[2]+=sprintf(((char*)(UART_line[2]) + offset[2]), "%.6f|",accumulator.banks[bank].cells[cell].voltage_S);
 		}
-		offset[0]+=sprintf((char*)(UART_head + offset[0]), "\n\r");
-		offset[1]+=sprintf((char*)(UART_str + offset[1]), "\n\r");
-		offset[2]+=sprintf((char*)(UART_temp + offset[2]), "\n\r\n\r\n\r");
-		HAL_UART_Transmit(&huart2, (uint8_t*) UART_head, offset[0]+1, 100);
-		HAL_UART_Transmit(&huart2, (uint8_t*) UART_str, offset[1]+1, 100);
-		HAL_UART_Transmit(&huart2, (uint8_t*) UART_temp, offset[2]+1, 100);
+		for(int line=0;line<3;line++){
+			offset[line]+=sprintf(((char*)(UART_line[line]) + offset[line]), "\n\r") ;
+			HAL_UART_Transmit(&huart2, (uint8_t*) UART_line[line], offset[line]+1, 100);
+		}
+
 	}
 }
 

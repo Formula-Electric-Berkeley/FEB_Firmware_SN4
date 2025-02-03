@@ -1,127 +1,494 @@
-// ******************************** Includes ********************************
-
 #include "FEB_SM.h"
 
-// ******************************** State Functions ********************************
+//extern osMutexId_t FEB_SM_LockHandle;
+//extern osMutexId_t FEB_UART_LockHandle;
+extern UART_HandleTypeDef huart2;
+//extern CAN_HandleTypeDef hcan1;
+//extern uint8_t FEB_CAN_Tx_Data[8];
+//extern CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
+//extern uint32_t FEB_CAN_Tx_Mailbox;
 
-uint8_t FEB_Startup_State();
-uint8_t FEB_Idle_State();
-uint8_t FEB_Charge_State();
-uint8_t FEB_Balance_State();
-uint8_t FEB_Standby_State();
-uint8_t FEB_Precharge_State();
-uint8_t FEB_Drive_State();
-uint8_t FEB_Fault_State();
-uint8_t FEB_Drive_Standby_State();
-uint8_t FEB_Drive_Regen_State();
-
-// *****************************a** Global Variables ********************************
-
-FEB_State_Code current_state = FEB_STATE_STARTUP;
-uint8_t (*current_state_func) (void);
-uint8_t num_transitions = 18;
-FEB_State_Transition_t transitions[] = {
-		{FEB_STATE_STARTUP, FEB_Idle_State, FEB_STATE_IDLE},
-		{FEB_STATE_STARTUP, FEB_Fault_State, FEB_STATE_FAULT},
-
-		{FEB_STATE_IDLE, FEB_Standby_State, FEB_STATE_STANDBY},
-		{FEB_STATE_IDLE, FEB_Fault_State, FEB_STATE_FAULT},
-
-		{FEB_STATE_STANDBY, FEB_Precharge_State, FEB_STATE_PRECHARGE},
-		{FEB_STATE_STANDBY, FEB_Charge_State, FEB_STATE_CHARGE},
-		{FEB_STATE_STANDBY, FEB_Balance_State, FEB_STATE_BALANCE},
-		{FEB_STATE_STANDBY, FEB_Fault_State, FEB_STATE_FAULT},
-
-		{FEB_STATE_CHARGE, FEB_Charge_State, FEB_STATE_STANDBY},
-		{FEB_STATE_CHARGE, FEB_Fault_State, FEB_STATE_FAULT},
-
-		{FEB_STATE_BALANCE, FEB_Charge_State, FEB_STATE_STANDBY},
-		{FEB_STATE_BALANCE, FEB_Fault_State, FEB_STATE_FAULT},
-
-		{FEB_STATE_PRECHARGE, FEB_Drive_State, FEB_STATE_DRIVE},
-		{FEB_STATE_PRECHARGE, FEB_Fault_State, FEB_STATE_FAULT},
-
-		{FEB_STATE_DRIVE, FEB_Drive_State, FEB_STATE_DRIVE_STANDBY},
-		{FEB_STATE_DRIVE, FEB_Fault_State, FEB_STATE_FAULT},
-
-		{FEB_STATE_DRIVE, FEB_Drive_State, FEB_STATE_DRIVE_REGEN},
-		{FEB_STATE_DRIVE, FEB_Fault_State, FEB_STATE_FAULT},
-
+/* List of transition functions*/
+static void bootTransition(FEB_SM_ST_t);
+static void LVPowerTransition(FEB_SM_ST_t);
+static void ESCCompleteTransition(FEB_SM_ST_t);
+static void PrechargeTransition(FEB_SM_ST_t);
+static void EnergizedTransition(FEB_SM_ST_t);
+static void DriveTransition(FEB_SM_ST_t);
+static void FreeTransition(FEB_SM_ST_t);
+static void ChargingTransition(FEB_SM_ST_t);
+static void BalanceTransition(FEB_SM_ST_t);
+static void BMSFaultTransition(FEB_SM_ST_t);
+static void BSPDFaultTransition(FEB_SM_ST_t);
+static void IMDFaultTransition(FEB_SM_ST_t);
+static void ChargingFaultTransition(FEB_SM_ST_t);
+static void (*transitionVector[13])(FEB_SM_ST_t)={
+		bootTransition,
+		LVPowerTransition,
+		ESCCompleteTransition,
+		PrechargeTransition,
+		EnergizedTransition,
+		DriveTransition,
+		FreeTransition,
+		ChargingTransition,
+		BalanceTransition,
+		BMSFaultTransition,
+		BSPDFaultTransition,
+		IMDFaultTransition,
+		ChargingFaultTransition
 };
 
-// *****************************a** Functions ********************************
+// Shared variable, requires synchronization
+static FEB_SM_ST_t SM_Current_State;
 
-void FEB_SM_Init() {
-	FEB_Startup_State();
+/* ******** State Transition Functions ******** */
+/* State transition functions assume serial access (SM lock held). */
+
+/* Initiate state transition. Assume SM lock held. */
+static void transition(FEB_SM_ST_t next_state) {
+	(transitionVector[FEB_SM_Get_Current_State()])(next_state);
 }
 
-FEB_State_Code FEB_SM_Get_Current_State() {
-	return current_state;
-}
+/* Function called from initial thread (no other threads created).
+ * No synchronization needed. */
+/*static void startup(void) {
+	FEB_Current_State = FEB_SM_ST_BOOT;
+	FEB_Config_Update(FEB_Current_State);
 
-uint8_t FEB_SM_Set_State(FEB_State_Code next_state) {
-	if (current_state == next_state) {
-		return 1;
+	FEB_Hw_Set_AIR_Plus_Relay(FEB_HW_RELAY_OPEN);
+	FEB_Hw_Set_Precharge_Relay(FEB_HW_RELAY_OPEN);
+	FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_CLOSE);
+	FEB_CAN_Charger_Init();
+
+
+	if (!FEB_CAN_Init()) {
+		FEB_Current_State = FEB_SM_ST_FAULT_BMS;
+		FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_OPEN);
+		return;
 	}
-	for (uint8_t i = 0; i < num_transitions; i++) {
-		if (transitions[i].src_state == current_state &&
-			transitions[i].dest_state == next_state ) {
-			transitions[i].state_func();
-			return 1;
-		}
+
+}*/
+
+/* ******** Interface ******** */
+
+/* Function called from initial thread (no other threads created).
+ * No synchronization needed. */
+void FEB_SM_Init(void) {
+	SM_Current_State=FEB_SM_ST_BOOT;
+	//startup();
+}
+
+/* Get current state of state machine. */
+FEB_SM_ST_t FEB_SM_Get_Current_State(void) {
+	//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
+	FEB_SM_ST_t state = SM_Current_State;
+	//osMutexRelease(FEB_SM_LockHandle);
+	return state;
+}
+
+/* Initiate state transition. */
+void FEB_SM_Transition(FEB_SM_ST_t next_state) {
+	transition(next_state);
+}
+
+/* Check for conditions necessary for state transitions. */
+void FEB_SM_Process(void) {
+
+	//TODO: Add task queue
+	transitionVector[FEB_SM_Get_Current_State()](FEB_SM_ST_DEFAULT);
+}
+
+//FAULT HELPER FUNCTION
+static void fault(FEB_SM_ST_t FAULT_TYPE) {
+	SM_Current_State = FAULT_TYPE;
+	FEB_Config_Update(SM_Current_State);
+	FEB_Hw_Set_BMS_Shutdown_Relay(FEB_RELAY_STATE_OPEN);
+	FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
+	FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+
+}
+
+/** Transition Functions **/
+static FEB_SM_ST_t updateStateProtected(FEB_SM_ST_t next_state){
+	//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
+	if(SM_Current_State==FEB_SM_ST_FAULT_BMS)
+		return FEB_SM_ST_FAULT_BMS;
+	SM_Current_State=next_state;
+	//osMutexRelease(FEB_SM_LockHandle);
+	return next_state;
+}
+
+static void bootTransition(FEB_SM_ST_t next_state){
+	switch(next_state){
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+	case FEB_SM_ST_FAULT_BSPD:
+		fault(next_state);
+		break;
+
+	case FEB_SM_ST_LV:
+		FEB_Config_Update(updateStateProtected(FEB_SM_ST_LV));
+		break;
+
+	default:
+		return;
 	}
-	return 0; /* Invalid Transition */
+
 }
 
+static void LVPowerTransition(FEB_SM_ST_t next_state){
+	switch(next_state){
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+	case FEB_SM_ST_FAULT_BSPD:
+		fault(next_state);
+		break;
 
-// ******************************** State Functions ********************************
+	case FEB_SM_ST_ESC:
+	case FEB_SM_ST_FREE:
+		FEB_Config_Update(updateStateProtected(next_state));
+		break;
 
-uint8_t FEB_Startup_State() {
-	/* Code Goes Here */
-	return 1;
+	case FEB_SM_ST_DEFAULT:
+		if(FEB_Hw_BMS_Shutdown_Sense()==FEB_RELAY_STATE_CLOSE)
+			LVPowerTransition(FEB_SM_ST_ESC);
+		if (FEB_CAN_Charger_Received())
+			LVPowerTransition(FEB_SM_ST_FREE);
+		break;
+
+	default:
+		return;
+	}
 }
 
-uint8_t FEB_Idle_State() {
-	/* Code Goes Here */
-	return 1;
+static void ESCCompleteTransition(FEB_SM_ST_t next_state){
+	switch(next_state){
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+	case FEB_SM_ST_FAULT_BSPD:
+		fault(next_state);
+		break;
+
+	case FEB_SM_ST_LV:
+		FEB_Config_Update(updateStateProtected(next_state));
+		break;
+
+	case FEB_SM_ST_PRECHARGE:
+		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
+		FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_CLOSE);
+		updateStateProtected(FEB_SM_ST_PRECHARGE);
+		FEB_Config_Update(SM_Current_State);
+		break;
+
+	case FEB_SM_ST_DEFAULT:
+		if (FEB_Hw_AIR_Minus_Sense() == FEB_RELAY_STATE_CLOSE && FEB_Hw_AIR_Plus_Sense() == FEB_RELAY_STATE_OPEN && FEB_Hw_Charge_Sense() == FEB_RELAY_STATE_OPEN)
+			ESCCompleteTransition(FEB_SM_ST_PRECHARGE);
+		else if(FEB_Hw_BMS_Shutdown_Sense()==FEB_RELAY_STATE_OPEN)
+			ESCCompleteTransition(FEB_SM_ST_LV);
+		break;
+
+	default:
+		return;
+	}
+
+
 }
 
-uint8_t FEB_Charge_State() {
-	/* Code Goes Here */
-	return 1;
+static void PrechargeTransition(FEB_SM_ST_t next_state){
+	switch(next_state){
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+	case FEB_SM_ST_FAULT_BSPD:
+		fault(next_state);
+		break;
+
+	case FEB_SM_ST_LV:
+	case FEB_SM_ST_ESC:
+		FEB_Config_Update(updateStateProtected(next_state));
+		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
+		FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+		break;
+
+	case FEB_SM_ST_ENERGIZED:
+		FEB_Config_Update(updateStateProtected(FEB_SM_ST_ENERGIZED));
+		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_CLOSE);
+		osDelay(100);
+		FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+
+		break;
+
+	case FEB_SM_ST_DEFAULT:
+		if(FEB_Hw_BMS_Shutdown_Sense()==FEB_RELAY_STATE_OPEN||FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN)
+			PrechargeTransition(FEB_SM_ST_LV);
+		else if(FEB_Hw_Precharge_Sense()==FEB_RELAY_STATE_OPEN)
+			PrechargeTransition(FEB_SM_ST_ESC);
+		break;
+
+	default:
+		return;
+	}
+
+
 }
 
-uint8_t FEB_Balance_State() {
-	/* Code Goes Here */
-	return 1;
+static void EnergizedTransition(FEB_SM_ST_t next_state){
+	switch(next_state){
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+	case FEB_SM_ST_FAULT_BSPD:
+		fault(next_state);
+		break;
+
+	case FEB_SM_ST_DRIVE:
+		FEB_Config_Update(updateStateProtected(next_state));
+		break;
+
+	case FEB_SM_ST_LV:
+	case FEB_SM_ST_ESC:
+		FEB_Config_Update(updateStateProtected(next_state));
+		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
+		FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+		break;
+
+	case FEB_SM_ST_DEFAULT:
+		if(FEB_Hw_BMS_Shutdown_Sense()==FEB_RELAY_STATE_OPEN||FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN)
+			EnergizedTransition(FEB_SM_ST_LV);
+		else if(FEB_CAN_ICS_Ready_To_Drive())
+			EnergizedTransition(FEB_SM_ST_DRIVE);
+		break;
+
+	default:
+		return;
+	}
+
 }
 
-uint8_t FEB_Standby_State() {
-	/* Code Goes Here */
-	return 1;
+static void DriveTransition(FEB_SM_ST_t next_state){
+	switch(next_state){
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+	case FEB_SM_ST_FAULT_BSPD:
+		fault(next_state);
+		break;
+
+	case FEB_SM_ST_LV:
+	case FEB_SM_ST_ESC:
+		FEB_Config_Update(updateStateProtected(next_state));
+		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
+		FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+		break;
+
+	case FEB_SM_ST_ENERGIZED:
+		FEB_Config_Update(updateStateProtected(FEB_SM_ST_ENERGIZED));
+		break;
+
+	case FEB_SM_ST_DEFAULT:
+		if(FEB_Hw_BMS_Shutdown_Sense()==FEB_RELAY_STATE_OPEN||FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN)
+			DriveTransition(FEB_SM_ST_LV);
+		else if(!FEB_CAN_ICS_Ready_To_Drive())
+			DriveTransition(FEB_SM_ST_ENERGIZED);
+		break;
+
+	default:
+		return;
+	}
 }
 
-uint8_t FEB_Precharge_State() {
-	/* Code Goes Here */
-	return 1;
+static void FreeTransition(FEB_SM_ST_t next_state){
+	switch(next_state){
+
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+		fault(FEB_SM_ST_FAULT_CHARGING);
+		break;
+
+	case FEB_SM_ST_FREE:
+	case FEB_SM_ST_LV:
+		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
+		FEB_Config_Update(updateStateProtected(FEB_SM_ST_FREE));
+		break;
+
+	case FEB_SM_ST_CHARGING:
+		FEB_Config_Update(updateStateProtected(next_state));
+		//osDelay(100);
+		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_CLOSE);
+		break;
+	case FEB_SM_ST_BALANCE:
+		FEB_Config_Update(updateStateProtected(next_state));
+		break;
+	case FEB_SM_ST_DEFAULT:
+		if(FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_CLOSE && FEB_Hw_Charge_Sense()==FEB_RELAY_STATE_CLOSE && FEB_CAN_Charger_Received())
+			FreeTransition(FEB_SM_ST_CHARGING);
+	default:
+		return;
+	}
+
 }
 
-uint8_t FEB_Drive_State() {
-	/* Code Goes Here */
-	return 1;
+static void ChargingTransition(FEB_SM_ST_t next_state){
+	switch(next_state){
+
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+		fault(FEB_SM_ST_FAULT_CHARGING);
+		break;
+
+	case FEB_SM_ST_LV:
+	case FEB_SM_ST_FREE:
+		FEB_Config_Update(updateStateProtected(FEB_SM_ST_FREE));
+
+		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
+		FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+		break;
+
+	case FEB_SM_ST_DEFAULT:
+		if(FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN)
+			ChargingTransition(FEB_SM_ST_FREE);
+	default:
+		break;
+	}
+
 }
 
-uint8_t FEB_Fault_State() {
-	/* Code Goes Here */
-	return 1;
+static void BalanceTransition(FEB_SM_ST_t next_state){
+	switch(next_state){
+
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+		fault(FEB_SM_ST_FAULT_CHARGING);
+		//osMutexRelease(FEB_SM_LockHandle);
+		//TODO: REPLACE FOR BALANCING
+		//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
+		break;
+
+	case FEB_SM_ST_LV:
+	case FEB_SM_ST_FREE:
+		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
+		FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+		//osMutexRelease(FEB_SM_LockHandle);
+		//FEB_LTC6811_Stop_Balance();
+		//FEB_Config_Update(updateStateProtected(FEB_SM_ST_FREE));
+		break;
+
+	case FEB_SM_ST_DEFAULT:
+		if(FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN)
+			BalanceTransition(FEB_SM_ST_FREE);
+
+	default:
+		break;
+
+	}
 }
 
-uint8_t FEB_Drive_Standby_State() {
-	/* Code Goes Here */
-	return 1;
+/** Hard Fault Functions **/
+static void BMSFaultTransition(FEB_SM_ST_t next_state){
+	fault(SM_Current_State);
+}
+static void BSPDFaultTransition(FEB_SM_ST_t next_state){
+	fault(SM_Current_State);
+}
+static void IMDFaultTransition(FEB_SM_ST_t next_state){
+	fault(SM_Current_State);
+}
+static void ChargingFaultTransition(FEB_SM_ST_t next_state){
+	fault(SM_Current_State);
 }
 
-uint8_t FEB_Drive_Regen_State() {
-	/* Code Goes Here */
-	return 1;
+/* Output current state, relay state, and GPIO sense. */
+void FEB_SM_UART_Transmit(void) {
+	if (!FEB_SM_ST_DEBUG)
+		return;
+
+	FEB_SM_ST_t state = FEB_SM_Get_Current_State();
+	char* state_str;
+	switch(state) {
+		case FEB_SM_ST_BOOT:
+			state_str = "Boot";
+			break;
+		case FEB_SM_ST_LV:
+			state_str = "LV Power";
+			break;
+		case FEB_SM_ST_ESC:
+			state_str = "ESC Complete";
+			break;
+		case FEB_SM_ST_PRECHARGE:
+			state_str = "PRECHARGE";
+			break;
+		case FEB_SM_ST_ENERGIZED:
+			state_str = "Energized";
+			break;
+		case FEB_SM_ST_DRIVE:
+			state_str = "Drive";
+			break;
+		case FEB_SM_ST_FREE:
+			state_str = "Accumulator Free";
+			break;
+		case FEB_SM_ST_CHARGING:
+			state_str = "Charging";
+			break;
+		case FEB_SM_ST_BALANCE:
+			state_str = "Balancing";
+			break;
+		case FEB_SM_ST_FAULT_BMS:
+			state_str = "BMS Fault";
+			break;
+		case FEB_SM_ST_FAULT_IMD:
+			state_str = "IMD Fault";
+			break;
+		case FEB_SM_ST_FAULT_BSPD:
+			state_str = "BSPD Fault";
+			break;
+		default:
+			state_str= "undef";
+			break;
+	}
+
+	//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
+	FEB_Relay_State_t bms_shutdown_relay = FEB_Hw_Get_BMS_Shutdown_Relay();
+	FEB_Relay_State_t air_plus_relay = FEB_Hw_Get_AIR_Plus_Relay();
+	FEB_Relay_State_t precharge_relay = FEB_Hw_Get_Precharge_Relay();
+	FEB_Relay_State_t air_minus_sense = FEB_Hw_AIR_Minus_Sense();
+	FEB_Relay_State_t air_plus_sense = FEB_Hw_AIR_Plus_Sense();
+	FEB_Relay_State_t bms_shutdown_sense = FEB_Hw_BMS_Shutdown_Sense();
+	FEB_Relay_State_t imd_shutdown_sense = FEB_Hw_IMD_Shutdown_Sense();
+	//bool r2d = FEB_CAN_ICS_Ready_To_Drive();
+	//uint8_t ics = FEB_CAN_ICS_Data();
+	//osMutexRelease(FEB_SM_LockHandle);
+
+	static char str[128];
+	sprintf(str, "state %s %d %d %d %d %d %d %d\n\r", state_str,
+			bms_shutdown_relay, air_plus_relay, precharge_relay,
+			air_minus_sense, air_plus_sense,
+			bms_shutdown_sense, imd_shutdown_sense);
+
+	//while (osMutexAcquire(FEB_UART_LockHandle, UINT32_MAX) != osOK);
+	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
+	//osMutexRelease(FEB_UART_LockHandle);
+}
+
+void FEB_SM_CAN_Transmit(void) {
+	/*
+	// Initialize transmission header
+	FEB_CAN_Tx_Header.DLC = 3;
+	FEB_CAN_Tx_Header.StdId = FEB_CAN_ID_BMS_STATE;
+	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
+	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
+	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
+
+	// Get data
+	uint16_t cell_min_voltage = FEB_LTC6811_Get_Min_Voltage();
+
+	// Copy data to Tx buffer
+	FEB_CAN_Tx_Data[0] = FEB_SM_Get_Current_State();
+	FEB_CAN_Tx_Data[1] = cell_min_voltage && 0xFF;
+	FEB_CAN_Tx_Data[2] = cell_min_voltage >> 8;
+
+	// Delay until mailbox available
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+
+	// Add Tx data to mailbox
+	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
+		// FEB_SM_Set_Current_State(FEB_SM_ST_SHUTDOWN);
+	}
+	*/
 }
