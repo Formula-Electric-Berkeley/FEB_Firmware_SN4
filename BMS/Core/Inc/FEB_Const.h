@@ -8,4 +8,10 @@
 #define FEB_CELL_MIN_VOLT 2.5
 #define FEB_CELL_MAX_VOLT 4.2
 
+// ******************************** Voltage Reading Configuration ***************************
+#define CONTVR CONTINUOUS
+#define DCPVR DCP_OFF
+#define RSTFVR RSTF_OFF
+#define OWVR OW_OFF_ALL_CH
+#define RDVR RD_OFF
 #endif /* INC_FEB_CONST_H_ */

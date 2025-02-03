@@ -110,9 +110,6 @@ void validate_voltages() {
 }
 
 // ******************************** Temperature ********************************
-
-
-
 void configure_gpio_bits(uint8_t channel) {
 	gpio_bits[0] = 0b1; /* ADC Channel */
 	gpio_bits[1] = 0b1; /* ADC Channel */
