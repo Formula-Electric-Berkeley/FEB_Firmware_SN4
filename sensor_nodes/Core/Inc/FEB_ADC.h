@@ -17,6 +17,6 @@
 
 // **************************************** Functions ****************************************
 
-uint32_t get_linear_potentiometer_reading(void);
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc);
 
 #endif /* INC_FEB_ADC_H_ */

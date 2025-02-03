@@ -11,7 +11,7 @@ extern ADC_HandleTypeDef hadc2;
 extern UART_HandleTypeDef huart2;
 extern DMA_HandleTypeDef hdma_adc2;
 
-extern uint16_t ADC2_Readings[4];
+extern uint32_t ADC2_Readings[4];
 float linear_potentiometer_value;
 char buf[164];
 float adc_resolution = 4095;
