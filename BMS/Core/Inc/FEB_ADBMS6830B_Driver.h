@@ -20,6 +20,7 @@
 typedef struct
 {
   uint16_t c_codes[18]; //!< Cell Voltage Codes
+  uint16_t s_codes[18]; //!< Cell Voltage Codes
   uint8_t pec_match[6]; //!< If a PEC error was detected during most recent read cmd
 } cv;
 
