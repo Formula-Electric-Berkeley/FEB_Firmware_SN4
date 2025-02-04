@@ -2,38 +2,20 @@
 #define INC_FEB_SM_H_
 
 // ******************************** Includes ********************************
-#include "FEB_HW.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "FEB_Const.h"
-#include "FEB_Task_Queue.h"
 
-// *********************** States ***********************
-typedef enum {
-	FEB_SM_ST_BOOT,
-	FEB_SM_ST_LV,
-	FEB_SM_ST_ESC,
-	FEB_SM_ST_PRECHARGE,
-	FEB_SM_ST_ENERGIZED,
-	FEB_SM_ST_DRIVE,
-	FEB_SM_ST_FREE,
-	FEB_SM_ST_CHARGING,
-	FEB_SM_ST_BALANCE,
-	FEB_SM_ST_FAULT_BMS,
-	FEB_SM_ST_FAULT_BSPD,
-	FEB_SM_ST_FAULT_IMD,
-	FEB_SM_ST_FAULT_CHARGING,
-	FEB_SM_ST_DEFAULT
-} FEB_SM_ST_t;
+#include "FEB_CAN.h"
+#include "FEB_UART_Transmit.h"
+
+
 
 // ************************ Task Queues ***************
-static FEB_Task_Header_t FEB_SM_Tasks;
-static FEB_Task_Header_t FEB_CAN_Tasks;
-//FEB_Task_Header_t FEB_ADBMS_Tasks;
-//FEB_Task_Header_t FEB_LTC_Tasks;
-//FEB_Task_Header_t FEB_UART_Tasks;
+extern FEB_Task_Header_t FEB_CAN_Tasks;
+extern FEB_Task_Header_t FEB_UART_Tasks;
 
 void FEB_SM_Init(void);
 FEB_SM_ST_t FEB_SM_Get_Current_State(void);

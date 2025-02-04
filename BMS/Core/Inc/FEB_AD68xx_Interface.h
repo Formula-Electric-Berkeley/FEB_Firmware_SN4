@@ -3,11 +3,9 @@
 // ******************************** Includes ********************************
 #include <FEB_HW.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include "stm32f4xx_hal.h"
-#include "FEB_Const.h"
 // ****************** Error Correction *******************
 /*!
  Calculates  and returns the CRC15

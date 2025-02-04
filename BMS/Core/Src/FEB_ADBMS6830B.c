@@ -1,8 +1,20 @@
 #include "FEB_ADBMS6830B.h"
+// ******************************** Voltage ********************************
+
+void start_adc_cell_voltage_measurements();
+void read_cell_voltages();
+void store_cell_voltages();
+void validate_voltages();
+// ******************************** Temperature ********************************
+
+void configure_gpio_bits(uint8_t channel);
+void start_aux_voltage_measurements();
+void read_aux_voltages();
+void store_cell_temps(uint8_t channel);
 
 // ******************************** Global Variabls ********************************
+cell_asic IC_Config[FEB_NUM_IC];
 
-accumulator_t accumulator = {0};
 extern UART_HandleTypeDef huart2;
 
 // ******************************** Config Bits ********************************
@@ -47,12 +59,12 @@ static float convert_voltage(int16_t raw_code) {
 
 void FEB_ADBMS_Init() {
 	FEB_cs_high();
-	ADBMS6830B_init_cfg(FEB_NUM_IC, accumulator.IC_Config);
+	ADBMS6830B_init_cfg(FEB_NUM_IC, IC_Config);
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
-		ADBMS6830B_set_cfgr(ic, accumulator.IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
+		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
 	}
-	ADBMS6830B_reset_crc_count(FEB_NUM_IC, accumulator.IC_Config);
-	ADBMS6830B_init_reg_limits(FEB_NUM_IC, accumulator.IC_Config);
+	ADBMS6830B_reset_crc_count(FEB_NUM_IC, IC_Config);
+	ADBMS6830B_init_reg_limits(FEB_NUM_IC, IC_Config);
 
 }
 
@@ -84,16 +96,18 @@ void start_adc_cell_voltage_measurements() {
 
 void read_cell_voltages() {
 	wakeup_sleep(FEB_NUM_IC);
-	ADBMS6830B_rdcv(FEB_NUM_IC, accumulator.IC_Config);
+	ADBMS6830B_rdcv(FEB_NUM_IC, IC_Config);
 }
 
 void store_cell_voltages() {
-	accumulator.total_voltage_V = 0;
+	FEB_ACC.total_voltage_V = 0;
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
 			uint8_t ic = bank;
-			accumulator.banks[bank].cells[cell].voltage_V = convert_voltage(accumulator.IC_Config[bank].cells.c_codes[ic]);
-			accumulator.banks[bank].cells[cell].voltage_S = convert_voltage(accumulator.IC_Config[bank].cells.s_codes[ic]);
+			float CVoltage = convert_voltage(IC_Config[bank].cells.c_codes[ic]);
+			FEB_ACC.banks[bank].cells[cell].voltage_V = CVoltage;
+			FEB_ACC.banks[bank].cells[cell].voltage_S = convert_voltage(IC_Config[bank].cells.s_codes[ic]);
+			FEB_ACC.total_voltage_V+=CVoltage;
 		}
 	}
 }
@@ -101,7 +115,7 @@ void store_cell_voltages() {
 void validate_voltages() {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
-			float voltage = accumulator.banks[bank].cells[cell].voltage_V;
+			float voltage = FEB_ACC.banks[bank].cells[cell].voltage_V;
 			if (voltage > FEB_CELL_MAX_VOLT || voltage < FEB_CELL_MIN_VOLT) {
 				/* Some error handling */
 			}
@@ -119,11 +133,11 @@ void configure_gpio_bits(uint8_t channel) {
 	gpio_bits[5] = 0b1; /* ADC Channel */
 	gpio_bits[6] = 0b1; /* ADC Channel */
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
-		ADBMS6830B_set_cfgr(ic, accumulator.IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
+		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
 	}
 	wakeup_sleep(FEB_NUM_IC);
-	ADBMS6830B_wrcfga(FEB_NUM_IC, accumulator.IC_Config);
-	ADBMS6830B_wrcfgb(FEB_NUM_IC, accumulator.IC_Config);
+	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
+	ADBMS6830B_wrcfgb(FEB_NUM_IC, IC_Config);
 
 }
 
@@ -135,40 +149,19 @@ void start_aux_voltage_measurements() {
 
 void read_aux_voltages() {
 	wakeup_sleep(FEB_NUM_IC);
-	ADBMS6830B_rdaux(FEB_NUM_IC, accumulator.IC_Config);
+	ADBMS6830B_rdaux(FEB_NUM_IC, IC_Config);
 }
 
 void store_cell_temps(uint8_t channel) {
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
 		for (uint8_t mux = 0; mux < 4; mux++) {
 			uint8_t gpio = get_gpio_pin(mux);
-			uint16_t raw_code = accumulator.IC_Config[bank].aux.a_codes[gpio];
+			uint16_t raw_code = IC_Config[bank].aux.a_codes[gpio];
 			uint8_t sensor = get_sensor(mux, channel);
-			accumulator.banks[bank].temp_sensor_readings_V[sensor] = convert_voltage(raw_code);
+			FEB_ACC.banks[bank].temp_sensor_readings_V[sensor] = convert_voltage(raw_code);
 		}
 	}
 }
 
-void FEB_ADBMS_UART_Transmit() {
-	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
-		char UART_line[3][256];
-		int offset[3];
-		offset[0]=sprintf((char*)(UART_line[0]),"|Bnk %d|",bank);
-		offset[1]=sprintf((char*)(UART_line[1]),"|Vlt C|");
-		offset[2]=sprintf((char*)(UART_line[2]),"|Vlt S|");
-
-
-		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell++) {
-			offset[0]+=sprintf(((char*)(UART_line[0]) + offset[0]), (cell>=10)?"Cell  %d|":"Cell   %d|",cell);
-			offset[1]+=sprintf(((char*)(UART_line[1]) + offset[1]), "%.6f|",accumulator.banks[bank].cells[cell].voltage_V);
-			offset[2]+=sprintf(((char*)(UART_line[2]) + offset[2]), "%.6f|",accumulator.banks[bank].cells[cell].voltage_S);
-		}
-		for(int line=0;line<3;line++){
-			offset[line]+=sprintf(((char*)(UART_line[line]) + offset[line]), "\n\r") ;
-			HAL_UART_Transmit(&huart2, (uint8_t*) UART_line[line], offset[line]+1, 100);
-		}
-
-	}
-}
 
 

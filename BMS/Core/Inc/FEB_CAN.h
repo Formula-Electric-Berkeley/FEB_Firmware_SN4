@@ -3,10 +3,10 @@
 
 
 // **************************************** Includes ****************************************
-
-#include "FEB_UART_Transmit.h"
-#include "FEB_SM.h"
 #include "FEB_CAN_ID.h"
+#include "FEB_Task_Queue.h"
+#include "FEB_HW.h"
+
 
 // **************************************** Constants ****************************************
 #define FEB_CAN_PINGPONG_MODE 1
@@ -14,7 +14,8 @@
 #define FEB_CAN_EXCEPTION_TIMEOUT 1000
 #define FEB_CAN_EXCEPTION_TxFAIL 1001
 // **************************************** Functions ****************************************
-extern FEB_Task_Header_t FEB_CAN_Tasks;
+static FEB_Task_Header_t FEB_CAN_Tasks;
+
 void FEB_CAN_Init(void);
 void FEB_CAN_Filter_Config(void);
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan);

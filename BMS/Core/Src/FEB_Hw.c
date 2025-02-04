@@ -5,22 +5,12 @@
 
 extern SPI_HandleTypeDef hspi1;
 
-// ******************************** Static ********************************
-
-typedef struct {
-	FEB_Relay_State_t shutdown;
-	FEB_Relay_State_t AIR_plus;
-	FEB_Relay_State_t precharge;
-} relay_status_t;
-
-static relay_status_t relay_status;
-static uint8_t shutdown_close_guard = 0; //guard for shutdown relay
-
 // ******************************** SPI ********************************
 
 void FEB_delay_u(uint16_t micro) {
 	int a=0;
 	while(micro--)a=micro;
+	a++;
 }
 
 void FEB_delay_m(uint16_t milli) {

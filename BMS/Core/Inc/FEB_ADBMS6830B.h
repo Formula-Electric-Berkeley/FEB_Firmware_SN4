@@ -6,8 +6,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "FEB_ADBMS6830B_Driver.h"
 #include "FEB_Const.h"
+#include "FEB_SM.h"
+#include "FEB_ADBMS6830B_Driver.h"
+
 
 // ********************************** ADBMS6830B Configuration **********************************
 
@@ -70,44 +72,11 @@ typedef enum {
 	VRES
 } AUX_CH;
 
-// ******************************** Struct ********************************
-
-typedef struct {
-	float voltage_V;
-	float voltage_S;
-} cell_t;
-
-typedef struct {
-	float total_voltage_V;
-	float temp_sensor_readings_V[FEB_NUM_TEMP_SENSE_PER_BANK];
-	cell_t cells[FEB_NUM_CELLS_PER_BANK];
-} bank_t;
-
-typedef struct {
-	float total_voltage_V;
-	bool balance_done;
-	bank_t banks[FEB_NUM_BANKS];
-	cell_asic IC_Config[FEB_NUM_IC];
-} accumulator_t;
-
 // ******************************** Functions ********************************
 
 void FEB_ADBMS_Init();
 void FEB_ADBMS_AcquireData();
 
-// ******************************** Voltage ********************************
-
-void start_adc_cell_voltage_measurements();
-void read_cell_voltages();
-void store_cell_voltages();
-void validate_voltages();
-
-// ******************************** Temperature ********************************
-
-void configure_gpio_bits(uint8_t channel);
-void start_aux_voltage_measurements();
-void read_aux_voltages();
-void store_cell_temps(uint8_t channel);
 
 // ******************************** UART ********************************
 

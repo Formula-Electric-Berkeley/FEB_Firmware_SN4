@@ -1,3 +1,6 @@
+../Core/Inc/FEB_Task_Queue.h:25:13:FEB_Queue	32	static
+../Core/Inc/FEB_Task_Queue.h:52:13:FEB_Pop_Head	32	static
+../Core/Inc/FEB_Task_Queue.h:64:13:FEB_Pop_Tail	32	static
 ../Core/Src/stm32f4xx_it.c:70:6:NMI_Handler	4	static
 ../Core/Src/stm32f4xx_it.c:85:6:HardFault_Handler	4	static
 ../Core/Src/stm32f4xx_it.c:100:6:MemManage_Handler	4	static

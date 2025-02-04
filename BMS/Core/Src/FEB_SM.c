@@ -42,12 +42,15 @@ static FEB_SM_ST_t SM_Current_State;
 
 /* Initiate state transition. Assume SM lock held. */
 static void transition(FEB_SM_ST_t next_state) {
-	(transitionVector[FEB_SM_Get_Current_State()])(next_state);
+	(transitionVector[SM_Current_State])(next_state);
 }
+
+/* ******** Interface ******** */
 
 /* Function called from initial thread (no other threads created).
  * No synchronization needed. */
-static void startup(void) {
+void FEB_SM_Init(void) {
+	SM_Current_State=FEB_SM_ST_BOOT;
 	//FEB_Config_Update(FEB_Current_State);
 
 	//FEB_Hw_Set_AIR_Plus_Relay(FEB_HW_RELAY_OPEN);
@@ -63,15 +66,6 @@ static void startup(void) {
 	}
 	*/
 
-}
-
-/* ******** Interface ******** */
-
-/* Function called from initial thread (no other threads created).
- * No synchronization needed. */
-void FEB_SM_Init(void) {
-	SM_Current_State=FEB_SM_ST_BOOT;
-	//startup();
 }
 
 /* Get current state of state machine. */
@@ -208,7 +202,7 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_ENERGIZED:
 		FEB_Config_Update(updateStateProtected(FEB_SM_ST_ENERGIZED));
 		FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_CLOSE);
-		osDelay(100);
+		//osDelay(100);
 		FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
 
 		break;

@@ -1,6 +1,4 @@
 // **************************************** Includes ****************************************
-/*
-#include "FEB_CAN.h"
 #include "FEB_UART_Transmit.h"
 
 extern UART_HandleTypeDef huart2;
@@ -10,6 +8,28 @@ extern UART_HandleTypeDef huart2;
 static uint8_t counter = 0;
 
 // **************************************** Functions ****************************************
+
+void FEB_ADBMS_UART_Transmit(void) {
+	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
+		char UART_line[3][256];
+		int offset[3];
+		offset[0]=sprintf((char*)(UART_line[0]),"|Bnk %d|",bank);
+		offset[1]=sprintf((char*)(UART_line[1]),"|Vlt C|");
+		offset[2]=sprintf((char*)(UART_line[2]),"|Vlt S|");
+
+
+		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell++) {
+			offset[0]+=sprintf(((char*)(UART_line[0]) + offset[0]), (cell>=10)?"Cell  %d|":"Cell   %d|",cell);
+			offset[1]+=sprintf(((char*)(UART_line[1]) + offset[1]), "%.6f|",FEB_ACC.banks[bank].cells[cell].voltage_V);
+			offset[2]+=sprintf(((char*)(UART_line[2]) + offset[2]), "%.6f|",FEB_ACC.banks[bank].cells[cell].voltage_S);
+		}
+		for(int line=0;line<3;line++){
+			offset[line]+=sprintf(((char*)(UART_line[line]) + offset[line]), "\n\r") ;
+			HAL_UART_Transmit(&huart2, (uint8_t*) UART_line[line], offset[line]+1, 100);
+		}
+
+	}
+}
 
 void FEB_UART_Transmit_Process(void) {
 	char str[2048];
@@ -94,7 +114,7 @@ void FEB_SM_UART_Transmit(void) {
 			break;
 	}
 
-	//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
+	/*while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
 	FEB_Relay_State_t bms_shutdown_relay = FEB_Hw_Get_BMS_Shutdown_Relay();
 	FEB_Relay_State_t air_plus_relay = FEB_Hw_Get_AIR_Plus_Relay();
 	FEB_Relay_State_t precharge_relay = FEB_Hw_Get_Precharge_Relay();
@@ -111,9 +131,10 @@ void FEB_SM_UART_Transmit(void) {
 			bms_shutdown_relay, air_plus_relay, precharge_relay,
 			air_minus_sense, air_plus_sense,
 			bms_shutdown_sense, imd_shutdown_sense);
+	 */
 
 	//while (osMutexAcquire(FEB_UART_LockHandle, UINT32_MAX) != osOK);
-	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
+	//HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
 	//osMutexRelease(FEB_UART_LockHandle);
 }
-*/
+

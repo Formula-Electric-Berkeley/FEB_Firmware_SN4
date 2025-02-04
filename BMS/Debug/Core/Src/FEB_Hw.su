@@ -1,0 +1,9 @@
+../Core/Src/FEB_HW.c:10:6:FEB_delay_u	24	static
+../Core/Src/FEB_HW.c:16:6:FEB_delay_m	16	static
+../Core/Src/FEB_HW.c:20:6:FEB_cs_low	8	static
+../Core/Src/FEB_HW.c:24:6:FEB_cs_high	8	static
+../Core/Src/FEB_HW.c:28:6:FEB_spi_write_read	24	static
+../Core/Src/FEB_HW.c:39:6:FEB_PIN_RST	16	static
+../Core/Src/FEB_HW.c:42:6:FEB_PIN_SET	16	static
+../Core/Src/FEB_HW.c:45:6:FEB_PIN_TGL	16	static
+../Core/Src/FEB_HW.c:48:15:FEB_PIN_RD	16	static

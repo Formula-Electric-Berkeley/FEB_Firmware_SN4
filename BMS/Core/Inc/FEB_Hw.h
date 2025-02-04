@@ -4,8 +4,10 @@
 // ******************************** Includes ***********************************
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "stm32f446xx.h"
 #include "stm32f4xx_hal.h"
+#include "FEB_Const.h"
 
 // ******************************** GPIO MAP ***********************************
 typedef struct {
@@ -65,6 +67,25 @@ void FEB_PIN_RST(FEB_GPIO);
 void FEB_PIN_SET(FEB_GPIO);
 void FEB_PIN_TGL(FEB_GPIO);
 GPIO_PinState FEB_PIN_RD(FEB_GPIO);
+// ******************************** Struct ********************************
 
+typedef struct {
+	float voltage_V;
+	float voltage_S;
+} cell_t;
 
+typedef struct {
+	float total_voltage_V;
+	float temp_sensor_readings_V[FEB_NUM_TEMP_SENSE_PER_BANK];
+	cell_t cells[FEB_NUM_CELLS_PER_BANK];
+} bank_t;
+
+typedef struct {
+	float total_voltage_V;
+	bool balance_done;
+	bank_t banks[FEB_NUM_BANKS];
+} accumulator_t;
+
+//ACC STATE
+static accumulator_t FEB_ACC = {0};
 #endif /* INC_FEB_HW_H_ */
