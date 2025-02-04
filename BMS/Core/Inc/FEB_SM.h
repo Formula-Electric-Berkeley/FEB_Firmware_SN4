@@ -2,17 +2,15 @@
 #define INC_FEB_SM_H_
 
 // ******************************** Includes ********************************
+#include "FEB_HW.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "stm32f4xx_hal.h"
-#include "FEB_HW.h"
-#include "FEB_CAN.h"
 #include "FEB_Const.h"
 #include "FEB_Task_Queue.h"
 
-// States
+// *********************** States ***********************
 typedef enum {
 	FEB_SM_ST_BOOT,
 	FEB_SM_ST_LV,
@@ -30,12 +28,19 @@ typedef enum {
 	FEB_SM_ST_DEFAULT
 } FEB_SM_ST_t;
 
+// ************************ Task Queues ***************
+static FEB_Task_Header_t FEB_SM_Tasks;
+static FEB_Task_Header_t FEB_CAN_Tasks;
+//FEB_Task_Header_t FEB_ADBMS_Tasks;
+//FEB_Task_Header_t FEB_LTC_Tasks;
+//FEB_Task_Header_t FEB_UART_Tasks;
+
 void FEB_SM_Init(void);
 FEB_SM_ST_t FEB_SM_Get_Current_State(void);
 void FEB_SM_Transition(FEB_SM_ST_t next_state);
 void FEB_SM_Process(void);
-void FEB_SM_UART_Transmit(void);
-void FEB_SM_CAN_Transmit(void);
+
+
 
 /* Faults
 CAN Initialization fails

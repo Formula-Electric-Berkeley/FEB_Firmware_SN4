@@ -15,9 +15,8 @@
 
 // **************************************** Functions ****************************************
 void FEB_UART_Transmit_Process(void);
-
 void FEB_UART_Transmit_PingPong_Members(void);
-
+void FEB_SM_UART_Transmit(void);
 void FEB_UART_Transmit_CAN_Error(int);
 */
 #endif /* INC_FEB_UART_TRANSMIT_H_ */
