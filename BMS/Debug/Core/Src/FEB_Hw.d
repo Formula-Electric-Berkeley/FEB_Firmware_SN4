@@ -1,4 +1,4 @@
-Core/Src/FEB_HW.o: ../Core/Src/FEB_HW.c ../Core/Inc/FEB_HW.h \
+Core/Src/FEB_Hw.o: ../Core/Src/FEB_Hw.c ../Core/Inc/FEB_HW.h \
  ../Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f446xx.h \
  ../Drivers/CMSIS/Include/core_cm4.h \
  ../Drivers/CMSIS/Include/cmsis_version.h \

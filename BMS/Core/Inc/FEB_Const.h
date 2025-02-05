@@ -16,10 +16,10 @@
 
 // ******************************** Voltage Reading Configuration ***************************
 #define CONTVR CONTINUOUS
-#define DCPVR DCP_OFF
+#define DCPVR DCP_ON
 #define RSTFVR RSTF_OFF
 #define OWVR OW_OFF_ALL_CH
-#define RDVR RD_OFF
+#define RDVR RD_ON
 
 // *********************** States ***********************
 typedef enum {

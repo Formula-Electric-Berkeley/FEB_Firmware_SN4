@@ -4,7 +4,7 @@
 "./Core/Src/FEB_CAN.o"
 "./Core/Src/FEB_CB.o"
 "./Core/Src/FEB_Config.o"
-"./Core/Src/FEB_HW.o"
+"./Core/Src/FEB_Hw.o"
 "./Core/Src/FEB_IVT.o"
 "./Core/Src/FEB_Main.o"
 "./Core/Src/FEB_SM.o"

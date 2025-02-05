@@ -66,15 +66,16 @@ void FEB_ADBMS_Init() {
 	ADBMS6830B_reset_crc_count(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_init_reg_limits(FEB_NUM_IC, IC_Config);
 
+
 }
 
 void FEB_ADBMS_Voltage_Process() {
 	/* Voltage */
-	start_adc_cell_voltage_measurements();
+	wakeup_sleep(FEB_NUM_IC);
 	read_cell_voltages();
 	store_cell_voltages();
-	//validate_voltages();
-
+	validate_voltages();
+	configure_gpio_bits(channel);
 
 
 }
@@ -82,7 +83,7 @@ void FEB_ADBMS_Voltage_Process() {
 void FEB_ADBMS_Temperature_Process(){
 	/* Temperature */
 	for (uint8_t channel = 0; channel < 8; channel++) {
-		configure_gpio_bits(channel);
+
 		start_aux_voltage_measurements();
 		read_aux_voltages();
 		store_cell_temps(channel);
@@ -93,7 +94,7 @@ void FEB_ADBMS_Temperature_Process(){
 
 void start_adc_cell_voltage_measurements() {
 	wakeup_sleep(FEB_NUM_IC);
-	ADBMS6830B_adcv(RDVR, DCPVR, CONTVR, RSTFVR, OWVR);
+	ADBMS6830B_adcv(RDVR, DCPVR, CONTINUOUS, RSTFVR, OWVR);
 	ADBMS6830B_pollAdc();
 }
 
@@ -143,6 +144,7 @@ void configure_gpio_bits(uint8_t channel) {
 	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_wrcfgb(FEB_NUM_IC, IC_Config);
+	start_adc_cell_voltage_measurements();
 
 }
 
