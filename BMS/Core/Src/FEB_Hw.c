@@ -24,6 +24,18 @@ void FEB_cs_low() {
 void FEB_cs_high() {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 }
+void FEB_spi_write_array(uint8_t len, uint8_t data[]) {
+	if(HAL_SPI_Transmit(&hspi1, data, len, HAL_MAX_DELAY)!=HAL_OK){
+		//catch error
+	}
+}
+uint8_t FEB_spi_read_byte(uint8_t tx_data) {
+	uint8_t data;
+	if(HAL_SPI_Receive(&hspi1, &data, 1, 100)!=HAL_OK){
+		//catch error
+	}
+	return data;
+}
 
 void FEB_spi_write_read(uint8_t tx_Data[], uint8_t tx_len, uint8_t *rx_data, uint8_t rx_len) {
 	if(HAL_SPI_Transmit(&hspi1,tx_Data,tx_len,HAL_MAX_DELAY) != HAL_OK){
@@ -45,6 +57,6 @@ void FEB_PIN_SET(FEB_GPIO PinOut){
 void FEB_PIN_TGL(FEB_GPIO PinOut){
 	HAL_GPIO_TogglePin(PinOut.group, PinOut.pin);
 }
-GPIO_PinState FEB_PIN_RD(FEB_GPIO PinOut){
-	return HAL_GPIO_ReadPin(PinOut.group, PinOut.pin);
+FEB_Relay_State FEB_PIN_RD(FEB_GPIO PinOut){
+	return (FEB_Relay_State)HAL_GPIO_ReadPin(PinOut.group, PinOut.pin);
 }

@@ -68,14 +68,18 @@ void FEB_ADBMS_Init() {
 
 }
 
-void FEB_ADBMS_AcquireData() {
-
+void FEB_ADBMS_Voltage_Process() {
 	/* Voltage */
 	start_adc_cell_voltage_measurements();
 	read_cell_voltages();
 	store_cell_voltages();
 	//validate_voltages();
 
+
+
+}
+
+void FEB_ADBMS_Temperature_Process(){
 	/* Temperature */
 	for (uint8_t channel = 0; channel < 8; channel++) {
 		configure_gpio_bits(channel);
@@ -83,7 +87,6 @@ void FEB_ADBMS_AcquireData() {
 		read_aux_voltages();
 		store_cell_temps(channel);
 	}
-
 }
 
 // ******************************** Voltage ********************************
@@ -113,11 +116,13 @@ void store_cell_voltages() {
 }
 
 void validate_voltages() {
+	uint16_t vMax = FEB_Config_Get_Cell_Max_Voltage_mV();
+	uint16_t vMin = FEB_Config_Get_Cell_Min_Voltage_mV();
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
 			float voltage = FEB_ACC.banks[bank].cells[cell].voltage_V;
-			if (voltage > FEB_CELL_MAX_VOLT || voltage < FEB_CELL_MIN_VOLT) {
-				/* Some error handling */
+			if (voltage > vMax || voltage < vMin) {
+				FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 			}
 		}
 	}
@@ -162,6 +167,4 @@ void store_cell_temps(uint8_t channel) {
 		}
 	}
 }
-
-
 

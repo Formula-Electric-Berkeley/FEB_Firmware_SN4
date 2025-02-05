@@ -8,32 +8,39 @@
 void FEB_Main_Setup() {
 	//SM setup
 	FEB_ADBMS_Init();
-	//CAN Filter Config Setup
+	FEB_SM_Init();
+	FEB_CAN_Init();
 	//IVT Setup
 }
 
-void FEB_Main_Task1_VT() {
-	FEB_ADBMS_AcquireData();
-	FEB_ADBMS_UART_Transmit();
-	HAL_Delay(100);
+void FEB_Task_ADBMS() {
+	FEB_ADBMS_Voltage_Process();
+	FEB_ADBMS_Temperature_Process();
 }
 
-void FEB_Main_Task2_SM() {
-
+void FEB_Task_SM() {
+	FEB_SM_Process();
 }
 
-void FEB_Main_Task3_Charge() {
-
-}
-
-void FEB_Main_Task4_Balance() {
+void FEB_Task_Charge() {
 
 }
 
-void FEB_Main_Task5_IVT() {
+void FEB_Task_Balance() {
 
 }
 
-void FEB_Main_Task6_CAN() {
+void FEB_Task_IVT() {
 
+}
+
+void FEB_Task_CAN() {
+
+}
+
+void FEB_Task_UART() {
+	if(FEB_SM_ST_DEBUG){
+		FEB_ADBMS_UART_Transmit();
+		FEB_SM_UART_Transmit();
+	}
 }

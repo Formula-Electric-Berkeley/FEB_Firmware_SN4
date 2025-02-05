@@ -1,0 +1,7 @@
+../Core/Src/FEB_Config.c:12:6:FEB_Config_Update	24	static
+../Core/Src/FEB_Config.c:96:10:FEB_Config_Get_Cell_Min_Voltage_mV	16	static
+../Core/Src/FEB_Config.c:103:10:FEB_Config_Get_Cell_Max_Voltage_mV	16	static
+../Core/Src/FEB_Config.c:111:9:FEB_Config_Get_Cell_Min_Temperature_dC	16	static
+../Core/Src/FEB_Config.c:118:9:FEB_Config_Get_Cell_Max_Temperature_dC	16	static
+../Core/Src/FEB_Config.c:125:9:FEB_Config_Get_Pack_Min_Current_mA	16	static
+../Core/Src/FEB_Config.c:132:9:FEB_Config_Get_Pack_Max_Current_mA	16	static

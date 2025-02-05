@@ -7,8 +7,12 @@
 #define FEB_NUM_TEMP_SENSE_PER_BANK 32
 #define FEB_NUM_BANKS 1
 #define FEB_NUM_IC 1
-#define FEB_CELL_MIN_VOLT 2.5
-#define FEB_CELL_MAX_VOLT 4.2
+
+#define FEB_CONFIG_CELL_MIN_VOLTAGE_mV 2500
+#define FEB_CONFIG_CELL_MAX_VOLTAGE_mV 4200
+#define FEB_CONFIG_CELL_MIN_VOLTAGE_100uV (FEB_CONFIG_CELL_MIN_VOLTAGE_mV * 10)
+#define FEB_CONFIG_CELL_MAX_VOLTAGE_100uV (FEB_CONFIG_CELL_MAX_VOLTAGE_mV * 10)
+#define FEB_CONST_PRECHARGE_PCT 0.8
 
 // ******************************** Voltage Reading Configuration ***************************
 #define CONTVR CONTINUOUS
@@ -35,4 +39,9 @@ typedef enum {
 	FEB_SM_ST_DEFAULT
 } FEB_SM_ST_t;
 
+typedef enum {
+	FEB_RELAY_STATE_OPEN,
+	FEB_RELAY_STATE_CLOSE
+
+}FEB_Relay_State;
 #endif /* INC_FEB_CONST_H_ */

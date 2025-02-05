@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "FEB_Const.h"
+#include "FEB_Config.h"
 #include "FEB_SM.h"
 #include "FEB_ADBMS6830B_Driver.h"
 
@@ -75,7 +76,7 @@ typedef enum {
 // ******************************** Functions ********************************
 
 void FEB_ADBMS_Init();
-void FEB_ADBMS_AcquireData();
+void FEB_ADBMS_Voltage_Process();
 
 
 // ******************************** UART ********************************

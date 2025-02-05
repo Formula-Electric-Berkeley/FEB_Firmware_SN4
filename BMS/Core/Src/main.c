@@ -114,12 +114,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  FEB_Main_Task1_VT();
-//	  FEB_Main_Task2_SM();
-//	  FEB_Main_Task3_Charge();
-//	  FEB_Main_Task4_Balance();
-//	  FEB_Main_Task5_IVT();
-//	  FEB_Main_Task6_CAN();
+	  FEB_Task_ADBMS();
+	  FEB_Task_SM();
+	  FEB_Task_Charge();
+	  FEB_Task_Balance();
+	  FEB_Task_IVT();
+	  FEB_Task_CAN();
   }
   /* USER CODE END 3 */
 }

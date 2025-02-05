@@ -114,14 +114,14 @@ void FEB_SM_UART_Transmit(void) {
 			break;
 	}
 
-	/*while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
-	FEB_Relay_State_t bms_shutdown_relay = FEB_Hw_Get_BMS_Shutdown_Relay();
-	FEB_Relay_State_t air_plus_relay = FEB_Hw_Get_AIR_Plus_Relay();
-	FEB_Relay_State_t precharge_relay = FEB_Hw_Get_Precharge_Relay();
-	FEB_Relay_State_t air_minus_sense = FEB_Hw_AIR_Minus_Sense();
-	FEB_Relay_State_t air_plus_sense = FEB_Hw_AIR_Plus_Sense();
-	FEB_Relay_State_t bms_shutdown_sense = FEB_Hw_BMS_Shutdown_Sense();
-	FEB_Relay_State_t imd_shutdown_sense = FEB_Hw_IMD_Shutdown_Sense();
+	//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
+	FEB_Relay_State bms_shutdown_relay = FEB_PIN_RD(PN_SHS_IN);//FEB_Hw_Get_BMS_Shutdown_Relay();
+	FEB_Relay_State air_plus_relay = FEB_PIN_RD(PN_PC_AIR);//FEB_Hw_Get_AIR_Plus_Relay();
+	FEB_Relay_State precharge_relay = FEB_PIN_RD(PN_PC_REL);//FEB_Hw_Get_Precharge_Relay();
+	FEB_Relay_State air_minus_sense = FEB_PIN_RD(PN_AIRM_SENSE);//FEB_Hw_AIR_Minus_Sense();
+	FEB_Relay_State air_plus_sense = FEB_PIN_RD(PN_AIRP_SENSE);//FEB_Hw_AIR_Plus_Sense();
+	FEB_Relay_State bms_shutdown_sense = FEB_PIN_RD(PN_SHS_TSMS);//FEB_Hw_BMS_Shutdown_Sense();
+	FEB_Relay_State imd_shutdown_sense = FEB_PIN_RD(PN_SHS_IMD);//FEB_Hw_IMD_Shutdown_Sense();
 	//bool r2d = FEB_CAN_ICS_Ready_To_Drive();
 	//uint8_t ics = FEB_CAN_ICS_Data();
 	//osMutexRelease(FEB_SM_LockHandle);
@@ -131,10 +131,9 @@ void FEB_SM_UART_Transmit(void) {
 			bms_shutdown_relay, air_plus_relay, precharge_relay,
 			air_minus_sense, air_plus_sense,
 			bms_shutdown_sense, imd_shutdown_sense);
-	 */
 
 	//while (osMutexAcquire(FEB_UART_LockHandle, UINT32_MAX) != osOK);
-	//HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
+	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
 	//osMutexRelease(FEB_UART_LockHandle);
 }
 
