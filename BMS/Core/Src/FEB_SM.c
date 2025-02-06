@@ -52,11 +52,11 @@ static void transition(FEB_SM_ST_t next_state) {
  * No synchronization needed. */
 void FEB_SM_Init(void) {
 	SM_Current_State=FEB_SM_ST_BOOT;
-	//FEB_Config_Update(FEB_Current_State);
-
-	//FEB_Hw_Set_AIR_Plus_Relay(FEB_HW_RELAY_OPEN);
-	//FEB_Hw_Set_Precharge_Relay(FEB_HW_RELAY_OPEN);
-	//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_CLOSE);
+	FEB_Config_Update(FEB_Current_State);
+	FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_HW_RELAY_OPEN);
+	FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_HW_RELAY_OPEN);
+	FEB_PIN_SET(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_CLOSE);
+	FEB_PIN_SET(PN_BMS_IND);
 	//FEB_CAN_Charger_Init();
 
 	/*
@@ -94,7 +94,7 @@ void FEB_SM_Process(void) {
 static void fault(FEB_SM_ST_t FAULT_TYPE) {
 	SM_Current_State = FAULT_TYPE;
 	//FEB_Config_Update(SM_Current_State);
-	FEB_PIN_RST(P_PC1);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_RELAY_STATE_OPEN);
+	FEB_PIN_RST(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_RELAY_STATE_OPEN);
 	FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 	FEB_PIN_RST(PN_PC_REL); //FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
 	FEB_PIN_SET(PN_BUZZER);
@@ -119,7 +119,7 @@ static void bootTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_FAULT_BSPD:
 		fault(next_state);
 		break;
-
+	case FEB_SM_ST_DEFAULT:
 	case FEB_SM_ST_LV:
 		updateStateProtected(FEB_SM_ST_LV);
 		break;
@@ -218,6 +218,8 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 			)PrechargeTransition(FEB_SM_ST_LV);
 		else if(FEB_PIN_RD(PN_AIRP_SENSE)//FEB_Hw_Precharge_Sense()==FEB_RELAY_STATE_OPEN
 				)PrechargeTransition(FEB_SM_ST_ESC);
+		else if (0//Precharge complete
+				)PrechargeTransition(FEB_SM_ST_ENERGIZED);
 		break;
 
 	default:
@@ -250,8 +252,7 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 		if( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN||
 			FEB_PIN_RD(PN_AIRM_SENSE)==FEB_RELAY_STATE_OPEN//FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN
 			)EnergizedTransition(FEB_SM_ST_LV);
-		else if(0
-				//FEB_CAN_ICS_Ready_To_Drive()
+		else if(0//FEB_CAN_ICS_Ready_To_Drive() <-TODO:replace with task
 				)
 			EnergizedTransition(FEB_SM_ST_DRIVE);
 		break;
@@ -285,8 +286,7 @@ static void DriveTransition(FEB_SM_ST_t next_state){
 		if( FEB_PIN_RD(PN_SHS_IN)== FEB_RELAY_STATE_OPEN ||
 			FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_OPEN //FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN
 			)DriveTransition(FEB_SM_ST_LV);
-		else if(0
-				//FEB_CAN_ICS_Ready_To_Drive()
+		else if(0//!FEB_CAN_ICS_Ready_To_Drive() <-TODO:replace with task
 				)
 			DriveTransition(FEB_SM_ST_ENERGIZED);
 		break;
@@ -319,9 +319,8 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 		updateStateProtected(next_state);
 		break;
 	case FEB_SM_ST_DEFAULT:
-		if( FEB_PIN_RD(PN_AIRM_SENSE)== FEB_RELAY_STATE_CLOSE //FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_CLOSE &&
-			//FEB_Hw_Charge_Sense()==FEB_RELAY_STATE_CLOSE
-			//FEB_CAN_Charger_Received()
+		if( FEB_PIN_RD(PN_AIRM_SENSE)== FEB_RELAY_STATE_CLOSE &&//FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_CLOSE &&
+			0//FEB_CAN_Charger_Received()
 		) FreeTransition(FEB_SM_ST_CHARGING);
 	default:
 		return;
@@ -361,7 +360,7 @@ static void BalanceTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_FAULT_IMD:
 		fault(FEB_SM_ST_FAULT_CHARGING);
 		//osMutexRelease(FEB_SM_LockHandle);
-		//TODO: REPLACE FOR BALANCING
+		FEB_Stop_Balance();
 		//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
 		break;
 
@@ -370,7 +369,7 @@ static void BalanceTransition(FEB_SM_ST_t next_state){
 		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
 		//osMutexRelease(FEB_SM_LockHandle);
-		//FEB_LTC6811_Stop_Balance();
+		FEB_Stop_Balance();//FEB_LTC6811_Stop_Balance();
 		updateStateProtected(FEB_SM_ST_FREE);
 		break;
 
@@ -387,15 +386,19 @@ static void BalanceTransition(FEB_SM_ST_t next_state){
 
 /** Hard Fault Functions **/
 static void BMSFaultTransition(FEB_SM_ST_t next_state){
+	if (next_state==FEB_SM_ST_DEFAULT)return;
 	fault(SM_Current_State);
 }
 static void BSPDFaultTransition(FEB_SM_ST_t next_state){
+	if (next_state==FEB_SM_ST_DEFAULT)return;
 	fault(SM_Current_State);
 }
 static void IMDFaultTransition(FEB_SM_ST_t next_state){
+	if (next_state==FEB_SM_ST_DEFAULT)return;
 	fault(SM_Current_State);
 }
 static void ChargingFaultTransition(FEB_SM_ST_t next_state){
+	if (next_state==FEB_SM_ST_DEFAULT)return;
 	fault(SM_Current_State);
 }
 

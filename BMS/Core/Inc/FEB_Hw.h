@@ -73,6 +73,7 @@ FEB_Relay_State FEB_PIN_RD(FEB_GPIO);
 typedef struct {
 	float voltage_V;
 	float voltage_S;
+	uint8_t dischargeAmount;
 } cell_t;
 
 typedef struct {
@@ -83,7 +84,6 @@ typedef struct {
 
 typedef struct {
 	float total_voltage_V;
-	bool balance_done;
 	bank_t banks[FEB_NUM_BANKS];
 } accumulator_t;
 

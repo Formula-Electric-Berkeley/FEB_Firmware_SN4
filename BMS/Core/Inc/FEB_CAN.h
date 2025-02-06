@@ -7,13 +7,31 @@
 #include "FEB_Task_Queue.h"
 #include "FEB_HW.h"
 
+//***************************************** Structs *****************************************
+typedef enum {
+	DEV_IND_IVM,
+	DEV_IND_DASH,
+	DEV_IND_PCU,
+	DEV_IND_DCU,
+	DEV_IND_SN,
+	DEV_IND_CHARGER,
+} FEB_DEV_INDEX;
 
-// **************************************** Constants ****************************************
+
+typedef struct {
+	uint8_t FaAck; //Failed Acknowledgments
+	uint8_t lastOnline; //CAN SM Reports since last update
+} FEB_CAN_DEV;
+
+static FEB_CAN_DEV FEB_CAN_NETWORK[FEB_NUM_CAN_DEV]={0};
+
+// **************************************** Constants ***************************************
 #define FEB_CAN_PINGPONG_MODE 1
 #define FEB_CAN_TIMEOUT_MS 2000
 #define FEB_CAN_EXCEPTION_TIMEOUT 1000
 #define FEB_CAN_EXCEPTION_TxFAIL 1001
-// **************************************** Functions ****************************************
+
+// **************************************** Functions ***************************************
 static FEB_Task_Header_t FEB_CAN_Tasks;
 
 void FEB_CAN_Init(void);

@@ -10,20 +10,27 @@ static uint8_t counter = 0;
 // **************************************** Functions ****************************************
 
 void FEB_ADBMS_UART_Transmit(void) {
+	int NUMLINES=6;
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
-		char UART_line[3][256];
-		int offset[3];
+		char UART_line[NUMLINES][128];
+		int offset[NUMLINES];
 		offset[0]=sprintf((char*)(UART_line[0]),"|Bnk %d|",bank);
 		offset[1]=sprintf((char*)(UART_line[1]),"|Vlt C|");
 		offset[2]=sprintf((char*)(UART_line[2]),"|Vlt S|");
-
+		offset[3]=sprintf((char*)(UART_line[3]),"|Tmp 1|");
+		offset[4]=sprintf((char*)(UART_line[4]),"|Tmp 2|");
+		offset[4]=sprintf((char*)(UART_line[5]),"|PWM  |");
 
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell++) {
 			offset[0]+=sprintf(((char*)(UART_line[0]) + offset[0]), (cell>=10)?"Cell  %d|":"Cell   %d|",cell);
 			offset[1]+=sprintf(((char*)(UART_line[1]) + offset[1]), "%.6f|",FEB_ACC.banks[bank].cells[cell].voltage_V);
 			offset[2]+=sprintf(((char*)(UART_line[2]) + offset[2]), "%.6f|",FEB_ACC.banks[bank].cells[cell].voltage_S);
+			offset[3]+=sprintf(((char*)(UART_line[3]) + offset[3]), "%.6f|",FEB_ACC.banks[bank].temp_sensor_readings_V[cell]);
+			offset[4]+=sprintf(((char*)(UART_line[4]) + offset[4]), "%.6f|",FEB_ACC.banks[bank].temp_sensor_readings_V[cell+16]);
+			offset[4]+=sprintf(((char*)(UART_line[4]) + offset[4]), "%.6f|",FEB_ACC.banks[bank].temp_sensor_readings_V[cell+16]);
 		}
-		for(int line=0;line<3;line++){
+		offset[NUMLINES-1]+=sprintf(((char*)(UART_line[NUMLINES-1]) + offset[NUMLINES-1]), "\n\r");
+		for(int line=0;line<NUMLINES;line++){
 			offset[line]+=sprintf(((char*)(UART_line[line]) + offset[line]), "\n\r") ;
 			HAL_UART_Transmit(&huart2, (uint8_t*) UART_line[line], offset[line]+1, 100);
 		}

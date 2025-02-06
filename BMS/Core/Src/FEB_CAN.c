@@ -24,6 +24,7 @@ void FEB_CAN_Init(void) {
         // Code Error - Shutdown
 	}
 	HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
+	//TODO: Create directory
 }
 
 void FEB_CAN_Filter_Config(void) {
@@ -31,16 +32,14 @@ void FEB_CAN_Filter_Config(void) {
     if(FEB_CAN_PINGPONG_MODE) filter_bank =FEB_CAN_PINGPONG_Filter(&hcan1, CAN_RX_FIFO0, filter_bank);
 
 	// Assign Filter
-    // filter_bank = Function(&hcan1, CAN_RX_FIFO0, filter_bank);
+    //filter_bank = Function(&hcan1, CAN_RX_FIFO0, filter_bank);
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &FEB_CAN_Rx_Header, FEB_CAN_Rx_Data) == HAL_OK) {
 		if(FEB_CAN_PINGPONG_MODE){
 			FEB_CAN_PONG(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
-		}
-
-		else{
+		} else {
 			//YOUR HANDLER HERE!!!
 		}
 
@@ -49,7 +48,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 
 
 void FEB_SM_CAN_Transmit(void) {
-	/*
+
 	// Initialize transmission header
 	FEB_CAN_Tx_Header.DLC = 3;
 	FEB_CAN_Tx_Header.StdId = FEB_CAN_ID_BMS_STATE;
@@ -58,7 +57,7 @@ void FEB_SM_CAN_Transmit(void) {
 	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
 
 	// Get data
-	uint16_t cell_min_voltage = FEB_LTC6811_Get_Min_Voltage();
+	uint16_t cell_min_voltage=0;
 
 	// Copy data to Tx buffer
 	FEB_CAN_Tx_Data[0] = FEB_SM_Get_Current_State();
@@ -72,7 +71,6 @@ void FEB_SM_CAN_Transmit(void) {
 	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
 		// FEB_SM_Set_Current_State(FEB_SM_ST_SHUTDOWN);
 	}
-	*/
 }
 
 void FEB_CAN_PING(void) {
