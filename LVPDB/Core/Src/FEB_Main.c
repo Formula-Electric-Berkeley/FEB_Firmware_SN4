@@ -1,0 +1,286 @@
+#include "FEB_Main.h"
+#include "main.h"
+
+extern I2C_HandleTypeDef hi2c1;
+extern CAN_HandleTypeDef hcan1;
+extern UART_HandleTypeDef huart2;
+
+extern FEB_CAN_APPS_Message_t FEB_CAN_APPS_Message;
+
+static void FEB_Compose_CAN_Data(void);
+static void FEB_Variable_Conversion(void);
+static void FEB_Variable_Init(void);
+
+// Stores TPS2482 configurations
+/* 		LV - Low voltage bus
+* 		CP - Coolant Pump
+* 		AF - Accumulator Fans
+* 		RF - Radiator Fans
+* 		SH - Shutdown Source
+* 		L - LIDAR
+* 		AS - Autonomous Steering
+* 		AB - Autonomous Braking
+*/
+uint8_t tps2482_i2c_addresses[NUM_TPS2482];
+uint16_t tps2482_ids[NUM_TPS2482];
+
+TPS2482_Configuration tps2482_configurations[NUM_TPS2482];
+TPS2482_Configuration *lv_config = &tps2482_configurations[0];
+TPS2482_Configuration *cp_config = &tps2482_configurations[1];
+TPS2482_Configuration *af_config = &tps2482_configurations[2];
+TPS2482_Configuration *rf_config = &tps2482_configurations[3];
+TPS2482_Configuration *sh_config = &tps2482_configurations[4];
+TPS2482_Configuration *l_config = &tps2482_configurations[5];
+TPS2482_Configuration *as_config = &tps2482_configurations[6];
+TPS2482_Configuration *ab_config = &tps2482_configurations[7];
+
+GPIO_TypeDef *tps2482_en_ports[NUM_TPS2482 - 1]; // LV doesn't have an EN pin
+uint16_t tps2482_en_pins[NUM_TPS2482 - 1]; // LV doesn't have an EN pin
+
+GPIO_TypeDef *tps2482_pg_ports[NUM_TPS2482];
+uint16_t tps2482_pg_pins[NUM_TPS2482];
+
+GPIO_TypeDef *tps2482_alert_ports[NUM_TPS2482];
+uint16_t tps2482_alert_pins[NUM_TPS2482];
+
+uint16_t tps2482_current_raw[NUM_TPS2482];
+uint16_t tps2482_bus_voltage_raw[NUM_TPS2482];
+
+float tps2482_current[NUM_TPS2482];
+float tps2482_bus_voltage[NUM_TPS2482];
+
+FEB_LVPDB_CAN_Data can_data;
+
+void FEB_Main_Setup(void) {
+	FEB_Variable_Init();
+
+	FEB_CAN_Init();
+
+	bool tps2482_en_res[NUM_TPS2482 - 1];
+	bool tps2482_en_success = false;
+	GPIO_PinState tps2482_pg_res[NUM_TPS2482];
+	bool tps2482_pg_success = false;
+	int maxiter = 0; // Safety in case of infinite while
+
+	while ( !tps2482_en_success || !tps2482_pg_success ) {
+		if ( maxiter > 1000 ) {
+			break; // Todo add failure case
+		}
+
+		// Assume successful enable
+		bool b1 = true;
+		bool b2 = true;
+
+		TPS2482_Enable(tps2482_en_ports, tps2482_en_pins, tps2482_en_res, NUM_TPS2482 - 1);
+		TPS2482_GPIO_Read(tps2482_pg_ports, tps2482_pg_pins, tps2482_pg_res, NUM_TPS2482);
+
+		for ( uint8_t i = 0; i < NUM_TPS2482 - 1; i++ ) {
+			// If any don't enable properly b will be false and thus loop continues
+			b1 &= tps2482_en_res[i];
+		}
+
+		for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
+			// If any don't power up properly b will be false and thus loop continues
+			b2 &= tps2482_pg_res[i];
+		}
+
+		tps2482_en_success = b1;
+		tps2482_pg_success = b2;
+		maxiter += 1;
+	}
+
+	bool tps2482_init_res[NUM_TPS2482];
+	bool tps2482_init_success = false;
+	maxiter = 0; // Safety in case of infinite while
+
+	while ( !tps2482_init_success ) {
+		if ( maxiter > 1000 ) {
+			break; // Todo add failure case
+		}
+
+		// Assume successful init
+		bool b = true;
+
+		TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, NUM_TPS2482);
+
+		for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
+			// If any don't enable properly b will be false and thus loop continues
+			b &= tps2482_init_res[i];
+		}
+
+		tps2482_init_success = b;
+		maxiter += 1;
+	}
+
+	// Initialize brake light to be off
+	HAL_GPIO_WritePin(BL_SWITCH_GPIO_Port, BL_SWITCH_Pin, GPIO_PIN_RESET);
+}
+
+void FEB_Main_Loop(void) {
+
+	/*  Todo fix all this enable stuff when better understood
+	if ( FEB_CAN_APPS_Message.brake_pedal >= 4 ) {
+		HAL_GPIO_WritePin(BL_SWITCH_GPIO_Port, BL_SWITCH_Pin, GPIO_PIN_SET);
+	}
+	else {
+		HAL_GPIO_WritePin(BL_SWITCH_GPIO_Port, BL_SWITCH_Pin, GPIO_PIN_RESET);
+	}
+
+	if ( FEB_Accum_Fan_Control() ) {
+		HAL_GPIO_WritePin(AF_EN_GPIO_Port, AF_EN_Pin, GPIO_PIN_SET);
+	}
+	else {
+		HAL_GPIO_WritePin(AF_EN_GPIO_Port, AF_EN_Pin, GPIO_PIN_RESET);
+	}
+
+	if ( FEB_Coolant_Pump_Control() ) {
+		HAL_GPIO_WritePin(CP_EN_GPIO_Port, CP_EN_Pin, GPIO_PIN_SET);
+	}
+	else{
+		HAL_GPIO_WritePin(CP_EN_GPIO_Port, CP_EN_Pin, GPIO_PIN_RESET);
+	}
+
+	if ( FEB_Extra_Control() ){
+		HAL_GPIO_WritePin(RF_EN_GPIO_Port, RF_EN_Pin, GPIO_PIN_SET);
+	}
+	else {
+		HAL_GPIO_WritePin(RF_EN_GPIO_Port, RF_EN_Pin, GPIO_PIN_RESET);
+	} */
+
+	// Todo add alert and pg monitoring
+
+
+	TPS2482_Poll_Current(&hi2c1, tps2482_i2c_addresses, tps2482_current_raw, NUM_TPS2482);
+	TPS2482_Poll_Bus_Voltage(&hi2c1, tps2482_i2c_addresses, tps2482_bus_voltage_raw, NUM_TPS2482);
+
+	FEB_Variable_Conversion();
+
+	FEB_Compose_CAN_Data();
+
+	for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
+		can_data.flags &= 0xF0FFFFFF;
+		can_data.flags |= ((uint32_t)i) << 24;
+		FEB_CAN_Transmit(&hcan1, &can_data);
+	}
+
+	HAL_Delay(10);
+}
+
+static void FEB_Compose_CAN_Data(void) {
+	memset(&can_data, 0, sizeof(FEB_LVPDB_CAN_Data));
+
+	can_data.bus_voltage = tps2482_bus_voltage[0];
+
+	memcpy(&can_data.lv_current, tps2482_current, 8 * sizeof(float));
+}
+
+static void FEB_Variable_Conversion(void) {
+	for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
+		tps2482_bus_voltage[i] = tps2482_bus_voltage_raw[i] * TPS2482_CONV_VBUS;
+	}
+
+	tps2482_current[0] = tps2482_current_raw[0] * LV_CURRENT_LSB;
+	tps2482_current[1] = tps2482_current_raw[1] * CP_CURRENT_LSB;
+	tps2482_current[2] = tps2482_current_raw[2] * AF_CURRENT_LSB;
+	tps2482_current[3] = tps2482_current_raw[3] * RF_CURRENT_LSB;
+	tps2482_current[4] = tps2482_current_raw[4] * SH_CURRENT_LSB;
+	tps2482_current[5] = tps2482_current_raw[5] * L_CURRENT_LSB;
+	tps2482_current[6] = tps2482_current_raw[6] * AS_CURRENT_LSB;
+	tps2482_current[7] = tps2482_current_raw[7] * AB_CURRENT_LSB;
+}
+
+static void FEB_Variable_Init(void) {
+	tps2482_i2c_addresses[0] = LV_ADDR;
+	tps2482_i2c_addresses[1] = CP_ADDR;
+	tps2482_i2c_addresses[2] = AF_ADDR;
+	tps2482_i2c_addresses[3] = RF_ADDR;
+	tps2482_i2c_addresses[4] = SH_ADDR;
+	tps2482_i2c_addresses[5] = L_ADDR;
+	tps2482_i2c_addresses[6] = AS_ADDR;
+	tps2482_i2c_addresses[7] = AB_ADDR;
+
+	for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
+		tps2482_configurations[i].config = TPS2482_CONFIG_DEFAULT;
+		tps2482_configurations[i].mask = TPS2482_MASK_SOL;
+	}
+
+	lv_config->cal = LV_CAL_VAL;
+	cp_config->cal = CP_CAL_VAL;
+	af_config->cal = AF_CAL_VAL;
+	rf_config->cal = RF_CAL_VAL;
+	sh_config->cal = SH_CAL_VAL;
+	l_config->cal = L_CAL_VAL;
+	as_config->cal = AS_CAL_VAL;
+	ab_config->cal = AB_CAL_VAL;
+
+	lv_config->alert_lim = LV_ALERT_LIM_VAL;
+	cp_config->alert_lim = CP_ALERT_LIM_VAL;
+	af_config->alert_lim = AF_ALERT_LIM_VAL;
+	rf_config->alert_lim = RF_ALERT_LIM_VAL;
+	sh_config->alert_lim = SH_ALERT_LIM_VAL;
+	l_config->alert_lim = L_ALERT_LIM_VAL;
+	as_config->alert_lim = AS_ALERT_LIM_VAL;
+	ab_config->alert_lim = AB_ALERT_LIM_VAL;
+
+	tps2482_en_ports[0] = CP_EN_GPIO_Port;
+	tps2482_en_ports[1] = AF_EN_GPIO_Port;
+	tps2482_en_ports[2] = RF_EN_GPIO_Port;
+	tps2482_en_ports[3] = SH_EN_GPIO_Port;
+	tps2482_en_ports[4] = L_EN_GPIO_Port;
+	tps2482_en_ports[5] = AS_EN_GPIO_Port;
+	tps2482_en_ports[6] = AB_EN_GPIO_Port;
+
+	tps2482_en_pins[0] = CP_EN_Pin;
+	tps2482_en_pins[1] = AF_EN_Pin;
+	tps2482_en_pins[2] = RF_EN_Pin;
+	tps2482_en_pins[3] = SH_EN_Pin;
+	tps2482_en_pins[4] = L_EN_Pin;
+	tps2482_en_pins[5] = AS_EN_Pin;
+	tps2482_en_pins[6] = AB_EN_Pin;
+
+	tps2482_pg_ports[0] = LV_PG_GPIO_Port;
+	tps2482_pg_ports[1] = CP_PG_GPIO_Port;
+	tps2482_pg_ports[2] = AF_PG_GPIO_Port;
+	tps2482_pg_ports[3] = RF_PG_GPIO_Port;
+	tps2482_pg_ports[4] = SH_PG_GPIO_Port;
+	tps2482_pg_ports[5] = L_PG_GPIO_Port;
+	tps2482_pg_ports[6] = AS_PG_GPIO_Port;
+	tps2482_pg_ports[7] = AB_PG_GPIO_Port;
+
+	tps2482_pg_pins[0] = LV_PG_Pin;
+	tps2482_pg_pins[1] = CP_PG_Pin;
+	tps2482_pg_pins[2] = AF_PG_Pin;
+	tps2482_pg_pins[3] = RF_PG_Pin;
+	tps2482_pg_pins[4] = SH_PG_Pin;
+	tps2482_pg_pins[5] = L_PG_Pin;
+	tps2482_pg_pins[6] = AS_PG_Pin;
+	tps2482_pg_pins[7] = AB_PG_Pin;
+
+	tps2482_alert_ports[0] = LV_ALERT_GPIO_Port;
+	tps2482_alert_ports[1] = CP_ALERT_GPIO_Port;
+	tps2482_alert_ports[2] = AF_ALERT_GPIO_Port;
+	tps2482_alert_ports[3] = RF_ALERT_GPIO_Port;
+	tps2482_alert_ports[4] = SH_ALERT_GPIO_Port;
+	tps2482_alert_ports[5] = L_ALERT_GPIO_Port;
+	tps2482_alert_ports[6] = AS_ALERT_GPIO_Port;
+	tps2482_alert_ports[7] = AB_ALERT_GPIO_Port;
+
+	tps2482_alert_pins[0] = LV_ALERT_Pin;
+	tps2482_alert_pins[1] = CP_ALERT_Pin;
+	tps2482_alert_pins[2] = AF_ALERT_Pin;
+	tps2482_alert_pins[3] = RF_ALERT_Pin;
+	tps2482_alert_pins[4] = SH_ALERT_Pin;
+	tps2482_alert_pins[5] = L_ALERT_Pin;
+	tps2482_alert_pins[6] = AS_ALERT_Pin;
+	tps2482_alert_pins[7] = AB_ALERT_Pin;
+
+	can_data.ids[0] = 0x0001;
+	can_data.ids[1] = 0x0002;
+	can_data.ids[2] = 0x0003;
+	can_data.ids[3] = 0x0004;
+	can_data.ids[4] = 0x0005;
+	can_data.ids[5] = 0x0006;
+	can_data.ids[6] = 0x0007;
+	can_data.ids[7] = 0x0008;
+	can_data.ids[8] = 0x0009;
+}
