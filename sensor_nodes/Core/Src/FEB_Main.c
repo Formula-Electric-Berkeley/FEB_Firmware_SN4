@@ -47,6 +47,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		Tire_Temp_Main();
 		ADC2_Main();
 		GPS_Main();
+
+//		BNO08x_RVC_Read();
 	}
 }
 

@@ -9,6 +9,7 @@
 
 #include <FEB_ADC.h>
 
+extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 extern UART_HandleTypeDef huart2;
 extern CAN_HandleTypeDef hcan1;
@@ -18,6 +19,7 @@ extern CAN_HandleTypeDef hcan1;
 #define ADC_RESOLUTION 4095
 #define LIN_POT_LENGTH 75000 // micrometers
 
+uint32_t ADC1_Readings[7];
 uint32_t ADC2_Readings[4]; // 1st and 2nd are linear potentiometer, 3rd and 4th are coolant pressure
 char buf[164];
 uint8_t TxData[8];
@@ -33,7 +35,31 @@ uint16_t CoolantPressureConversion(uint32_t adc_value) {
 	return (uint16_t) 1000 * ((voltage - 0.5) * 30) / (4.5 - 0.5);
 }
 
-void UART_Transmit_Readings(void) {
+
+void UART_Transmit_ADC1_Readings(void) {
+	sprintf(buf, "Strain Gauge 1: %u\r\n", (unsigned) ADC1_Readings[0]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+
+	sprintf(buf, "Strain Gauge 2: %u\r\n", (unsigned) ADC1_Readings[1]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+
+	sprintf(buf, "Strain Gauge 3: %u\r\n", (unsigned) ADC1_Readings[2]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+
+	sprintf(buf, "Strain Gauge 4: %u\r\n", (unsigned) ADC1_Readings[3]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+
+	sprintf(buf, "Thermocouple 1: %u\r\n", (unsigned) ADC1_Readings[4]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+
+	sprintf(buf, "Thermocouple 2: %u\r\n", (unsigned) ADC1_Readings[5]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+
+	sprintf(buf, "Thermocouple 3: %u\r\n", (unsigned) ADC1_Readings[6]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+}
+
+void UART_Transmit_ADC2_Readings(void) {
 	sprintf(buf, "LIN_POT 1: %u\r\n", (unsigned) ADC2_Readings[0]);
 	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
 
@@ -93,8 +119,14 @@ void CAN_ADC_Transmit(void)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
+	if (hadc->Instance == ADC1) {
+
+		UART_Transmit_ADC1_Readings();
+
+	}
+
 	if (hadc->Instance == ADC2) {
-		UART_Transmit_Readings();
+		UART_Transmit_ADC2_Readings();
 
 		Fill_CAN_Data();
 
@@ -105,6 +137,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 void ADC2_Main(void) {
 
+	HAL_ADC_Start_DMA(&hadc1, ADC1_Readings, 7);
 	HAL_ADC_Start_DMA(&hadc2, ADC2_Readings, 4);
 
 }
