@@ -11,34 +11,93 @@
 
 extern ADC_HandleTypeDef hadc2;
 extern UART_HandleTypeDef huart2;
-extern DMA_HandleTypeDef hdma_adc2;
 
 // ******************************************** Variables **********************************************
 
 #define ADC_RESOLUTION 4095
-#define LIN_POT_LENGTH 75 // mm
+#define LIN_POT_LENGTH 75000 // micrometers
 
 uint32_t ADC2_Readings[4]; // 1st and 2nd are linear potentiometer, 3rd and 4th are coolant pressure
 char buf[164];
+uint8_t TxData[8];
 
 // ******************************************** Functions **********************************************
+
+uint16_t LinearPotentiometerConversion(uint32_t adc_value) {
+	return (uint16_t) adc_value / ADC_RESOLUTION * LIN_POT_LENGTH;
+}
+
+uint16_t CoolantPressureConversion(uint32_t adc_value) {
+	float voltage = (float) adc_value * 3.3 / ADC_RESOLUTION;
+	return (uint16_t) 1000 * ((voltage - 0.5) * 30) / (4.5 - 0.5);
+}
+
+void UART_Transmit_Readings(void) {
+	sprintf(buf, "LIN_POT 1: %u\r\n", (unsigned) ADC2_Readings[0]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+
+	sprintf(buf, "LIN_POT 2: %u\r\n", (unsigned) ADC2_Readings[1]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+
+	sprintf(buf, "Coolant Pressure 1: %u\r\n", (unsigned) ADC2_Readings[2]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+
+	sprintf(buf, "Coolant Pressure 2: %u\r\n", (unsigned) ADC2_Readings[3]);
+	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+}
+
+void Fill_CAN_Data(void) {
+
+	float LiPo1 = LinearPotentiometerConversion(ADC2_Readings[0]);
+	float LiPo2 = LinearPotentiometerConversion(ADC2_Readings[1]);
+	float CoPr1 = CoolantPressureConversion(ADC2_Readings[2]);
+	float CoPr2 = CoolantPressureConversion(ADC2_Readings[3]);
+
+	// Fill the data
+	TxData[0] = (LiPo1 >> 8) & 0xFF;
+	TxData[1] = LiPo1 & 0xFF;
+	TxData[2] = (LiPo2 >> 8) & 0xFF;
+	TxData[3] = LiPo2 & 0xFF;
+	TxData[4] = (CoPr1 >> 8) & 0xFF;
+	TxData[5] = CoPr1 & 0xFF;
+	TxData[6] = (CoPr2 >> 8) & 0xFF;
+	TxData[7] = CoPr2 & 0xFF;
+
+
+}
+
+void CAN_ADC_Transmit(void)
+{
+	CAN_TxHeaderTypeDef TxHeader;
+	uint32_t TxMailbox;
+
+	TxHeader.DLC = 8; // Data length
+	TxHeader.IDE = CAN_ID_STD; // Standard ID
+	TxHeader.RTR = CAN_RTR_DATA; // Data frame
+	TxHeader.StdId = 0x545; // CAN ID
+	TxHeader.ExtId = 0; // Not used with standard ID
+
+
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+
+	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
+	{
+		// Transmission request error
+		char msg[50];
+		sprintf(msg, "CAN transmit error");
+		UART_transmit(msg);
+//		Error_Handler();
+	}
+}
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 	if (hadc->Instance == ADC2) {
+		UART_Transmit_Readings();
 
-		sprintf(buf, "LIN_POT 1: %u\r\n", (unsigned) ADC2_Readings[0] / ADC_RESOLUTION * LIN_POT_LENGTH);
-		HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+		Fill_CAN_Data();
 
-		sprintf(buf, "LIN_POT 2: %u\r\n", (unsigned) ADC2_Readings[1] / ADC_RESOLUTION * LIN_POT_LENGTH);
-		HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
-
-		sprintf(buf, "Coolant Pressure 1: %u\r\n", (unsigned) ADC2_Readings[2]);
-		HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
-
-		sprintf(buf, "Coolant Pressure 2: %u\r\n", (unsigned) ADC2_Readings[3]);
-		HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
-
+		CAN_ADC_Transmit();
 	}
 
 }

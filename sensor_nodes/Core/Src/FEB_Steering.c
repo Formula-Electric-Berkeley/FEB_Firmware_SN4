@@ -11,7 +11,6 @@
 
 extern CAN_HandleTypeDef hcan1;
 extern I2C_HandleTypeDef hi2c3;
-extern TIM_HandleTypeDef htim6;
 
 // **************************************** Configuration ****************************************
 
