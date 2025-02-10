@@ -46,6 +46,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		Steer_ENC_Main();
 		Tire_Temp_Main();
 		ADC2_Main();
+		GPS_Main();
 	}
 }
 

@@ -11,6 +11,7 @@
 
 extern ADC_HandleTypeDef hadc2;
 extern UART_HandleTypeDef huart2;
+extern CAN_HandleTypeDef hcan1;
 
 // ******************************************** Variables **********************************************
 
@@ -48,10 +49,10 @@ void UART_Transmit_Readings(void) {
 
 void Fill_CAN_Data(void) {
 
-	float LiPo1 = LinearPotentiometerConversion(ADC2_Readings[0]);
-	float LiPo2 = LinearPotentiometerConversion(ADC2_Readings[1]);
-	float CoPr1 = CoolantPressureConversion(ADC2_Readings[2]);
-	float CoPr2 = CoolantPressureConversion(ADC2_Readings[3]);
+	uint16_t LiPo1 = LinearPotentiometerConversion(ADC2_Readings[0]);
+	uint16_t LiPo2 = LinearPotentiometerConversion(ADC2_Readings[1]);
+	uint16_t CoPr1 = CoolantPressureConversion(ADC2_Readings[2]);
+	uint16_t CoPr2 = CoolantPressureConversion(ADC2_Readings[3]);
 
 	// Fill the data
 	TxData[0] = (LiPo1 >> 8) & 0xFF;
@@ -85,7 +86,7 @@ void CAN_ADC_Transmit(void)
 		// Transmission request error
 		char msg[50];
 		sprintf(msg, "CAN transmit error");
-		UART_transmit(msg);
+		HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), HAL_MAX_DELAY);
 //		Error_Handler();
 	}
 }

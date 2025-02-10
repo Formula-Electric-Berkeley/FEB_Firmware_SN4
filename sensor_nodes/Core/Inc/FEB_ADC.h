@@ -17,8 +17,8 @@
 
 // **************************************** Functions ****************************************
 
-float LinearPotentiometerConversion(uint32_t adc_value);
-float CoolantPressureConversion(uint32_t adc_value);
+uint16_t LinearPotentiometerConversion(uint32_t adc_value);
+uint16_t CoolantPressureConversion(uint32_t adc_value);
 void UART_Transmit_Readings(void);
 void Fill_CAN_Data(void);
 void CAN_ADC_Transmit(void);

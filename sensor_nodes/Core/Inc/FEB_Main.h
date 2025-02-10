@@ -18,6 +18,7 @@
 #include "FEB_Steering.h"
 #include "FEB_Tire_Temp.h"
 #include "FEB_ADC.h"
+#include "FEB_GPS.h"
 
 // ******************************** Functions ********************************
 
