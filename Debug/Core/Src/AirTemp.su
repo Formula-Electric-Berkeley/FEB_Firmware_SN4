@@ -1,0 +1,3 @@
+../Core/Src/AirTemp.c:16:6:AirTemp_Init	4	static
+../Core/Src/AirTemp.c:20:7:Read_Temperature	16	static
+../Core/Src/AirTemp.c:27:7:Convert_To_Temperature	32	static

@@ -1,0 +1,3 @@
+../Core/Src/FEB_Main.c:21:6:FEB_Setup	8	static
+../Core/Src/FEB_Main.c:25:6:FEB_Loop	64	static
+../Core/Src/FEB_Main.c:37:6:Send_UART	16	static
