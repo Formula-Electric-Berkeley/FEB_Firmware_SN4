@@ -1,0 +1,2 @@
+../Core/Src/CoolantSensor.c:12:7:getTemperature	1
+../Core/Src/CoolantSensor.c:26:7:getFlowRate	1
