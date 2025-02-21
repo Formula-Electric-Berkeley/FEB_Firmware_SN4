@@ -3,6 +3,6 @@
 ../Core/Src/FEB_AD68xx_Interface.c:92:6:cmd_68	24	static
 ../Core/Src/FEB_AD68xx_Interface.c:107:6:cmd_68_r	32	static
 ../Core/Src/FEB_AD68xx_Interface.c:126:6:write_68	40	static
-../Core/Src/FEB_AD68xx_Interface.c:168:6:transmitCMD	24	static
-../Core/Src/FEB_AD68xx_Interface.c:174:6:transmitCMDR	24	static
-../Core/Src/FEB_AD68xx_Interface.c:181:6:transmitCMDW	24	static
+../Core/Src/FEB_AD68xx_Interface.c:167:6:transmitCMD	24	static
+../Core/Src/FEB_AD68xx_Interface.c:173:6:transmitCMDR	24	static
+../Core/Src/FEB_AD68xx_Interface.c:180:6:transmitCMDW	24	static

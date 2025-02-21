@@ -67,19 +67,23 @@ void FEB_ADBMS_Init() {
 	FEB_cs_high();
 	ADBMS6830B_init_cfg(FEB_NUM_IC, IC_Config);
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
-		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
+		ADBMS6830B_set_cfgr(ic, IC_Config, 1, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
 	}
 	ADBMS6830B_reset_crc_count(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_init_reg_limits(FEB_NUM_IC, IC_Config);
 	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
+	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_wrcfgb(FEB_NUM_IC, IC_Config);
 	//TODO:read back config
+	wakeup_sleep(FEB_NUM_IC);
 	start_adc_cell_voltage_measurements();
 
 }
 
 void FEB_ADBMS_Voltage_Process() {
+	start_adc_cell_voltage_measurements();
+	//HAL_Delay(10);
 	read_cell_voltages();
 	store_cell_voltages();
 	validate_voltages();
@@ -99,8 +103,8 @@ void FEB_ADBMS_Temperature_Process(){
 
 void start_adc_cell_voltage_measurements() {
 	wakeup_sleep(FEB_NUM_IC);
-	ADBMS6830B_adcv(0, 0, 1, 0, OWVR);
-	//ADBMS6830B_pollAdc();
+	ADBMS6830B_adcv(1, 1, 1, 0, OWVR);
+	ADBMS6830B_pollAdc();
 }
 
 void read_cell_voltages() {
@@ -128,7 +132,7 @@ void validate_voltages() {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
 			float voltage = FEB_ACC.banks[bank].cells[cell].voltage_V;
 			if (voltage > vMax || voltage < vMin) {
-				FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
+				//FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 			}
 		}
 	}
@@ -174,6 +178,18 @@ void store_cell_temps(uint8_t channel) {
 }
 
 //************************** Cell Balancing **********************
+void BalanceUart(){
+	char buffer[32];
+	for(int i=0;i<6;i++){
+		sprintf(buffer,"|PWM %d|%02X",i,IC_Config[0].pwm.tx_data[i]);
+		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, 32, 100);
+	}
+	for(int i=0;i<2;i++){
+		sprintf(buffer,"|PWM %d|%02X",i+6,IC_Config[0].pwmb.tx_data[i]);
+		HAL_UART_Transmit(&huart2, (uint8_t*) buffer, 32, 100);
+	}
+}
+
 void FEB_Cell_Balance_Start(){
 	FEB_cs_high();
 	ADBMS6830B_init_cfg(FEB_NUM_IC, IC_Config);
@@ -184,21 +200,26 @@ void FEB_Cell_Balance_Process(){
 	uint64_t PWMBITS=determineDischarge();
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
 		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
-		memcopy( &(IC_Config[ic].pwm), (int8_t*)PWMBITS, 6);
-		memcopy( &(IC_Config[ic].pwmb), ((int8_t*)PWMBITS)+6, 2);
+		for(int i=0;i<6;i++)
+			IC_Config[ic].pwm.tx_data[i]=*(((int8_t*)(PWMBITS))+i);
+		for(int i=0;i<2;i++)
+			IC_Config[ic].pwmb.tx_data[i]=*(((int8_t*)(PWMBITS))+6+i);
 	}
 	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_wrcfgb(FEB_NUM_IC, IC_Config);
 	//TODO:read back config
 	transmitCMD(ADCV|AD_CONT);
+	BalanceUART();
 }
 void FEB_Stop_Balance(){
 	uint64_t PWMBITS=0;
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
 		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
-		memcopy( &(IC_Config[ic].pwm), (int8_t*)PWMBITS, 6);
-		memcopy( &(IC_Config[ic].pwmb), ((int8_t*)PWMBITS)+6, 2);
+		for(int i=0;i<6;i++)
+			IC_Config[ic].pwm.tx_data[i]=*(((int8_t*)(PWMBITS))+i);
+		for(int i=0;i<2;i++)
+			IC_Config[ic].pwmb.tx_data[i]=*(((int8_t*)(PWMBITS))+6+i);
 	}
 	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);

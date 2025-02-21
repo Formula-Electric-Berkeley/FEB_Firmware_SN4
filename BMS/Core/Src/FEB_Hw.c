@@ -27,6 +27,7 @@ void FEB_cs_high() {
 void FEB_spi_write_array(uint8_t len, uint8_t data[]) {
 	if(HAL_SPI_Transmit(&hspi1, data, len, HAL_MAX_DELAY)!=HAL_OK){
 		//catch error
+		int i=0;
 	}
 }
 uint8_t FEB_spi_read_byte(uint8_t tx_data) {
@@ -40,9 +41,11 @@ uint8_t FEB_spi_read_byte(uint8_t tx_data) {
 void FEB_spi_write_read(uint8_t tx_Data[], uint8_t tx_len, uint8_t *rx_data, uint8_t rx_len) {
 	if(HAL_SPI_Transmit(&hspi1,tx_Data,tx_len,HAL_MAX_DELAY) != HAL_OK){
 		//catch error
+		*rx_data=0x696969;
 	}
 	if(HAL_SPI_Receive(&hspi1,rx_data,rx_len,HAL_MAX_DELAY)!= HAL_OK){
 		//catch error
+		*rx_data=0x696969;
 	}
 	return;
 }

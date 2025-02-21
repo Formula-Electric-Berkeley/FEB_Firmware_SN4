@@ -78,7 +78,7 @@ typedef enum {
 void FEB_ADBMS_Init();
 
 void FEB_ADBMS_Voltage_Process();
-void FEB_Cell_Temperature_Process();
+void FEB_ADBMS_Temperature_Process();
 
 void FEB_Cell_Balance_Start();
 void FEB_Cell_Balance_Process();

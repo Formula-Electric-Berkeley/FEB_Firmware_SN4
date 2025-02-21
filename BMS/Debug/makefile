@@ -9,7 +9,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
+-include Drivers/STM32F4xx_HAL_Driver/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
 -include objects.mk
@@ -60,8 +60,8 @@ all: main-build
 main-build: BMS_SN4_FW.elf secondary-outputs
 
 # Tool invocations
-BMS_SN4_FW.elf BMS_SN4_FW.map: $(OBJS) $(USER_OBJS) C:\Users\Andy\Documents\Code\BERK\FEB\BMS\BMS\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "BMS_SN4_FW.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Andy\Documents\Code\BERK\FEB\BMS\BMS\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BMS_SN4_FW.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+BMS_SN4_FW.elf BMS_SN4_FW.map: $(OBJS) $(USER_OBJS) C:\Users\andys\Documents\code\feb\FEB_Firmware_SN4\BMS\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "BMS_SN4_FW.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\andys\Documents\code\feb\FEB_Firmware_SN4\BMS\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BMS_SN4_FW.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

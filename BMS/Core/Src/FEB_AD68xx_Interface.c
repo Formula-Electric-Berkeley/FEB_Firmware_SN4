@@ -156,7 +156,6 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 		cmd[cmd_index + 1] = (uint8_t)data_pec;
 		cmd_index = cmd_index + 2;
 	}
-
 	FEB_cs_low();
 	FEB_spi_write_array(CMD_LEN, cmd);
 	FEB_cs_high();

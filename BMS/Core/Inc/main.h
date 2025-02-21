@@ -97,8 +97,6 @@ void Error_Handler(void);
 #define SWO_GPIO_Port GPIOB
 #define RST_Pin GPIO_PIN_5
 #define RST_GPIO_Port GPIOB
-#define PG_Pin GPIO_PIN_6
-#define PG_GPIO_Port GPIOB
 #define Alert_Pin GPIO_PIN_7
 #define Alert_GPIO_Port GPIOB
 

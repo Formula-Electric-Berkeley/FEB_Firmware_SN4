@@ -52,7 +52,7 @@ static void transition(FEB_SM_ST_t next_state) {
  * No synchronization needed. */
 void FEB_SM_Init(void) {
 	SM_Current_State=FEB_SM_ST_BOOT;
-	FEB_Config_Update(FEB_Current_State);
+	FEB_Config_Update(SM_Current_State);
 	FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_HW_RELAY_OPEN);
 	FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_HW_RELAY_OPEN);
 	FEB_PIN_SET(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_CLOSE);
