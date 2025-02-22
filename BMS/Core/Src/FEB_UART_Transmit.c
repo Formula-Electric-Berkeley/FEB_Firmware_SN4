@@ -2,14 +2,13 @@
 #include "FEB_UART_Transmit.h"
 
 extern UART_HandleTypeDef huart2;
-
 // **************************************** Global Variables ********************************
 
 static uint8_t counter = 0;
 
 // **************************************** Functions ****************************************
 
-void FEB_ADBMS_UART_Transmit(void) {
+void FEB_ADBMS_UART_Transmit(accumulator_t FEB_ACC) {
 	int NUMLINES=5;
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
 		char UART_line[NUMLINES][192];

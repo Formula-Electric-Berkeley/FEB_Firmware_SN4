@@ -188,27 +188,36 @@ void ADBMS6830B_adcv( uint8_t RD, //ADC Mode
 uint32_t ADBMS6830B_pollAdc()
 {
 	uint32_t counter = 0;
-	uint8_t finished = 0;
-	uint8_t current_time = 0;
-	FEB_cs_low();
-	transmitCMD(PLCADC);
+		uint8_t finished = 0;
+		uint8_t current_time = 0;
+		uint8_t cmd[4];
+		uint16_t cmd_pec;
 
-	while ((counter < 200000) && (finished == 0))
-	{
-		//current_time = FEB_spi_read_byte(0xff);
-		if (current_time > 0)
+		cmd[0] = 0x07;
+		cmd[1] = 0x18;
+		cmd_pec = pec15_calc(2, cmd);
+		cmd[2] = (uint8_t) (cmd_pec >> 8);
+		cmd[3] = (uint8_t) (cmd_pec);
+
+		FEB_cs_low();
+		FEB_spi_write_array(4, cmd);
+
+		while ((counter < 200000) && (finished == 0))
 		{
-			finished = 1;
+			current_time = FEB_spi_read_byte(0xff);
+			if (current_time > 0)
+			{
+				finished = 1;
+			}
+			else
+			{
+				counter = counter + 10;
+			}
 		}
-		else
-		{
-			counter = counter + 10;
-		}
-	}
 
-	FEB_cs_high();
+		FEB_cs_high();
 
-	return(counter);
+		return(counter);
 }
 
 /*
@@ -241,12 +250,12 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 	}
 	uint16_t data_pec=pec10_calc(32,cell_data);
 	uint16_t rx_pec=*(uint16_t*)(cell_data+32);
-	/*
+
 	transmitCMDR(RDSALL,cell_data,34*total_ic);
 	for(int bank=0;bank<total_ic;bank++){
 		memcpy(&(ic[bank].cells.s_codes),cell_data+bank*TxSize,(size_t)34);
 	}
-	*/
+
 	free(cell_data);
 	return(data_pec!=rx_pec);
 }
@@ -436,12 +445,12 @@ uint8_t ADBMS6830B_rdaux(uint8_t total_ic, // The number of ICs in the system
 void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 {
 	for (int i = 0; i < total_ic; i++) {
+		int nops =20;
 	   FEB_cs_low();
-	   //FEB_delay_m(1); // Guarantees the ADBMS6830B will be in standby
+	   while(nops-->0);
 	   FEB_cs_high();
-	   int j=60;
-	   while(--j>0);
-
+	   nops=60;
+	   while(nops-->0);
 	}
 }
 

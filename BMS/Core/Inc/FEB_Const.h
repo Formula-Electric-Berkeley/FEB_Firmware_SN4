@@ -16,7 +16,7 @@
 #define FEB_NUM_CAN_DEV 6
 // ******************************** Voltage Reading Configuration ***************************
 #define CONTVR CONTINUOUS
-#define DCPVR DCP_ON
+#define DCPVR DCP_OFF
 #define RSTFVR RSTF_OFF
 #define OWVR OW_OFF_ALL_CH
 #define RDVR RD_ON

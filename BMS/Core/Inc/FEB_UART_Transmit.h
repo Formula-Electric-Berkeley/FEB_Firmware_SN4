@@ -16,7 +16,7 @@ static FEB_Task_Header_t FEB_UART_Tasks;
 
 // **************************************** Functions ****************************************
 void FEB_UART_Transmit_Process(void);
-void FEB_ADBMS_UART_Transmit(void);
+void FEB_ADBMS_UART_Transmit(accumulator_t FEB_ACC);
 void FEB_UART_Transmit_PingPong_Members(void);
 void FEB_SM_UART_Transmit(void);
 void FEB_UART_Transmit_CAN_Error(int);

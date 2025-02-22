@@ -34,7 +34,7 @@ Core/Src/FEB_ADBMS6830B_Driver.o: ../Core/Src/FEB_ADBMS6830B_Driver.c \
  C:/Users/andys/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  C:/Users/andys/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  C:/Users/andys/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/FEB_Const.h
+ ../Core/Inc/FEB_Const.h ../Core/Inc/FEB_Hw.h
 ../Core/Inc/FEB_ADBMS6830B_Driver.h:
 ../Core/Inc/FEB_CMDCODES.h:
 ../Core/Inc/FEB_AD68xx_Interface.h:
@@ -73,3 +73,4 @@ C:/Users/andys/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HA
 C:/Users/andys/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h:
 C:/Users/andys/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 ../Core/Inc/FEB_Const.h:
+../Core/Inc/FEB_Hw.h:

@@ -38,7 +38,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  C:/Users/andys/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f446xx.h \
  ../Core/Inc/FEB_UART_Transmit.h ../Core/Inc/FEB_ADBMS6830B_Driver.h \
  ../Core/Inc/FEB_CMDCODES.h ../Core/Inc/FEB_AD68xx_Interface.h \
- ../Core/Inc/FEB_HW.h
+ ../Core/Inc/FEB_HW.h ../Core/Inc/FEB_Hw.h
 ../Core/Inc/main.h:
 C:/Users/andys/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -87,3 +87,4 @@ C:/Users/andys/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/CMSIS/Device
 ../Core/Inc/FEB_CMDCODES.h:
 ../Core/Inc/FEB_AD68xx_Interface.h:
 ../Core/Inc/FEB_HW.h:
+../Core/Inc/FEB_Hw.h:

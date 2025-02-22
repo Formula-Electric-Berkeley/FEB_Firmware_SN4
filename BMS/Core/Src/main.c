@@ -116,12 +116,12 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  FEB_Task_ADBMS();
 	  FEB_Task_UART();
-	  FEB_Task_SM();
-	  FEB_Task_Charge();
-	  FEB_Task_Balance();
-	  FEB_Task_IVT();
-	  FEB_Task_CAN();
-	  HAL_Delay(100);
+	  //FEB_Task_SM();
+	  //FEB_Task_Charge();
+	  //FEB_Task_Balance();
+	  //FEB_Task_IVT();
+	  //FEB_Task_CAN();
+	  //HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -264,7 +264,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
