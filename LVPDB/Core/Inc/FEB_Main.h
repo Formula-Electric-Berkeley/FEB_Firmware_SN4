@@ -91,5 +91,6 @@
 
 void FEB_Main_Setup(void);
 void FEB_Main_Loop(void);
+void FEB_1ms_Callback(void);
 
 #endif
