@@ -96,9 +96,9 @@ uint8_t FEB_CAN_PINGPONG_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment
     filter_config.FilterActivation = CAN_FILTER_ENABLE;
 	filter_config.FilterBank = filter_bank;
 	filter_config.FilterFIFOAssignment = FIFO_assignment;
-	filter_config.FilterIdHigh = 0xA0001;
-	filter_config.FilterIdLow = 0xD1;
-	filter_config.FilterMaskIdHigh = 0xFFE0;
+	filter_config.FilterIdHigh = 0;
+	filter_config.FilterIdLow = 0;
+	filter_config.FilterMaskIdHigh = 0;
 	filter_config.FilterMaskIdLow = 0;
 	filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
 	filter_config.FilterScale = CAN_FILTERSCALE_32BIT;
@@ -106,17 +106,17 @@ uint8_t FEB_CAN_PINGPONG_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment
     filter_bank++;
 
     // Extended CAN - 2.0B - 29 bit
-	filter_config.FilterActivation = CAN_FILTER_ENABLE;
-	filter_config.FilterBank = filter_bank;
-	filter_config.FilterFIFOAssignment = FIFO_assignment;
-	filter_config.FilterIdHigh = /* ID */ 0 >> 13;
-	filter_config.FilterIdLow = (/* ID */ 0 & 0x1FFF) << 3;
-	filter_config.FilterMaskIdHigh = 0xFFFF;
-	filter_config.FilterMaskIdLow = 0xFFF8;
-	filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
-	filter_config.FilterScale = CAN_FILTERSCALE_32BIT;
-	filter_config.SlaveStartFilterBank = 27;
-    filter_bank++;
+//	filter_config.FilterActivation = CAN_FILTER_ENABLE;
+//	filter_config.FilterBank = filter_bank;
+//	filter_config.FilterFIFOAssignment = FIFO_assignment;
+//	filter_config.FilterIdHigh = /* ID */ 0 >> 13;
+//	filter_config.FilterIdLow = (/* ID */ 0 & 0x1FFF) << 3;
+//	filter_config.FilterMaskIdHigh = 0xFFFF;
+//	filter_config.FilterMaskIdLow = 0xFFF8;
+//	filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
+//	filter_config.FilterScale = CAN_FILTERSCALE_32BIT;
+//	filter_config.SlaveStartFilterBank = 27;
+//    filter_bank++;
 
 	if (HAL_CAN_ConfigFilter(hcan, &filter_config) != HAL_OK) {
         // Code Error - Shutdown
