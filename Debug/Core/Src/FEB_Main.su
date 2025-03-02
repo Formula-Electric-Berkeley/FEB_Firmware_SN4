@@ -1,0 +1,2 @@
+../Core/Src/FEB_Main.c:13:6:FEB_Setup	8	static
+../Core/Src/FEB_Main.c:21:6:FEB_Loop	8	static

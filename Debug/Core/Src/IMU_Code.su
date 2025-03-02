@@ -1,0 +1,4 @@
+../Core/Src/IMU_Code.c:17:6:I2C_Scan	80	static
+../Core/Src/IMU_Code.c:34:6:BNO08X_Init	24	static
+../Core/Src/IMU_Code.c:54:5:BNO08X_ReadPacket	32	static
+../Core/Src/IMU_Code.c:89:6:BNO08X_GetRawData	344	static
