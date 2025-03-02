@@ -103,12 +103,12 @@ void FEB_circBuf_read(circBuffer *cb){
   }
 
   // print timestamp
-  int size_len = sprintf(str, "Time(ms): %ld \n", cb->buffer[cb->read].timestamp);
+  int size_len = sprintf(str, "Time(ms): %ld \n\r", cb->buffer[cb->read].timestamp);
   HAL_UART_Transmit(&huart2, (uint8_t*) str, size_len , HAL_MAX_DELAY);
 
   fres = f_lseek(&fil, f_size(&fil));
   if(fres != FR_OK){
-    HAL_UART_Transmit(&huart2, "Can't find eof\n",15, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart2, "Can't find eof\n\r",15, HAL_MAX_DELAY);
     f_close(&fil);
     return;
   }
