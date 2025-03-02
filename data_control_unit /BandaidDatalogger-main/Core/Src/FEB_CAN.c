@@ -49,14 +49,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 	//Case 2: Ext Id
 	}else if(FEB_CAN_Rx_Header.IDE == CAN_ID_EXT){
 		FEB_circBuf_write(&FEBBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Data);
-
-
 	}
-
-
-
-
-
 }
 
 // **************************************** Template Code [Other Files] ****************************************

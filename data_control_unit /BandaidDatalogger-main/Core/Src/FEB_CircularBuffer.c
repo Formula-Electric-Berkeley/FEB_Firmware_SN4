@@ -1,6 +1,6 @@
-#include "FEB_CircularBuffer.h"
 #include "fatfs.h"
 #include "fatfs_sd.h"
+#include "FEB_CircularBuffer.h"
 
 extern UART_HandleTypeDef huart2;
 
@@ -23,7 +23,7 @@ uint8_t iteration;
 void FEB_circBuf_init(circBuffer *cb)
 {
 
-  //Initialize the Circular buffer
+  //Init cb
     if (cb->buffer == NULL) {
     printf("Error! Memory not allocated for buffer.");
     exit(0);
@@ -40,7 +40,7 @@ void FEB_circBuf_init(circBuffer *cb)
   cb->read = 0; 
 
 
-  //Mount SD card
+  // Mount SD card
 //  fres = f_mount(&fs,"",0);
   fres = f_mount(&fs, "",1);
   if (fres!= FR_OK){
@@ -204,6 +204,13 @@ void FEB_circBuf_read(circBuffer *cb){
   cb->count--;
 
   iteration++;
+}
+
+void FEB_circBuf_dummy(circBuffer *cb)
+{
+    uint8_t dummyData[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+    // Random ID
+    FEB_circBuf_write(cb, 0x123, dummyData);
 }
 
 

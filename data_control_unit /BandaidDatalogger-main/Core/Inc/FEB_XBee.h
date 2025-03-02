@@ -3,11 +3,17 @@
 
 #include "stdint.h"
 #include "stm32f4xx_hal.h"
+#include "FEB_CircularBuffer.h"
 
-// UART for XBee
-void xbee_transmit(const char *message);
-void xbee_loop(void);
-void xbee_transmit_can_data(circBuffer *cb);
-void xbee_transmit_sd_data(void);
+// SPI Handle for XBee
+extern SPI_HandleTypeDef hspi3;
+
+// Debug UART Handle
+extern UART_HandleTypeDef huart2;
+
+void FEB_xbee_transmit(const char *message);
+void FEB_xbee_loop(void);
+void FEB_xbee_transmit_can_data(circBuffer *cb);
+void FEB_xbee_transmit_sd_data(void);
 
 #endif /* INC_FEB_XBEE_H_ */
