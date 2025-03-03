@@ -55,7 +55,7 @@ FEB_LVPDB_CAN_Data can_data;
 void FEB_Main_Setup(void) {
 	FEB_Variable_Init();
 
-	FEB_CAN_Init();
+	FEB_CAN_Init(FEB_CAN1_Rx_Callback);
 
 	HAL_TIM_Base_Start_IT(&htim1);
 
@@ -169,18 +169,108 @@ void FEB_Main_Loop(void) {
 //	HAL_Delay(10);
 }
 
-void FEB_1ms_Callback(void) {
-	FEB_Compose_CAN_Data();
+#define BOARD 3
 
-	for ( uint8_t i = 0; i < 3; i++ ) {
-		can_data.flags &= 0xF0FFFFFF;
-		can_data.flags |= ((uint32_t)i) << 24;
-		FEB_CAN_Transmit(&hcan1, &can_data);
+#if BOARD == 1
+#define THIS_ID 0x0001
+#define OTHER_ID 0x0002
+#elif BOARD == 2
+#define THIS_ID 0x0002
+#define OTHER_ID 0x0001
+#elif BOARD == 3
+#define THIS_ID 0x0003
+#define OTHER_ID 0x0004
+#elif BOARD == 4
+#define THIS_ID 0x0004
+#define OTHER_ID 0x0003
+#endif
+
+static uint64_t rx_tx_data = (BOARD > 2) ? 0xFFFFFFFF : 0;
+
+static CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
+
+static uint32_t FEB_CAN_Tx_Mailbox;
+
+void FEB_1ms_Callback(void) {
+//	FEB_Compose_CAN_Data();
+
+//	for ( uint8_t i = 0; i < 2; i++ ) {
+//		can_data.flags &= 0xF0FFFFFF;
+//		can_data.flags |= ((uint32_t)i) << 24;
+//		FEB_CAN_Transmit(&hcan1, &can_data);
+//	}
+
+	#if BOARD == 1 || BOARD == 3
+
+	// Initialize Transmission Header
+	FEB_CAN_Tx_Header.StdId = THIS_ID;
+	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
+	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
+	FEB_CAN_Tx_Header.DLC = 8;
+
+	// Delay until mailbox available
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+
+	// Add Tx data to mailbox
+	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, (uint8_t *) &rx_tx_data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
+		// Code Error - Shutdown
 	}
+
+	char buf[1024];
+
+	size_t len = sprintf(buf, "BOARD: %d, DATA: %lu\n\r", THIS_ID, (uint32_t)rx_tx_data);
+
+	HAL_UART_Transmit(&huart2, (const uint8_t *)buf, len, HAL_MAX_DELAY);
+
+	#endif
+}
+
+void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
+	data = (char *)data;
+
+	if ( rx_header->StdId == OTHER_ID ) {
+		rx_tx_data = *((uint64_t *) data);
+
+		#if BOARD == 2 || BOARD == 4
+
+		rx_tx_data = (BOARD > 2) ? rx_tx_data - 1 : rx_tx_data + 1;
+
+		// Initialize Transmission Header
+		FEB_CAN_Tx_Header.StdId = THIS_ID;
+		FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
+		FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
+		FEB_CAN_Tx_Header.DLC = 8;
+
+		// Delay until mailbox available
+		while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+
+		// Add Tx data to mailbox
+		if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, (uint8_t *) &rx_tx_data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
+			// Code Error - Shutdown
+		}
+
+		#endif
+	}
+//
+//	char buf[1024];
+//
+//	size_t len = sprintf(buf, "pong\n\r");
+//
+//	HAL_UART_Transmit(&huart2, (const uint8_t *)buf, len, HAL_MAX_DELAY);
 }
 
 static void FEB_Compose_CAN_Data(void) {
 	memset(&can_data, 0, sizeof(FEB_LVPDB_CAN_Data));
+
+	can_data.ids[0] = 0x0001;
+	can_data.ids[1] = 0x0002;
+	can_data.ids[2] = 0x0003;
+	can_data.ids[3] = 0x0004;
+	can_data.ids[4] = 0x0005;
+	can_data.ids[5] = 0x0006;
+	can_data.ids[6] = 0x0007;
+	can_data.ids[7] = 0x0008;
+	can_data.ids[8] = 0x0009;
 
 //	can_data.bus_voltage = tps2482_bus_voltage[0];
 

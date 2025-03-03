@@ -7,6 +7,7 @@
 #include "FEB_CAN_APPS.h"
 #include "FEB_CAN_ICS.h"
 #include "stm32f4xx_hal.h"
+#include <stdio.h>
 
 typedef struct __attribute__((packed)) {
 	uint32_t tim_ms; // rollover handled by logging device
@@ -36,8 +37,9 @@ typedef struct __attribute__((packed)) {
 
 // **************************************** Functions ****************************************
 
-void FEB_CAN_Init(void);
+void FEB_CAN_Init(void (*CAN_Callback)(CAN_RxHeaderTypeDef *, void *));
 void FEB_CAN_Filter_Config(void);
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan);
+uint8_t FEB_CAN_Filter(CAN_HandleTypeDef* hcan, unsigned char FIFO_assignment, uint8_t filter_bank);
+//void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan);
 void FEB_CAN_Transmit(CAN_HandleTypeDef *hcan, FEB_LVPDB_CAN_Data *can_data);
 #endif /* INC_FEB_CAN_H_ */
