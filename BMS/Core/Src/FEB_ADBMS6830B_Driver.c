@@ -59,6 +59,8 @@ void ADBMS6830B_set_cfgr(uint8_t nIC, // Current IC
 	ADBMS6830B_set_cfgr_dcto(nIC,ic,dcto);
 	ADBMS6830B_set_cfgr_uv(nIC, ic, uv);
 	ADBMS6830B_set_cfgr_ov(nIC, ic, ov);
+	ADBMS6830B_set_cfgr_flags(nIC, ic, 255);
+	ic[nIC].configa.tx_data[2] = 0;
 }
 
 /* Helper function to set the REFON bit */
@@ -66,6 +68,11 @@ void ADBMS6830B_set_cfgr_refon(uint8_t nIC, cell_asic *ic, bool refon)
 {
 	if (refon) ic[nIC].configa.tx_data[0] = ic[nIC].configa.tx_data[0]|0x80;
 	else ic[nIC].configa.tx_data[0] = ic[nIC].configa.tx_data[0]&0x7F;
+}
+
+void ADBMS6830B_set_cfgr_flags(uint8_t nIC, cell_asic *ic, uint8_t flags)
+{
+	ic[nIC].configa.tx_data[1] = flags;
 }
 
 /* Helper function to set CTH bits */
@@ -121,9 +128,9 @@ void ADBMS6830B_set_cfgr_dis(uint8_t nIC, cell_asic *ic, bool dcc[12])
 }
 
 /* Helper function to control discharge time value */
-void ADBMS6830B_set_cfgr_dcto(uint8_t nIC, cell_asic *ic, bool dcto[4])
+void ADBMS6830B_set_cfgr_dcto(uint8_t nIC, cell_asic *ic, bool dcto[5])
 {
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 5; i++) {
 		if (dcto[i]) {
             ic[nIC].configb.tx_data[3] = ic[nIC].configb.tx_data[3] | (0b01 << i);
         } else {
@@ -244,22 +251,48 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 	uint8_t TxSize = 34;
 	uint8_t*cell_data;
 	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
-	transmitCMDR(RDCVALL,cell_data,34*total_ic);
+	transmitCMDR(RDACALL,cell_data,34*total_ic);
 	for(int bank=0;bank<total_ic;bank++){
 		memcpy(&(ic[bank].cells.c_codes),cell_data+bank*TxSize,(size_t)34);
 	}
 	uint16_t data_pec=pec10_calc(32,cell_data);
 	uint16_t rx_pec=*(uint16_t*)(cell_data+32);
+	free(cell_data);
+	return(data_pec!=rx_pec);
+}
+
+
+uint8_t ADBMS6830B_rdsv(uint8_t total_ic, // The number of ICs in the system
+                     	   cell_asic *ic // Array of the parsed cell codes
+                    	  )
+{
+	/* OLD CODE
+	 * //parse data
+		int8_t c_ic=0;
+		for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
+			if (ic->isospi_reverse == false) {
+				c_ic = curr_ic;
+			} else {
+				c_ic = total_ic - curr_ic - 1;
+			}
+			//pec_error += parse_cells(c_ic, CELL, cell_data, &ic[c_ic].cells.c_codes[0], &ic[c_ic].cells.pec_match[0]);
+		}*/
+	uint8_t TxSize = 34;
+	uint8_t*cell_data;
+	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
+
 
 	transmitCMDR(RDSALL,cell_data,34*total_ic);
 	for(int bank=0;bank<total_ic;bank++){
 		memcpy(&(ic[bank].cells.s_codes),cell_data+bank*TxSize,(size_t)34);
 	}
 
+	uint16_t data_pec=pec10_calc(32,cell_data);
+	uint16_t rx_pec=*(uint16_t*)(cell_data+32);
+
 	free(cell_data);
 	return(data_pec!=rx_pec);
 }
-
 /* Helper function that parses voltage measurement registers */
 int8_t parse_cells(uint8_t current_ic, // Current IC
 					uint8_t cell_reg,  // Type of register
@@ -306,65 +339,93 @@ int8_t parse_cells(uint8_t current_ic, // Current IC
 }
 
 // ******************************** Temperature ********************************
-
+void ADBMS6830B_wrALL(uint8_t total_ic, //The number of ICs being written to
+                      cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                     )
+{
+	ADBMS6830B_wrcfga(total_ic, ic);
+	ADBMS6830B_wrcfgb(total_ic, ic);
+	ADBMS6830B_wrpwmga(total_ic, ic);
+	ADBMS6830B_wrpwmgb(total_ic, ic);
+}
+void ADBMS6830B_rdALL(uint8_t total_ic, //The number of ICs being written to
+                      cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                     )
+{
+	ADBMS6830B_rdcfga(total_ic, ic);
+	ADBMS6830B_rdcfgb(total_ic, ic);
+	ADBMS6830B_rdpwmga(total_ic, ic);
+	ADBMS6830B_rdpwmgb(total_ic, ic);
+}
 /* Write the ADBMS6830B CFGRA */
 void ADBMS6830B_wrcfga(uint8_t total_ic, //The number of ICs being written to
                    cell_asic ic[]  // A two dimensional array of the configuration data that will be written
                   )
 {
-	uint8_t cmd[2] = {0x00 , 0x01} ;
 	uint8_t write_buffer[256];
 	uint8_t write_count = 0;
 	uint8_t c_ic = 0;
-
 	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
 	{
-		if (ic->isospi_reverse == false)
-		{
-			c_ic = current_ic;
-		}
-		else
-		{
-			c_ic = total_ic - current_ic - 1;
-		}
-
+		c_ic = current_ic;
 		for (uint8_t data = 0; data<6; data++)
 		{
 			write_buffer[write_count] = ic[c_ic].configa.tx_data[data];
 			write_count++;
 		}
 	}
-	write_68(total_ic, cmd, write_buffer);
+
+	transmitCMDW(WRCFGA,write_buffer);
 }
 
+
+
+void ADBMS6830B_rdcfga(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  )
+{
+	uint8_t TxSize = 8;
+	uint8_t*cell_data;
+	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
+	transmitCMDR(RDCFGA,cell_data,8*total_ic);
+	for(int bank=0;bank<total_ic;bank++){
+		memcpy(&(ic[bank].configa.rx_data),cell_data+bank*TxSize,(size_t)8);
+	}
+
+}
 /* Write the ADBMS6830B CFGRB */
 void ADBMS6830B_wrcfgb(uint8_t total_ic, //The number of ICs being written to
                     cell_asic ic[] // A two dimensional array of the configuration data that will be written
                    )
 {
-	uint8_t cmd[2] = {0x00 , 0x24} ;
 	uint8_t write_buffer[256];
 	uint8_t write_count = 0;
 	uint8_t c_ic = 0;
 
 	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
 	{
-		if (ic->isospi_reverse == false)
-		{
-			c_ic = current_ic;
-		}
-		else
-		{
-			c_ic = total_ic - current_ic - 1;
-		}
-
+		c_ic = current_ic;
 		for (uint8_t data = 0; data<6; data++)
 		{
 			write_buffer[write_count] = ic[c_ic].configb.tx_data[data];
 			write_count++;
 		}
 	}
-	write_68(total_ic, cmd, write_buffer);
+	transmitCMDW(WRCFGB,write_buffer);
+}
+
+void ADBMS6830B_rdcfgb(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  )
+{
+	uint8_t TxSize = 8;
+	uint8_t*cell_data;
+	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
+	transmitCMDR(RDCFGB,cell_data,8*total_ic);
+	for(int bank=0;bank<total_ic;bank++){
+		memcpy(&(ic[bank].configa.rx_data),cell_data+bank*TxSize,(size_t)8);
+	}
+
 }
 
 /* Start ADC Conversion for GPIO and Vref2  */
@@ -380,7 +441,68 @@ void ADBMS6830B_adax(uint8_t OW, //Open Wire Detection
 
 	cmd_68(cmd);
 }
+void ADBMS6830B_wrpwmga(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  )
+{
+	uint8_t write_buffer[256];
+	uint8_t write_count = 0;
+	uint8_t c_ic = 0;
+	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
+	{
+		c_ic = current_ic;
+		for (uint8_t data = 0; data<6; data++)
+		{
+			write_buffer[write_count] = ic[c_ic].pwm.tx_data[data];
+			write_count++;
+		}
+	}
+	transmitCMDW(WRPWMA,write_buffer);
+}
+void ADBMS6830B_rdpwmga(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  )
+{
+	uint8_t TxSize = 8;
+	uint8_t*cell_data;
+	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
+	transmitCMDR(RDPWMA,cell_data,8*total_ic);
+	for(int bank=0;bank<total_ic;bank++){
+		memcpy(&(ic[bank].pwm.rx_data),cell_data+bank*TxSize,(size_t)8);
+	}
 
+}
+void ADBMS6830B_wrpwmgb(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  )
+{
+	uint8_t write_buffer[256];
+	uint8_t write_count = 0;
+	uint8_t c_ic = 0;
+	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
+	{
+		c_ic = current_ic;
+		for (uint8_t data = 0; data<6; data++)
+		{
+			write_buffer[write_count] = ic[c_ic].pwmb.tx_data[data];
+			write_count++;
+		}
+	}
+	transmitCMDW(WRPWMB,write_buffer);
+}
+void ADBMS6830B_rdpwmgb(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  )
+{
+	uint8_t TxSize = 8;
+	uint8_t*cell_data;
+	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
+	transmitCMDR(RDPWMB,cell_data,8*total_ic);
+	for(int bank=0;bank<total_ic;bank++){
+		memcpy(&(ic[bank].pwmb.rx_data),cell_data+bank*TxSize,(size_t)8);
+	}
+
+}
 /*
 The function is used to read the  parsed GPIO codes of the ADBMS6830B.
 This function will send the requested read commands parse the data
@@ -440,7 +562,19 @@ uint8_t ADBMS6830B_rdaux(uint8_t total_ic, // The number of ICs in the system
 	free(cell_data);
 	return(pec_error);
 }
-
+void ADBMS6830B_CLRFLAG(uint8_t total_ic){
+	int8_t flagData[256];
+	uint8_t write_count = 0;
+	uint8_t c_ic = 0;
+	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++){
+		c_ic = current_ic;
+		for (uint8_t data = 0; data<6; data++){
+			flagData[write_count] = 0xFF;
+			write_count++;
+		}
+	}
+	transmitCMDW(CLRFLAG, flagData);
+}
 /* Generic wakeup command to wake the ADBMS6830B from sleep state */
 void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 {
@@ -449,7 +583,7 @@ void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 	   FEB_cs_low();
 	   while(nops-->0);
 	   FEB_cs_high();
-	   nops=60;
+	   nops=100;
 	   while(nops-->0);
 	}
 }

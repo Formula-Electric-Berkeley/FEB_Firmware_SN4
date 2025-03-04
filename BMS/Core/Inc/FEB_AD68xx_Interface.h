@@ -47,8 +47,7 @@ void transmitCMDR(uint16_t cmdcode,
 				  uint8_t* data,
 				  uint8_t len);
 void transmitCMDW(uint16_t cmdcode,
-				  uint8_t* data,
-				  uint8_t len);
+				  uint8_t* data);
 
 
 

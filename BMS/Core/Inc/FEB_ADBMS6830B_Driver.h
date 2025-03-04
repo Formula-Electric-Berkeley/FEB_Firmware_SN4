@@ -146,7 +146,9 @@ uint32_t ADBMS6830B_pollAdc();
 uint8_t ADBMS6830B_rdcv(uint8_t total_ic, //!< The number of ICs in the system
                      cell_asic *ic //!< Array of the parsed cell codes
                     );
-
+uint8_t ADBMS6830B_rdsv(uint8_t total_ic, // The number of ICs in the system
+                     	   cell_asic *ic // Array of the parsed cell codes
+                    	  );
 /*!
  Helper function that parses voltage measurement registers
  @return int8_t, pec_error PEC Status.
@@ -161,6 +163,12 @@ int8_t parse_cells(uint8_t current_ic, //!< Current IC
 				   );
 
 // ******************************** Temperature Functions ********************************
+void ADBMS6830B_wrALL(uint8_t total_ic, //The number of ICs being written to
+                      cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                     );
+void ADBMS6830B_rdALL(uint8_t total_ic, //The number of ICs being written to
+                      cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                     );
 
 /*!
  Write the ADBMS6830B CFGRA register
@@ -171,7 +179,9 @@ int8_t parse_cells(uint8_t current_ic, //!< Current IC
 void ADBMS6830B_wrcfga(uint8_t total_ic, //!< The number of ICs being written to
                    cell_asic *ic //!< A two dimensional array of the configuration data that will be written
                   );
-
+void ADBMS6830B_rdcfga(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  );
 /*!
  Write the ADBMS6830B CFGRB register
  This command will write the configuration registers of the LTC681xs connected in a daisy chain stack.
@@ -181,6 +191,23 @@ void ADBMS6830B_wrcfga(uint8_t total_ic, //!< The number of ICs being written to
 void ADBMS6830B_wrcfgb(uint8_t total_ic, //!< The number of ICs being written to
                     cell_asic *ic //!< A two dimensional array of the configuration data that will be written
                    );
+void ADBMS6830B_rdcfgb(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  );
+
+void ADBMS6830B_wrpwmga(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  );
+void ADBMS6830B_rdpwmga(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  );
+void ADBMS6830B_wrpwmgb(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  );
+void ADBMS6830B_rdpwmgb(uint8_t total_ic, //The number of ICs being written to
+                   cell_asic ic[]  // A two dimensional array of the configuration data that will be written
+                  );
+
 
 /* Start ADC Conversion for GPIO and Vref2  */
 void ADBMS6830B_adax(uint8_t OW, //Open Wire Detection
@@ -213,5 +240,6 @@ void ADBMS6830B_check_pec(uint8_t total_ic, //!< Number of ICs in the daisy chai
                        uint8_t reg, //!< Type of register
                        cell_asic *ic //!< A two dimensional array that will store the data
 					   );
+void ADBMS6830B_CLRFLAG(uint8_t total_ic);
 
 #endif /* INC_FEB_ADBMS6830B_DRIVER_H_ */

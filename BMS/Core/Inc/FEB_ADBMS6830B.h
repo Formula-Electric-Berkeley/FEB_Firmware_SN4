@@ -12,6 +12,8 @@
 #include "FEB_ADBMS6830B_Driver.h"
 
 
+extern accumulator_t FEB_ACC;
+
 // ********************************** ADBMS6830B Configuration **********************************
 
 typedef enum {

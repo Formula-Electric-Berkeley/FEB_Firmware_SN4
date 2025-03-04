@@ -25,7 +25,7 @@ void FEB_cs_high() {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 }
 void FEB_spi_write_array(uint8_t len, uint8_t data[]) {
-	if(HAL_SPI_Transmit(&hspi1, data, len, HAL_MAX_DELAY)!=HAL_OK){
+	if(HAL_SPI_Transmit(&hspi1, data, len, 100)!=HAL_OK){
 		//catch error
 		int i=0;
 	}

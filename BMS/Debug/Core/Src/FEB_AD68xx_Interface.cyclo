@@ -1,8 +1,8 @@
 ../Core/Src/FEB_AD68xx_Interface.c:57:10:pec15_calc	2
 ../Core/Src/FEB_AD68xx_Interface.c:74:10:pec10_calc	2
 ../Core/Src/FEB_AD68xx_Interface.c:92:6:cmd_68	1
-../Core/Src/FEB_AD68xx_Interface.c:107:6:cmd_68_r	1
-../Core/Src/FEB_AD68xx_Interface.c:126:6:write_68	3
-../Core/Src/FEB_AD68xx_Interface.c:167:6:transmitCMD	1
-../Core/Src/FEB_AD68xx_Interface.c:173:6:transmitCMDR	1
-../Core/Src/FEB_AD68xx_Interface.c:180:6:transmitCMDW	1
+../Core/Src/FEB_AD68xx_Interface.c:108:6:cmd_68_r	1
+../Core/Src/FEB_AD68xx_Interface.c:128:6:write_68	3
+../Core/Src/FEB_AD68xx_Interface.c:170:6:transmitCMD	1
+../Core/Src/FEB_AD68xx_Interface.c:176:6:transmitCMDR	1
+../Core/Src/FEB_AD68xx_Interface.c:183:6:transmitCMDW	1

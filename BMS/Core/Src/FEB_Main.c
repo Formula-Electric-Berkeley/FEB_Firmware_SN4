@@ -6,7 +6,8 @@
 
 void FEB_Main_Setup() {
 	FEB_ADBMS_Init();
-	//FEB_Balance_Start();
+	//HAL_Delay(10);
+	//FEB_Cell_Balance_Start();
 	//FEB_SM_Init();
 	//FEB_CAN_Init();
 	//IVT Setup
@@ -15,9 +16,8 @@ void FEB_Main_Setup() {
 void FEB_Task_ADBMS() {
 	FEB_ADBMS_Voltage_Process();
 	FEB_ADBMS_Temperature_Process();
-	//FEB_ADBMS_Temperature_Process();
 	//FEB_Cell_Balance_Process();
-	HAL_Delay(500);
+	HAL_Delay(50);
 }
 
 void FEB_Task_SM() {

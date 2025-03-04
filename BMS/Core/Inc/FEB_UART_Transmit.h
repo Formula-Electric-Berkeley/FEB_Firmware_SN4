@@ -13,7 +13,7 @@
 
 // TASKS
 static FEB_Task_Header_t FEB_UART_Tasks;
-
+extern accumulator_t FEB_ACC;
 // **************************************** Functions ****************************************
 void FEB_UART_Transmit_Process(void);
 void FEB_ADBMS_UART_Transmit(accumulator_t FEB_ACC);

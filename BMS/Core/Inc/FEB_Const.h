@@ -15,7 +15,7 @@
 #define FEB_CONST_PRECHARGE_PCT 0.8
 #define FEB_NUM_CAN_DEV 6
 // ******************************** Voltage Reading Configuration ***************************
-#define CONTVR CONTINUOUS
+#define CONTVR 0
 #define DCPVR DCP_OFF
 #define RSTFVR RSTF_OFF
 #define OWVR OW_OFF_ALL_CH

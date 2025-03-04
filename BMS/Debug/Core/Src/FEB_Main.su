@@ -3,9 +3,9 @@
 ../Core/Inc/FEB_Task_Queue.h:64:13:FEB_Pop_Tail	32	static
 ../Core/Src/FEB_Main.c:7:6:FEB_Main_Setup	8	static
 ../Core/Src/FEB_Main.c:16:6:FEB_Task_ADBMS	8	static
-../Core/Src/FEB_Main.c:25:6:FEB_Task_SM	4	static
-../Core/Src/FEB_Main.c:29:6:FEB_Task_Charge	4	static
-../Core/Src/FEB_Main.c:33:6:FEB_Task_Balance	4	static
-../Core/Src/FEB_Main.c:37:6:FEB_Task_IVT	4	static
-../Core/Src/FEB_Main.c:41:6:FEB_Task_CAN	4	static
-../Core/Src/FEB_Main.c:45:6:FEB_Task_UART	4	static
+../Core/Src/FEB_Main.c:23:6:FEB_Task_SM	4	static
+../Core/Src/FEB_Main.c:27:6:FEB_Task_Charge	4	static
+../Core/Src/FEB_Main.c:31:6:FEB_Task_Balance	4	static
+../Core/Src/FEB_Main.c:35:6:FEB_Task_IVT	4	static
+../Core/Src/FEB_Main.c:39:6:FEB_Task_CAN	4	static
+../Core/Src/FEB_Main.c:43:6:FEB_Task_UART	4	static
