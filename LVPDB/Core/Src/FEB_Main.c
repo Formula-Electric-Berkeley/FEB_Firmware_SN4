@@ -1,6 +1,8 @@
 #include "FEB_Main.h"
 #include "main.h"
 
+#define TESTBENCH 0
+
 extern I2C_HandleTypeDef hi2c1;
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart2;
@@ -59,64 +61,68 @@ void FEB_Main_Setup(void) {
 
 	HAL_TIM_Base_Start_IT(&htim1);
 
-//	bool tps2482_en_res[NUM_TPS2482 - 1];
-//	bool tps2482_en_success = false;
-//	GPIO_PinState tps2482_pg_res[NUM_TPS2482];
-//	bool tps2482_pg_success = false;
-//	int maxiter = 0; // Safety in case of infinite while
-//
-//	while ( !tps2482_en_success || !tps2482_pg_success ) {
-//		if ( maxiter > 1000 ) {
-//			break; // Todo add failure case
-//		}
-//
-//		// Assume successful enable
-//		bool b1 = true;
-//		bool b2 = true;
-//
-//		TPS2482_Enable(tps2482_en_ports, tps2482_en_pins, tps2482_en_res, NUM_TPS2482 - 1);
-//		TPS2482_GPIO_Read(tps2482_pg_ports, tps2482_pg_pins, tps2482_pg_res, NUM_TPS2482);
-//
-//		for ( uint8_t i = 0; i < NUM_TPS2482 - 1; i++ ) {
-//			// If any don't enable properly b will be false and thus loop continues
-//			b1 &= tps2482_en_res[i];
-//		}
-//
-//		for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
-//			// If any don't power up properly b will be false and thus loop continues
-//			b2 &= tps2482_pg_res[i];
-//		}
-//
-//		tps2482_en_success = b1;
-//		tps2482_pg_success = b2;
-//		maxiter += 1;
-//	}
-//
-//	bool tps2482_init_res[NUM_TPS2482];
-//	bool tps2482_init_success = false;
-//	maxiter = 0; // Safety in case of infinite while
-//
-//	while ( !tps2482_init_success ) {
-//		if ( maxiter > 1000 ) {
-//			break; // Todo add failure case
-//		}
-//
-//		// Assume successful init
-//		bool b = true;
-//
-//		TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, NUM_TPS2482);
-//
-//		for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
-//			// If any don't enable properly b will be false and thus loop continues
-//			b &= tps2482_init_res[i];
-//		}
-//
-//		tps2482_init_success = b;
-//		maxiter += 1;
-//	}
-//
-//	// Initialize brake light to be off
-//	HAL_GPIO_WritePin(BL_SWITCH_GPIO_Port, BL_SWITCH_Pin, GPIO_PIN_RESET);
+#if !TESTBENCH
+
+	bool tps2482_en_res[NUM_TPS2482 - 1];
+	bool tps2482_en_success = false;
+	GPIO_PinState tps2482_pg_res[NUM_TPS2482];
+	bool tps2482_pg_success = false;
+	int maxiter = 0; // Safety in case of infinite while
+
+	while ( !tps2482_en_success || !tps2482_pg_success ) {
+		if ( maxiter > 1000 ) {
+			break; // Todo add failure case
+		}
+
+		// Assume successful enable
+		bool b1 = true;
+		bool b2 = true;
+
+		TPS2482_Enable(tps2482_en_ports, tps2482_en_pins, tps2482_en_res, NUM_TPS2482 - 1);
+		TPS2482_GPIO_Read(tps2482_pg_ports, tps2482_pg_pins, tps2482_pg_res, NUM_TPS2482);
+
+		for ( uint8_t i = 0; i < NUM_TPS2482 - 1; i++ ) {
+			// If any don't enable properly b will be false and thus loop continues
+			b1 &= tps2482_en_res[i];
+		}
+
+		for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
+			// If any don't power up properly b will be false and thus loop continues
+			b2 &= tps2482_pg_res[i];
+		}
+
+		tps2482_en_success = b1;
+		tps2482_pg_success = b2;
+		maxiter += 1;
+	}
+
+	bool tps2482_init_res[NUM_TPS2482];
+	bool tps2482_init_success = false;
+	maxiter = 0; // Safety in case of infinite while
+
+	while ( !tps2482_init_success ) {
+		if ( maxiter > 1000 ) {
+			break; // Todo add failure case
+		}
+
+		// Assume successful init
+		bool b = true;
+
+		TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, NUM_TPS2482);
+
+		for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
+			// If any don't enable properly b will be false and thus loop continues
+			b &= tps2482_init_res[i];
+		}
+
+		tps2482_init_success = b;
+		maxiter += 1;
+	}
+
+	// Initialize brake light to be off
+	HAL_GPIO_WritePin(BL_SWITCH_GPIO_Port, BL_SWITCH_Pin, GPIO_PIN_RESET);
+
+#endif
 }
 
 void FEB_Main_Loop(void) {
@@ -151,23 +157,9 @@ void FEB_Main_Loop(void) {
 	} */
 
 	// Todo add alert and pg monitoring
-
-
-//	TPS2482_Poll_Current(&hi2c1, tps2482_i2c_addresses, tps2482_current_raw, NUM_TPS2482);
-//	TPS2482_Poll_Bus_Voltage(&hi2c1, tps2482_i2c_addresses, tps2482_bus_voltage_raw, NUM_TPS2482);
-//
-//	FEB_Variable_Conversion();
-
-//	FEB_Compose_CAN_Data();
-//
-//	for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
-//		can_data.flags &= 0xF0FFFFFF;
-//		can_data.flags |= ((uint32_t)i) << 24;
-//		FEB_CAN_Transmit(&hcan1, &can_data);
-//	}
-//
-//	HAL_Delay(10);
 }
+
+#if TESTBENCH
 
 #define BOARD 3
 
@@ -191,15 +183,26 @@ static CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
 
 static uint32_t FEB_CAN_Tx_Mailbox;
 
+#endif
+
 void FEB_1ms_Callback(void) {
-//	FEB_Compose_CAN_Data();
+#if !TESTBENCH
 
-//	for ( uint8_t i = 0; i < 2; i++ ) {
-//		can_data.flags &= 0xF0FFFFFF;
-//		can_data.flags |= ((uint32_t)i) << 24;
-//		FEB_CAN_Transmit(&hcan1, &can_data);
-//	}
+	TPS2482_Poll_Current(&hi2c1, tps2482_i2c_addresses, tps2482_current_raw, NUM_TPS2482);
+	TPS2482_Poll_Bus_Voltage(&hi2c1, tps2482_i2c_addresses, tps2482_bus_voltage_raw, NUM_TPS2482);
 
+	FEB_Variable_Conversion();
+
+	FEB_Compose_CAN_Data();
+
+	for ( uint8_t i = 0; i < 5; i++ ) {
+		can_data.flags &= 0xF0FFFFFF;
+		can_data.flags |= ((uint32_t)i) << 24;
+		FEB_CAN_Transmit(&hcan1, &can_data);
+	}
+#endif
+
+#if TESTBENCH
 	#if BOARD == 1 || BOARD == 3
 
 	// Initialize Transmission Header
@@ -223,10 +226,14 @@ void FEB_1ms_Callback(void) {
 	HAL_UART_Transmit(&huart2, (const uint8_t *)buf, len, HAL_MAX_DELAY);
 
 	#endif
+
+#endif
 }
 
 void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 	data = (char *)data;
+
+#if TESTBENCH
 
 	if ( rx_header->StdId == OTHER_ID ) {
 		rx_tx_data = *((uint64_t *) data);
@@ -251,30 +258,25 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 
 		#endif
 	}
-//
-//	char buf[1024];
-//
-//	size_t len = sprintf(buf, "pong\n\r");
-//
-//	HAL_UART_Transmit(&huart2, (const uint8_t *)buf, len, HAL_MAX_DELAY);
+
+#endif
+
 }
 
 static void FEB_Compose_CAN_Data(void) {
 	memset(&can_data, 0, sizeof(FEB_LVPDB_CAN_Data));
 
-	can_data.ids[0] = 0x0001;
-	can_data.ids[1] = 0x0002;
-	can_data.ids[2] = 0x0003;
-	can_data.ids[3] = 0x0004;
-	can_data.ids[4] = 0x0005;
-	can_data.ids[5] = 0x0006;
-	can_data.ids[6] = 0x0007;
-	can_data.ids[7] = 0x0008;
-	can_data.ids[8] = 0x0009;
+	can_data.ids[0] = 0x00F1;
+	can_data.ids[1] = 0x00F2;
+	can_data.ids[2] = 0x00F3;
+	can_data.ids[3] = 0x00F4;
+	can_data.ids[4] = 0x00F5;
 
-//	can_data.bus_voltage = tps2482_bus_voltage[0];
+#if !TESTBENCH
+	can_data.bus_voltage = tps2482_bus_voltage[0];
 
-//	memcpy(&can_data.lv_current, tps2482_current, 8 * sizeof(float));
+	memcpy(&can_data.lv_current, tps2482_current, NUM_TPS2482 * sizeof(float));
+#endif
 }
 
 static void FEB_Variable_Conversion(void) {
@@ -377,13 +379,9 @@ static void FEB_Variable_Init(void) {
 	tps2482_alert_pins[6] = AS_ALERT_Pin;
 	tps2482_alert_pins[7] = AB_ALERT_Pin;
 
-	can_data.ids[0] = 0x0001;
-	can_data.ids[1] = 0x0002;
-	can_data.ids[2] = 0x0003;
-	can_data.ids[3] = 0x0004;
-	can_data.ids[4] = 0x0005;
-	can_data.ids[5] = 0x0006;
-	can_data.ids[6] = 0x0007;
-	can_data.ids[7] = 0x0008;
-	can_data.ids[8] = 0x0009;
+	can_data.ids[0] = 0x00F1;
+	can_data.ids[1] = 0x00F2;
+	can_data.ids[2] = 0x00F3;
+	can_data.ids[3] = 0x00F4;
+	can_data.ids[4] = 0x00F5;
 }

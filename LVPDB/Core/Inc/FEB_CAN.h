@@ -17,7 +17,7 @@ typedef struct __attribute__((packed)) {
 	 *  Bit 30: New bus voltage reading ready
 	 *  Bit 29: Bus undervoltage (Todo: define metric for undervoltage)
 	 *  Bit 28: Bus overvoltage (Todo: define metric for overvoltage)
-	 *  Bits [24:27] ID #
+	 *  Bits [24:27] LVPDB first word ID (should be 0)
 	 *  Bits [16:23] Bus shutdown (V_bus = 0 -> fuse blown)
 	 *  Bits [8:15]: Power good
 	 *  Bits [0:7]: Alert pins for overcurrent
@@ -32,7 +32,7 @@ typedef struct __attribute__((packed)) {
 	float l_current;
 	float as_current;
 	float ab_current;
-	uint32_t ids[9]; // 9 messages total so 9 id's sent out
+	uint32_t ids[5]; // 9 messages total so 9 id's sent out
 } FEB_LVPDB_CAN_Data; // Make sure that all edits do not input bit stuffing
 
 // **************************************** Functions ****************************************
