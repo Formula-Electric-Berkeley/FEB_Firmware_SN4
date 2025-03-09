@@ -17,23 +17,14 @@
 
 // **************************************** Variables ****************************************
 
-// Conversion constants
-#define MILLI_G_TO_MS2 0.0098067 ///< Convert milli-gs to m/s^2
-#define DEGREE_SCALE 0.01        ///< Convert raw degree values
-
-// Struct to hold a UART-RVC packet
-typedef struct {
-    float yaw;       ///< Yaw in degrees
-    float pitch;     ///< Pitch in degrees
-    float roll;      ///< Roll in degrees
-    float x_accel;   ///< X acceleration in m/s^2
-    float y_accel;   ///< Y acceleration in m/s^2
-    float z_accel;   ///< Z acceleration in m/s^2
-} BNO08x_RVC_Data;
+// Define BNO085 I2C Address
+#define BNO085_I2C_ADDR (0x4A << 1)  // Use 8-bit address format required by STM32 HAL
 
 // **************************************** Functions ****************************************
-int BNO08x_RVC_Init();
-int BNO08x_RVC_Read();
-
+void I2C_Scan(void);
+void BNO08X_Init(void);
+int BNO08X_ReadPacket(uint8_t *pBuffer, uint16_t len);
+void BNO08X_GetRawData(void);
+void IMU_Main(void);
 
 #endif /* INC_FEB_IMU_H_ */

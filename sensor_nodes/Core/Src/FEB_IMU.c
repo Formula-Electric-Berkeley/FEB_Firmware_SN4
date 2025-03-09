@@ -7,75 +7,120 @@
 
 // **************************************** Includes & External ****************************************
 
-#include <FEB_GPS.h>
+#include "FEB_IMU.h"
 
-extern UART_HandleTypeDef huart4;
+extern I2C_HandleTypeDef hi2c3;
 extern UART_HandleTypeDef huart2;
 
 // ******************************************** Functions **********************************************
 
-// Initialize the BNO085
-int BNO08x_RVC_Init() {
-    // IF we need initilization
-    return 0;
+
+char debug_buffer[100];
+
+/** Function to Scan I2C Bus */
+void I2C_Scan(void) {
+    char msg[64];
+    HAL_StatusTypeDef res;
+
+    sprintf(msg, "Scanning I2C Bus...\r\n");
+    HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
+    for (uint8_t addr = 1; addr < 128; addr++) {
+        res = HAL_I2C_IsDeviceReady(&hi2c3, (addr << 1), 1, 10);
+        if (res == HAL_OK) {
+            sprintf(msg, "I2C Device Found at 0x%X\r\n", addr);
+            HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+        }
+    }
 }
 
-int BNO08x_RVC_Read(void) {
-    uint8_t header[2];
-    uint8_t buffer[17];
-    //uint8_t checksum = 0;
-    BNO08x_RVC_Data data;
-    char debug_buffer[256]; // Buffer for debug printing
+/** BNO08X Initialization */
+void BNO08X_Init(void) {
+    uint8_t testByte;
+    HAL_StatusTypeDef status;
 
-    // Controlling the header
-    if (HAL_UART_Receive(&huart4, header, 2, HAL_MAX_DELAY) != HAL_OK) {
-        sprintf(debug_buffer, "Error: Failed to receive header.\r\n");
-        HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
-        return -1;
-    }
-
-    if (header[0] != 0xAA || header[1] != 0xAA) {
-        sprintf(debug_buffer, "Error: Invalid header (0x%02X 0x%02X).\r\n", header[0], header[1]);
-        HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
-        return -1;
-    }
-
-    // Receiving the remaining 17 bytes
-    if (HAL_UART_Receive(&huart4, buffer, 18, HAL_MAX_DELAY) != HAL_OK) { //17
-        sprintf(debug_buffer, "Error: Failed to receive payload.\r\n");
-        HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
-        return -1;
-    }
-
-    // DEBUG Verify checksum
-    /*for (uint8_t i = 0; i < 16; i++) {
-        checksum += buffer[i];
-    }
-    if (checksum != buffer[16]) {
-        sprintf(debug_buffer, "Error: Checksum mismatch.\r\n");
-        HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
-       return -1;
-    } */
-
-    // Raw data -> Meaningful data
-    int16_t raw_data[6];
-    for (uint8_t i = 0; i < 6; i++) {
-        raw_data[i] = (int16_t)((buffer[1 + (i * 2) + 1] << 8) | buffer[1 + (i * 2)]);
-    }
-
-    // Conversion
-    data.yaw = (float)raw_data[0] * DEGREE_SCALE;
-    data.pitch = (float)raw_data[1] * DEGREE_SCALE;
-    data.roll = (float)raw_data[2] * DEGREE_SCALE;
-    data.x_accel = (float)raw_data[3] * MILLI_G_TO_MS2;
-    data.y_accel = (float)raw_data[4] * MILLI_G_TO_MS2;
-    data.z_accel = (float)raw_data[5] * MILLI_G_TO_MS2;
-
-    // Printing the data to see
-    sprintf(debug_buffer, "Yaw: %.2f, Pitch: %.2f, Roll: %.2f\r\n", data.yaw, data.pitch, data.roll);
-    HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
-    sprintf(debug_buffer, "Accel X: %.2f, Y: %.2f, Z: %.2f\r\n", data.x_accel, data.y_accel, data.z_accel);
+    sprintf(debug_buffer, "Initializing BNO08X...\r\n");
     HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
 
-    return 0;
+    // Perform a test read to check if the sensor responds
+    status = HAL_I2C_Master_Receive(&hi2c3, BNO085_I2C_ADDR, &testByte, 1, 100);
+
+    if (status == HAL_OK) {
+        sprintf(debug_buffer, "BNO08X Detected! Test Read: 0x%X\r\n", testByte);
+    } else {
+        sprintf(debug_buffer, "BNO08X Not Responding! I2C Error=%d\r\n", status);
+    }
+
+    HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
+}
+
+/** Read a Full SHTP Packet */
+int BNO08X_ReadPacket(uint8_t *pBuffer, uint16_t len) {
+    uint8_t header[4];
+    uint16_t packet_size;
+
+    // Read the first 4 bytes (packet header)
+    if (HAL_I2C_Master_Receive(&hi2c3, BNO085_I2C_ADDR, header, 4, 100) != HAL_OK) {
+        sprintf(debug_buffer, "I2C Read Header Failed!\r\n");
+        HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
+        return 0;
+    }
+
+    // Extract packet size (Little-endian format)
+    packet_size = (uint16_t)(header[0] | (header[1] << 8));
+    packet_size &= ~0x8000;  // Clear "continue" bit
+
+    sprintf(debug_buffer, "Received Packet Size: %d bytes\r\n", packet_size);
+    HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
+
+    // Read the full packet
+    if (packet_size > len) {
+        sprintf(debug_buffer, "Packet too large! Size=%d\r\n", packet_size);
+        HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
+        return 0;
+    }
+
+    if (HAL_I2C_Master_Receive(&hi2c3, BNO085_I2C_ADDR, pBuffer, packet_size, 100) != HAL_OK) {
+        sprintf(debug_buffer, "I2C Read Payload Failed!\r\n");
+        HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
+        return 0;
+    }
+
+    return packet_size;
+}
+
+/** Read Raw Data from BNO08X */
+void BNO08X_GetRawData(void) {
+    uint8_t rawData[276];  // Large enough for any packet
+    int packetSize = BNO08X_ReadPacket(rawData, sizeof(rawData));
+
+    if (packetSize > 0) {
+        // Extract channel ID
+        uint8_t channel_id = rawData[2];
+
+        sprintf(debug_buffer, "Received Packet from Channel %d\r\n", channel_id);
+        HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
+
+        // If this is sensor data, process it
+        if (channel_id == 2) {  // Change channel ID if needed
+            int16_t accelX = (int16_t)((rawData[5] << 8) | rawData[4]);
+            int16_t accelY = (int16_t)((rawData[7] << 8) | rawData[6]);
+            int16_t accelZ = (int16_t)((rawData[9] << 8) | rawData[8]);
+
+//            float ax = accelX / 1024.0f;
+//            float ay = accelY / 1024.0f;
+//            float az = accelZ / 1024.0f;
+//
+//            sprintf(debug_buffer, "Accel X: %.2f, Y: %.2f, Z: %.2f\r\n", ax, ay, az);
+            sprintf(debug_buffer, "Accel X: %d, Y: %d, Z: %d\r\n", accelX, accelY, accelZ);
+            HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
+        }
+    } else {
+        sprintf(debug_buffer, "I2C Read Failed!\r\n");
+        HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
+    }
+}
+
+void IMU_Main(void) {
+
 }

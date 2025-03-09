@@ -75,16 +75,16 @@ void UART_Transmit_ADC2_Readings(void) {
 
 void Fill_CAN_Data(void) {
 
-	uint16_t LiPo1 = LinearPotentiometerConversion(ADC2_Readings[0]);
-	uint16_t LiPo2 = LinearPotentiometerConversion(ADC2_Readings[1]);
+	uint16_t LinPot1 = LinearPotentiometerConversion(ADC2_Readings[0]);
+	uint16_t LinPot2 = LinearPotentiometerConversion(ADC2_Readings[1]);
 	uint16_t CoPr1 = CoolantPressureConversion(ADC2_Readings[2]);
 	uint16_t CoPr2 = CoolantPressureConversion(ADC2_Readings[3]);
 
 	// Fill the data
-	TxData[0] = (LiPo1 >> 8) & 0xFF;
-	TxData[1] = LiPo1 & 0xFF;
-	TxData[2] = (LiPo2 >> 8) & 0xFF;
-	TxData[3] = LiPo2 & 0xFF;
+	TxData[0] = (LinPot1 >> 8) & 0xFF;
+	TxData[1] = LinPot1 & 0xFF;
+	TxData[2] = (LinPot2 >> 8) & 0xFF;
+	TxData[3] = LinPot2 & 0xFF;
 	TxData[4] = (CoPr1 >> 8) & 0xFF;
 	TxData[5] = CoPr1 & 0xFF;
 	TxData[6] = (CoPr2 >> 8) & 0xFF;
