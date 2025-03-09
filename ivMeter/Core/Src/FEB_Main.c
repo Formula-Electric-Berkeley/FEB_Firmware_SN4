@@ -33,6 +33,7 @@ extern UART_HandleTypeDef huart2;
 
 uint16_t ivData[3];
 uint8_t i2c_buf[2];
+uint8_t RxData[8];
 
 enum HECS_Sensor
 {
@@ -134,6 +135,7 @@ void FEB_Main_Setup(void)
 
 	HAL_ADC_Start(&hadc);
 	Voltage_I2C_Init();
+	HAL_CAN_Start(&hcan);
 
 }
 
