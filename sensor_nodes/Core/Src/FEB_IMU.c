@@ -14,7 +14,7 @@ extern UART_HandleTypeDef huart2;
 
 // ******************************************** Functions **********************************************
 
-
+#define CAN_ID 0x1FF
 char debug_buffer[100];
 
 /** Function to Scan I2C Bus */
@@ -120,6 +120,28 @@ void BNO08X_GetRawData(void) {
         HAL_UART_Transmit(&huart2, (uint8_t *)debug_buffer, strlen(debug_buffer), HAL_MAX_DELAY);
     }
 }
+
+void FILL_CAN_DATA(uint16_t CAN_ID, uint16_t x, uint16_t y, uint16_t z) {
+    CAN_TxHeaderTypeDef TxHeader;
+	uint8_t TxData[8];
+	uint32_t TxMailbox;
+
+	TxHeader.DLC = 8; // Data length
+	TxHeader.IDE = CAN_ID_STD;
+	TxHeader.RTR = CAN_RTR_DATA; // Data frame
+	TxHeader.StdId = CAN_ID; // Current CAN ID of the sensor
+	TxHeader.ExtId = 0; // Not used with standard ID
+    TxData[0] = (x >> 8) & 0xFF; // High byte of value1
+    TxData[1] = x & 0xFF; // Low byte of value1
+    TxData[2] = (y >> 8) & 0xFF; // High byte of value2
+    TxData[3] = y & 0xFF; // Low byte of value2
+    TxData[4] = (y >> 8) & 0xFF; // High byte of value3
+    TxData[5] = y & 0xFF; // Low byte of value3
+    TxData[6] = 0; // Padding byte
+    TxData[7] = 0; // Padding byte
+}
+
+
 
 void IMU_Main(void) {
 
