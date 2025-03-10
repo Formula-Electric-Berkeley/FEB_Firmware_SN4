@@ -16,7 +16,9 @@ extern UART_HandleTypeDef huart2;
 
 #define CAN_ID 0x1FF
 char debug_buffer[100];
-
+int16_t accelX;
+int16_t accelY;
+int16_t accelZ;
 /** Function to Scan I2C Bus */
 void I2C_Scan(void) {
     char msg[64];
@@ -103,9 +105,9 @@ void BNO08X_GetRawData(void) {
 
         // If this is sensor data, process it
         if (channel_id == 2) {  // Change channel ID if needed
-            int16_t accelX = (int16_t)((rawData[5] << 8) | rawData[4]);
-            int16_t accelY = (int16_t)((rawData[7] << 8) | rawData[6]);
-            int16_t accelZ = (int16_t)((rawData[9] << 8) | rawData[8]);
+            accelX = (int16_t)((rawData[5] << 8) | rawData[4]);
+            accelY = (int16_t)((rawData[7] << 8) | rawData[6]);
+            accelZ = (int16_t)((rawData[9] << 8) | rawData[8]);
 
 //            float ax = accelX / 1024.0f;
 //            float ay = accelY / 1024.0f;
@@ -121,24 +123,34 @@ void BNO08X_GetRawData(void) {
     }
 }
 
-void FILL_CAN_DATA(uint16_t CAN_ID, uint16_t x, uint16_t y, uint16_t z) {
-    CAN_TxHeaderTypeDef TxHeader;
-	uint8_t TxData[8];
-	uint32_t TxMailbox;
+void Fill_CAN_Data(void) {
+    uint8_t TxData[8];
 
-	TxHeader.DLC = 8; // Data length
-	TxHeader.IDE = CAN_ID_STD;
-	TxHeader.RTR = CAN_RTR_DATA; // Data frame
-	TxHeader.StdId = CAN_ID; // Current CAN ID of the sensor
-	TxHeader.ExtId = 0; // Not used with standard ID
-    TxData[0] = (x >> 8) & 0xFF; // High byte of value1
-    TxData[1] = x & 0xFF; // Low byte of value1
-    TxData[2] = (y >> 8) & 0xFF; // High byte of value2
-    TxData[3] = y & 0xFF; // Low byte of value2
-    TxData[4] = (y >> 8) & 0xFF; // High byte of value3
-    TxData[5] = y & 0xFF; // Low byte of value3
+    TxData[0] = (accelX >> 8) & 0xFF;
+    TxData[1] = accelX & 0xFF;
+    TxData[2] = (accelY >> 8) & 0xFF;
+    TxData[3] = accelY & 0xFF;
+    TxData[4] = (accelZ >> 8) & 0xFF;
+    TxData[5] = accelZ & 0xFF;
     TxData[6] = 0; // Padding byte
     TxData[7] = 0; // Padding byte
+}
+
+void CAN_IMU_Transmit(void) {
+    CAN_TxHeaderTypeDef TxHeader;
+    uint32_t TxMailbox;
+
+    TxHeader.DLC = 8; // Data length
+    TxHeader.IDE = CAN_ID_STD; // Standard ID
+    TxHeader.RTR = CAN_RTR_DATA; // Data frame
+    TxHeader.StdId = CAN_ID; // Example CAN ID for IMU data
+    TxHeader.ExtId = 0; // Not used with standard ID
+
+    while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {} // Wait for a free mailbox
+
+    if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK) {
+        // Transmission request error
+    }
 }
 
 
