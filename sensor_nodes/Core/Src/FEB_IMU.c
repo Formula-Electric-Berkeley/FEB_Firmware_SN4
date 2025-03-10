@@ -8,7 +8,7 @@
 // **************************************** Includes & External ****************************************
 
 #include "FEB_IMU.h"
-
+extern CAN_HandleTypeDef hcan1;
 extern I2C_HandleTypeDef hi2c3;
 extern UART_HandleTypeDef huart2;
 
