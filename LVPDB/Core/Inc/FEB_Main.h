@@ -1,7 +1,7 @@
 #ifndef INC_FEB__MAIN_H_
 #define INC_FEB__MAIN_H_
 
-#include "FEB_CAN.h"
+#include <FEB_CAN.h>
 #include "FEB_CAN_APPS.h"
 #include "FEB_CAN_ICS.h"
 #include <TPS2482.h>

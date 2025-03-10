@@ -72,8 +72,8 @@ uint16_t tps2482_pg_pins[NUM_TPS2482];
 GPIO_TypeDef *tps2482_alert_ports[NUM_TPS2482];
 uint16_t tps2482_alert_pins[NUM_TPS2482];
 
-int16_t tps2482_current_raw[NUM_TPS2482];
-int16_t tps2482_bus_voltage_raw[NUM_TPS2482];
+uint16_t tps2482_current_raw[NUM_TPS2482];
+uint16_t tps2482_bus_voltage_raw[NUM_TPS2482];
 
 int16_t tps2482_current[NUM_TPS2482];
 int16_t tps2482_bus_voltage[NUM_TPS2482];
