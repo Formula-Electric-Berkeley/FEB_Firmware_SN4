@@ -40,7 +40,7 @@
 // Fuse max are the current ratings for the fuses, and are used as current maximums
 // Fuse max can be exceeded safely in "peak current" scenarios so maybe not best metric
 #define BATTERY_FUSE_MAX	(float)(30) 	// A from +24BAT -> +24GLV
-#define LV_FUSE_MAX			(float)(5)		// A from +24GLV -> +24V
+#define LV_FUSE_MAX			(float)(5)	// mA from +24GLV -> +24V
 #define CP_FUSE_MAX			(float)(6.3)	// A
 #define AF_FUSE_MAX			(float)(20) 	// A
 #define RF_FUSE_MAX			(float)(3) 		// A
@@ -48,6 +48,8 @@
 #define L_FUSE_MAX			(float)(5) 		// A
 #define AS_FUSE_MAX			(float)(20)		// A
 #define AB_FUSE_MAX			(float)(5) 		// A
+
+#define FLOAT_TO_UINT16_T(n)		((uint16_t)(n * 1000))
 
 // Todo figure out of fuse max is what we want to do as it gives resolution at the cost of range
 #define LV_CURRENT_LSB	TPS2482_CURRENT_LSB_EQ(LV_FUSE_MAX)

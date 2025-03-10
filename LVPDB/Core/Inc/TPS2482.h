@@ -34,7 +34,6 @@
 #define TPS2482_CONV_VSHUNT 	(float)(0.0025f) 	// mV/LSB
 #define TPS2482_CONV_VBUS	 	(float)(0.00125f) 	// V/LSB
 
-
 // The following are "magic equations" contained in current monitoring calculations:
 // eq. 20, a = I_max (A), returns A/LSB
 #define TPS2482_CURRENT_LSB_EQ(a)	(double)((double)(a) / (1.0 * 0x7FFF))

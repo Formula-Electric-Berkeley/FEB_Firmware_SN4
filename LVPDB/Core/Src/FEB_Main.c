@@ -3,6 +3,32 @@
 
 #define TESTBENCH 0
 
+#if TESTBENCH
+
+#define BOARD 4
+
+#if BOARD == 1
+#define THIS_ID FEB_CAN_FEB_PING_PONG_COUNTER1_FRAME_ID
+#define OTHER_ID FEB_CAN_FEB_PING_PONG_COUNTER2_FRAME_ID
+#elif BOARD == 2
+#define THIS_ID FEB_CAN_FEB_PING_PONG_COUNTER2_FRAME_ID
+#define OTHER_ID FEB_CAN_FEB_PING_PONG_COUNTER1_FRAME_ID
+#elif BOARD == 3
+#define THIS_ID FEB_CAN_FEB_PING_PONG_COUNTER3_FRAME_ID
+#define OTHER_ID FEB_CAN_FEB_PING_PONG_COUNTER4_FRAME_ID
+#elif BOARD == 4
+#define THIS_ID FEB_CAN_FEB_PING_PONG_COUNTER4_FRAME_ID
+#define OTHER_ID FEB_CAN_FEB_PING_PONG_COUNTER3_FRAME_ID
+#endif
+
+static uint64_t rx_tx_data = (BOARD > 2) ? 0xFFFFFFFF : 0;
+
+static CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
+
+static uint32_t FEB_CAN_Tx_Mailbox;
+
+#endif
+
 extern I2C_HandleTypeDef hi2c1;
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart2;
@@ -46,11 +72,11 @@ uint16_t tps2482_pg_pins[NUM_TPS2482];
 GPIO_TypeDef *tps2482_alert_ports[NUM_TPS2482];
 uint16_t tps2482_alert_pins[NUM_TPS2482];
 
-uint16_t tps2482_current_raw[NUM_TPS2482];
-uint16_t tps2482_bus_voltage_raw[NUM_TPS2482];
+int16_t tps2482_current_raw[NUM_TPS2482];
+int16_t tps2482_bus_voltage_raw[NUM_TPS2482];
 
-float tps2482_current[NUM_TPS2482];
-float tps2482_bus_voltage[NUM_TPS2482];
+int16_t tps2482_current[NUM_TPS2482];
+int16_t tps2482_bus_voltage[NUM_TPS2482];
 
 FEB_LVPDB_CAN_Data can_data;
 
@@ -58,8 +84,6 @@ void FEB_Main_Setup(void) {
 	FEB_Variable_Init();
 
 	FEB_CAN_Init(FEB_CAN1_Rx_Callback);
-
-	HAL_TIM_Base_Start_IT(&htim1);
 
 #if !TESTBENCH
 
@@ -70,7 +94,7 @@ void FEB_Main_Setup(void) {
 	int maxiter = 0; // Safety in case of infinite while
 
 	while ( !tps2482_en_success || !tps2482_pg_success ) {
-		if ( maxiter > 1000 ) {
+		if ( maxiter > 100 ) {
 			break; // Todo add failure case
 		}
 
@@ -101,7 +125,7 @@ void FEB_Main_Setup(void) {
 	maxiter = 0; // Safety in case of infinite while
 
 	while ( !tps2482_init_success ) {
-		if ( maxiter > 1000 ) {
+		if ( maxiter > 100 ) {
 			break; // Todo add failure case
 		}
 
@@ -123,6 +147,8 @@ void FEB_Main_Setup(void) {
 	HAL_GPIO_WritePin(BL_SWITCH_GPIO_Port, BL_SWITCH_Pin, GPIO_PIN_RESET);
 
 #endif
+
+	HAL_TIM_Base_Start_IT(&htim1);
 }
 
 void FEB_Main_Loop(void) {
@@ -159,32 +185,6 @@ void FEB_Main_Loop(void) {
 	// Todo add alert and pg monitoring
 }
 
-#if TESTBENCH
-
-#define BOARD 3
-
-#if BOARD == 1
-#define THIS_ID 0x0001
-#define OTHER_ID 0x0002
-#elif BOARD == 2
-#define THIS_ID 0x0002
-#define OTHER_ID 0x0001
-#elif BOARD == 3
-#define THIS_ID 0x0003
-#define OTHER_ID 0x0004
-#elif BOARD == 4
-#define THIS_ID 0x0004
-#define OTHER_ID 0x0003
-#endif
-
-static uint64_t rx_tx_data = (BOARD > 2) ? 0xFFFFFFFF : 0;
-
-static CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
-
-static uint32_t FEB_CAN_Tx_Mailbox;
-
-#endif
-
 void FEB_1ms_Callback(void) {
 #if !TESTBENCH
 
@@ -195,7 +195,7 @@ void FEB_1ms_Callback(void) {
 
 	FEB_Compose_CAN_Data();
 
-	for ( uint8_t i = 0; i < 5; i++ ) {
+	for ( uint8_t i = 0; i < 3; i++ ) {
 		can_data.flags &= 0xF0FFFFFF;
 		can_data.flags |= ((uint32_t)i) << 24;
 		FEB_CAN_Transmit(&hcan1, &can_data);
@@ -266,32 +266,30 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 static void FEB_Compose_CAN_Data(void) {
 	memset(&can_data, 0, sizeof(FEB_LVPDB_CAN_Data));
 
-	can_data.ids[0] = 0x00F1;
-	can_data.ids[1] = 0x00F2;
-	can_data.ids[2] = 0x00F3;
-	can_data.ids[3] = 0x00F4;
-	can_data.ids[4] = 0x00F5;
+	can_data.ids[0] = FEB_CAN_FEB_LVPDB_FLAGS_BUS_VOLTAGE_LV_CURRENT_FRAME_ID;
+	can_data.ids[1] = FEB_CAN_FEB_LVPDB_CP_AF_RF_SH_CURRENT_FRAME_ID;
+	can_data.ids[2] = FEB_CAN_FEB_LVPDB_L_AS_AB_CURRENT_FRAME_ID;
 
 #if !TESTBENCH
 	can_data.bus_voltage = tps2482_bus_voltage[0];
 
-	memcpy(&can_data.lv_current, tps2482_current, NUM_TPS2482 * sizeof(float));
+	memcpy(&can_data.lv_current, tps2482_current, NUM_TPS2482 * sizeof(uint16_t));
 #endif
 }
 
 static void FEB_Variable_Conversion(void) {
 	for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
-		tps2482_bus_voltage[i] = tps2482_bus_voltage_raw[i] * TPS2482_CONV_VBUS;
+		tps2482_bus_voltage[i] = FLOAT_TO_UINT16_T(tps2482_bus_voltage_raw[i] * TPS2482_CONV_VBUS);
 	}
 
-	tps2482_current[0] = tps2482_current_raw[0] * LV_CURRENT_LSB;
-	tps2482_current[1] = tps2482_current_raw[1] * CP_CURRENT_LSB;
-	tps2482_current[2] = tps2482_current_raw[2] * AF_CURRENT_LSB;
-	tps2482_current[3] = tps2482_current_raw[3] * RF_CURRENT_LSB;
-	tps2482_current[4] = tps2482_current_raw[4] * SH_CURRENT_LSB;
-	tps2482_current[5] = tps2482_current_raw[5] * L_CURRENT_LSB;
-	tps2482_current[6] = tps2482_current_raw[6] * AS_CURRENT_LSB;
-	tps2482_current[7] = tps2482_current_raw[7] * AB_CURRENT_LSB;
+	tps2482_current[0] = FLOAT_TO_UINT16_T(tps2482_current_raw[0] * LV_CURRENT_LSB);
+	tps2482_current[1] = FLOAT_TO_UINT16_T(tps2482_current_raw[1] * CP_CURRENT_LSB);
+	tps2482_current[2] = FLOAT_TO_UINT16_T(tps2482_current_raw[2] * AF_CURRENT_LSB);
+	tps2482_current[3] = FLOAT_TO_UINT16_T(tps2482_current_raw[3] * RF_CURRENT_LSB);
+	tps2482_current[4] = FLOAT_TO_UINT16_T(tps2482_current_raw[4] * SH_CURRENT_LSB);
+	tps2482_current[5] = FLOAT_TO_UINT16_T(tps2482_current_raw[5] * L_CURRENT_LSB);
+	tps2482_current[6] = FLOAT_TO_UINT16_T(tps2482_current_raw[6] * AS_CURRENT_LSB);
+	tps2482_current[7] = FLOAT_TO_UINT16_T(tps2482_current_raw[7] * AB_CURRENT_LSB);
 }
 
 static void FEB_Variable_Init(void) {
@@ -379,9 +377,7 @@ static void FEB_Variable_Init(void) {
 	tps2482_alert_pins[6] = AS_ALERT_Pin;
 	tps2482_alert_pins[7] = AB_ALERT_Pin;
 
-	can_data.ids[0] = 0x00F1;
-	can_data.ids[1] = 0x00F2;
-	can_data.ids[2] = 0x00F3;
-	can_data.ids[3] = 0x00F4;
-	can_data.ids[4] = 0x00F5;
+	can_data.ids[0] = FEB_CAN_FEB_LVPDB_FLAGS_BUS_VOLTAGE_LV_CURRENT_FRAME_ID;
+	can_data.ids[1] = FEB_CAN_FEB_LVPDB_CP_AF_RF_SH_CURRENT_FRAME_ID;
+	can_data.ids[2] = FEB_CAN_FEB_LVPDB_L_AS_AB_CURRENT_FRAME_ID;
 }

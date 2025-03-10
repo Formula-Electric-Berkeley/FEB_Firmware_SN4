@@ -8,6 +8,7 @@
 #include "FEB_CAN_ICS.h"
 #include "stm32f4xx_hal.h"
 #include <stdio.h>
+#include <FEB_CAN_Library_SN4/gen/feb_can.h>
 
 typedef struct __attribute__((packed)) {
 	uint32_t tim_ms; // rollover handled by logging device
@@ -23,15 +24,16 @@ typedef struct __attribute__((packed)) {
 	 *  Bits [0:7]: Alert pins for overcurrent
 	 */
 	uint32_t flags;
-	float bus_voltage; // They all run off of the same v_bus
-	float lv_current;
-	float cp_current;
-	float af_current;
-	float rf_current;
-	float sh_current;
-	float l_current;
-	float as_current;
-	float ab_current;
+	uint16_t bus_voltage; // They all run off of the same v_bus
+	uint16_t lv_current;
+	uint16_t cp_current;
+	uint16_t af_current;
+	uint16_t rf_current;
+	uint16_t sh_current;
+	uint16_t l_current;
+	uint16_t as_current;
+	uint16_t ab_current;
+	uint16_t zero;	// byte stuffing
 	uint32_t ids[5]; // 9 messages total so 9 id's sent out
 } FEB_LVPDB_CAN_Data; // Make sure that all edits do not input bit stuffing
 
