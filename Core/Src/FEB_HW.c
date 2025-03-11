@@ -41,7 +41,7 @@ void FEB_spi_write_read(uint8_t tx_Data[], uint8_t tx_len, uint8_t *rx_data, uin
 	if(HAL_SPI_Transmit(&hspi1,tx_Data,tx_len,HAL_MAX_DELAY) != HAL_OK){
 		//catch error
 	}
-	if(HAL_SPI_Receive(&hspi1,rx_data,rx_len,HAL_MAX_DELAY)!= HAL_OK){
+	if(HAL_SPI_Receive(&hspi1,rx_data,rx_len,HAL_MAX_DELAY) != HAL_OK){
 		//catch error
 	}
 	return;

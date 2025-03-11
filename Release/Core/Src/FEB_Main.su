@@ -1,0 +1,8 @@
+../Core/Src/FEB_Main.c:8:6:FEB_Main_Setup	0	static
+../Core/Src/FEB_Main.c:16:6:FEB_Task_ADBMS	8	static
+../Core/Src/FEB_Main.c:22:6:FEB_Task_SM	0	static
+../Core/Src/FEB_Main.c:26:6:FEB_Task_Charge	0	static
+../Core/Src/FEB_Main.c:30:6:FEB_Task_Balance	0	static
+../Core/Src/FEB_Main.c:34:6:FEB_Task_IVT	0	static
+../Core/Src/FEB_Main.c:38:6:FEB_Task_CAN	0	static
+../Core/Src/FEB_Main.c:42:6:FEB_Task_UART	0	static

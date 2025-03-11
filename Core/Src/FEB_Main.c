@@ -16,7 +16,7 @@ void FEB_Main_Setup() {
 void FEB_Task_ADBMS() {
 	FEB_ADBMS_Voltage_Process();
 	//FEB_ADBMS_Temperature_Process();
-	HAL_Delay(250);
+	HAL_Delay(100);
 }
 
 void FEB_Task_SM() {

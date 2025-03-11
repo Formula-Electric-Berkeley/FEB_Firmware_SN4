@@ -38,6 +38,9 @@ void FEB_ADBMS_UART_Transmit(accumulator_t* FEB_ACC) {
 		}
 
 	}
+	char UART_line[128];
+	size_t len =sprintf( (UART_line) , "------------------------------------------------------------------------------------------------\n\r\n\r");
+	HAL_UART_Transmit(&huart2, (uint8_t*) UART_line, len+1, 100);
 }
 
 

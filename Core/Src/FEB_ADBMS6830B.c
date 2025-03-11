@@ -82,13 +82,18 @@ void FEB_ADBMS_Init() {
 	start_adc_cell_voltage_measurements();
 
 }
-
+#define POLL_RATE 10
+int poll = POLL_RATE;
 void FEB_ADBMS_Voltage_Process() {
 	start_adc_cell_voltage_measurements();
 	read_cell_voltages();
 	store_cell_voltages();
 	validate_voltages();
-	FEB_ADBMS_UART_Transmit(&FEB_ACC);
+	if(poll-- == 0){
+		FEB_ADBMS_UART_Transmit(&FEB_ACC);
+		poll=POLL_RATE;
+	}
+
 }
 
 void FEB_ADBMS_Temperature_Process(){
@@ -104,6 +109,7 @@ void FEB_ADBMS_Temperature_Process(){
 
 void start_adc_cell_voltage_measurements() {
 	ADBMS6830B_adcv(1, 0, 1, 0, OWVR);
+	HAL_Delay(1);
 	//ADBMS6830B_pollAdc();
 }
 

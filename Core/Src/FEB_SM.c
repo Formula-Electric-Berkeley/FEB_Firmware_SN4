@@ -217,9 +217,9 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 		if( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN ||
 			FEB_PIN_RD(PN_AIRM_SENSE)==FEB_RELAY_STATE_OPEN//FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN
 			)PrechargeTransition(FEB_SM_ST_LV);
-		else if(FEB_PIN_RD(PN_AIRP_SENSE)//FEB_Hw_Precharge_Sense()==FEB_RELAY_STATE_OPEN
+		else if(0//FEB_Hw_Precharge_Sense()==FEB_RELAY_STATE_OPEN
 				)PrechargeTransition(FEB_SM_ST_ESC);
-		else if (0//Precharge complete
+		else if (FEB_PIN_RD(PN_AIRP_SENSE)==FEB_RELAY_STATE_CLOSE//Precharge complete
 				)PrechargeTransition(FEB_SM_ST_ENERGIZED);
 		break;
 
