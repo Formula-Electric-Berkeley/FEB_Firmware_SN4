@@ -14,11 +14,14 @@ extern UART_HandleTypeDef huart2;
 
 // ******************************************** Functions **********************************************
 
-#define CAN_ID 0x1FF
+#define CAN_IMU_ID 0x1FF
 char debug_buffer[100];
+
+uint8_t TxData[8];
 int16_t accelX;
 int16_t accelY;
 int16_t accelZ;
+
 /** Function to Scan I2C Bus */
 void I2C_Scan(void) {
     char msg[64];
@@ -124,8 +127,6 @@ void BNO08X_GetRawData(void) {
 }
 
 void Fill_CAN_Data(void) {
-    uint8_t TxData[8];
-
     TxData[0] = (accelX >> 8) & 0xFF;
     TxData[1] = accelX & 0xFF;
     TxData[2] = (accelY >> 8) & 0xFF;
@@ -143,7 +144,7 @@ void CAN_IMU_Transmit(void) {
     TxHeader.DLC = 8; // Data length
     TxHeader.IDE = CAN_ID_STD; // Standard ID
     TxHeader.RTR = CAN_RTR_DATA; // Data frame
-    TxHeader.StdId = CAN_ID; // Example CAN ID for IMU data
+    TxHeader.StdId = CAN_IMU_ID; // Example CAN ID for IMU data
     TxHeader.ExtId = 0; // Not used with standard ID
 
     while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {} // Wait for a free mailbox
@@ -156,5 +157,9 @@ void CAN_IMU_Transmit(void) {
 
 
 void IMU_Main(void) {
+
+	BNO08X_GetRawData();
+	Fill_CAN_Data();
+	CAN_IMU_Transmit();
 
 }
