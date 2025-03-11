@@ -252,14 +252,22 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 	uint8_t TxSize = 34;
 	uint8_t*cell_data;
 	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
-	transmitCMDR(RDACALL,cell_data,34*total_ic);
+	transmitCMDR(RDCVALL,cell_data,34*total_ic);
+
 	for(int bank=0;bank<total_ic;bank++){
 		memcpy(&(ic[bank].cells.c_codes),cell_data+bank*TxSize,(size_t)34);
 	}
-	uint16_t data_pec=pec10_calc(32,cell_data);
-	uint16_t rx_pec=*(uint16_t*)(cell_data+32);
+	int16_t c_data_pec=pec10_calc(32,cell_data);
+	int16_t c_rx_pec=*(uint16_t*)(cell_data+32);
+
+	transmitCMDR(RDSALL,cell_data,34*total_ic);
+	for(int bank=0;bank<total_ic;bank++){
+		memcpy(&(ic[bank].cells.s_codes),cell_data+bank*TxSize,(size_t)34);
+	}
+	int16_t s_data_pec=pec10_calc(32,cell_data);
+	int16_t s_rx_pec=*(uint16_t*)(cell_data+32);
 	free(cell_data);
-	return(data_pec!=rx_pec);
+	return(c_data_pec!=c_rx_pec||s_data_pec!=s_rx_pec);
 }
 
 

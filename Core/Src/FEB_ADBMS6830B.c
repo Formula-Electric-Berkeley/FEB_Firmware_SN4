@@ -84,6 +84,7 @@ void FEB_ADBMS_Init() {
 }
 
 void FEB_ADBMS_Voltage_Process() {
+	start_adc_cell_voltage_measurements();
 	read_cell_voltages();
 	store_cell_voltages();
 	validate_voltages();
@@ -102,8 +103,8 @@ void FEB_ADBMS_Temperature_Process(){
 // ******************************** Voltage ********************************
 
 void start_adc_cell_voltage_measurements() {
-	ADBMS6830B_adcv(1, 0, 0, 0, OWVR);
-	ADBMS6830B_pollAdc();
+	ADBMS6830B_adcv(1, 0, 1, 0, OWVR);
+	//ADBMS6830B_pollAdc();
 }
 
 void read_cell_voltages() {
