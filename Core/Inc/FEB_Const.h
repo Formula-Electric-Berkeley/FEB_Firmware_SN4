@@ -1,0 +1,47 @@
+#ifndef INC_FEB_CONST_H_
+#define INC_FEB_CONST_H_
+
+#define FEB_SM_ST_DEBUG 1
+
+#define FEB_NUM_CELLS_PER_BANK 16
+#define FEB_NUM_TEMP_SENSE_PER_BANK 32
+#define FEB_NUM_BANKS 1
+#define FEB_NUM_IC 1
+
+#define FEB_CONFIG_CELL_MIN_VOLTAGE_mV 2500
+#define FEB_CONFIG_CELL_MAX_VOLTAGE_mV 4200
+#define FEB_CONFIG_CELL_MIN_VOLTAGE_100uV (FEB_CONFIG_CELL_MIN_VOLTAGE_mV * 10)
+#define FEB_CONFIG_CELL_MAX_VOLTAGE_100uV (FEB_CONFIG_CELL_MAX_VOLTAGE_mV * 10)
+#define FEB_CONST_PRECHARGE_PCT 0.8
+#define FEB_NUM_CAN_DEV 6
+// ******************************** Voltage Reading Configuration ***************************
+#define CONTVR CONTINUOUS
+#define DCPVR DCP_ON
+#define RSTFVR RSTF_OFF
+#define OWVR OW_OFF_ALL_CH
+#define RDVR RD_ON
+
+// *********************** States ***********************
+typedef enum {
+	FEB_SM_ST_BOOT,
+	FEB_SM_ST_LV,
+	FEB_SM_ST_ESC,
+	FEB_SM_ST_PRECHARGE,
+	FEB_SM_ST_ENERGIZED,
+	FEB_SM_ST_DRIVE,
+	FEB_SM_ST_FREE,
+	FEB_SM_ST_CHARGING,
+	FEB_SM_ST_BALANCE,
+	FEB_SM_ST_FAULT_BMS,
+	FEB_SM_ST_FAULT_BSPD,
+	FEB_SM_ST_FAULT_IMD,
+	FEB_SM_ST_FAULT_CHARGING,
+	FEB_SM_ST_DEFAULT
+} FEB_SM_ST_t;
+
+typedef enum {
+	FEB_RELAY_STATE_OPEN,
+	FEB_RELAY_STATE_CLOSE
+
+}FEB_Relay_State;
+#endif /* INC_FEB_CONST_H_ */
