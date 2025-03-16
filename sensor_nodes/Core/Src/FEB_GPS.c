@@ -9,7 +9,10 @@
 
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart2;
+extern CAN_HandleTypeDef hcan1;
 
+float longitude;
+float latitude;
 uint8_t GPS_Buffer[100];
 
 void Read_GPS_Data(void)
