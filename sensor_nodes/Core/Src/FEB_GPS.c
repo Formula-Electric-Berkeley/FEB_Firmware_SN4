@@ -87,7 +87,7 @@ void Parse_NMEA_Message(void)
 	longitude_num = convertToDegrees(longitude);
 	latitude_num = convertToDegrees(latitude);
 }
-void CAN_TRANSMIT_GPS (uint16_t CAN_ID, uint16_t *tire_temp) {
+void CAN_TRANSMIT_GPS () {
 	CAN_TxHeaderTypeDef TxHeader;
 	uint8_t TxData[8];
 	uint32_t TxMailbox;
@@ -95,7 +95,7 @@ void CAN_TRANSMIT_GPS (uint16_t CAN_ID, uint16_t *tire_temp) {
 	TxHeader.DLC = 8; // Data length
 	TxHeader.IDE = CAN_ID_STD;
 	TxHeader.RTR = CAN_RTR_DATA; // Data frame
-	TxHeader.StdId = CAN_ID; // Current CAN ID of the sensor
+	TxHeader.StdId = FEB_CAN_ID_GPS_DATA; // Current CAN ID of the sensor
 	TxHeader.ExtId = 0; // plz check!!
 	
 	longitudearray = (uint8_t*)(&longitude_num);
@@ -125,4 +125,5 @@ void GPS_Main(void)
 {
 	Read_GPS_Data();
 	Parse_NMEA_Message();
+	CAN_TRANSMIT_GPS();
 }
