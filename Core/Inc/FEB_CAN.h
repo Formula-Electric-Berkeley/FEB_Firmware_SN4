@@ -29,7 +29,7 @@ typedef struct {
 
 
 // **************************************** Constants ***************************************
-#define FEB_CAN_PINGPONG_MODE 1
+#define FEB_CAN_PINGPONG_MODE 0
 #define FEB_CAN_TIMEOUT_MS 2000
 #define FEB_CAN_EXCEPTION_TIMEOUT 1000
 #define FEB_CAN_EXCEPTION_TxFAIL 1001
