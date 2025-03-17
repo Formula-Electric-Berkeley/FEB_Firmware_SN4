@@ -7,10 +7,10 @@
 
 void FEB_Main_Setup() {
 	//SM setup
-	FEB_ADBMS_Init();
-	//FEB_SM_Init();
-	//FEB_CAN_Init();
-	//IVT Setup
+//	FEB_ADBMS_Init();
+	FEB_SM_Init();
+	FEB_CAN_Init();
+//	IVT Setup
 }
 
 void FEB_Task_ADBMS() {
@@ -20,7 +20,7 @@ void FEB_Task_ADBMS() {
 }
 
 void FEB_Task_SM() {
-	//FEB_SM_Process();
+	FEB_SM_Process();
 }
 
 void FEB_Task_Charge() {
@@ -32,11 +32,11 @@ void FEB_Task_Balance() {
 }
 
 void FEB_Task_IVT() {
-
+	FEB_CAN_IVT_Process();
 }
 
 void FEB_Task_CAN() {
-
+	FEB_SM_CAN_Transmit(); // for testing
 }
 
 void FEB_Task_UART() {
