@@ -2,8 +2,10 @@
 // **************************************** Includes & External ****************************************
 #include "FEB_HW.h"
 #include "FEB_CAN.h"
+#include "FEB_IVT.h"
 
 extern CAN_HandleTypeDef hcan1;
+extern UART_HandleTypeDef huart2;
 
 // **************************************** CAN Configuration ****************************************
 
@@ -29,6 +31,7 @@ void FEB_CAN_Init(void) {
 
 void FEB_CAN_Filter_Config(void) {
 	uint8_t filter_bank = 0;
+    FEB_CAN_IVT_Filter_Config(&hcan1, CAN_RX_FIFO0, filter_bank);
     if(FEB_CAN_PINGPONG_MODE) filter_bank =FEB_CAN_PINGPONG_Filter(&hcan1, CAN_RX_FIFO0, filter_bank);
 
 	// Assign Filter
@@ -37,11 +40,12 @@ void FEB_CAN_Filter_Config(void) {
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &FEB_CAN_Rx_Header, FEB_CAN_Rx_Data) == HAL_OK) {
-		if(FEB_CAN_PINGPONG_MODE){
-			FEB_CAN_PONG(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
-		} else {
-			//YOUR HANDLER HERE!!!
-		}
+//#ifdef FEB_CAN_PINGPONG_MODE == 1
+//			FEB_CAN_PONG(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
+//			return;
+//#endif
+		FEB_CAN_IVT_Store_Msg(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
+
 
 	}
 }
@@ -71,6 +75,11 @@ void FEB_SM_CAN_Transmit(void) {
 	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
 		// FEB_SM_Set_Current_State(FEB_SM_ST_SHUTDOWN);
 	}
+
+	char msg[512];
+	sprintf(msg, "State: %u\n\r", FEB_SM_Get_Current_State());
+	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), 100);
+
 }
 
 void FEB_CAN_PING(void) {
