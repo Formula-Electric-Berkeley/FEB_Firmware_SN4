@@ -1,19 +1,48 @@
 #include "FEB_ADBMS6830B_Driver.h"
 #include "FEB_HW.h"
-
+uint16_t SetOverVoltageThreshold(float voltage)
+{
+  uint16_t vov_value;
+  uint8_t rbits = 12;
+  voltage = (voltage - 1.5);
+  voltage = voltage / (16 * 0.000150);
+  vov_value = (uint16_t )(voltage + 2 * (1 << (rbits - 1)));
+  vov_value &= 0xFFF;
+  return vov_value;
+}
+uint16_t SetUnderVoltageThreshold(float voltage)
+{
+  uint16_t vuv_value;
+  uint8_t rbits = 12;
+  voltage = (voltage - 1.5);
+  voltage = voltage / (16 * 0.000150);
+  vuv_value = (uint16_t )(voltage + 2 * (1 << (rbits - 1)));
+  vuv_value &= 0xFFF;
+  return vuv_value;
+}
 /* Helper function to initialize CFG variables */
 void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
 					  cell_asic *ic //A two dimensional array that stores the data
 					  )
 {
-	for (uint8_t current_ic = 0; current_ic<total_ic;current_ic++)
-	{
-		for (int j =0; j<6; j++)
-		{
-		  ic[current_ic].configa.tx_data[j] = 0;
-          ic[current_ic].configb.tx_data[j] = 0;
-		}
-	}
+	  for(uint8_t cic = 0; cic < total_ic; cic++)
+	  {
+	    /* Init config A */
+	    ic[cic].configa.tx_data[0] = 0x83;
+	    ic[cic].configa.tx_data[1] = 0x01;
+	    ic[cic].configa.tx_data[2] = 0x00;
+	    ic[cic].configa.tx_data[3] = 0xCC;
+	    ic[cic].configa.tx_data[4] = 0x02;
+	    ic[cic].configa.tx_data[5] = 0x00;
+	    uint16_t VOVCode = SetOverVoltageThreshold(3.2);
+	    uint16_t VUVCode = SetUnderVoltageThreshold(2.0);
+	    ic[cic].configb.tx_data[0] = VUVCode;
+	    ic[cic].configb.tx_data[1] = (((VOVCode & 0x000F) << 4) | ((VUVCode ) >> 8));
+	    ic[cic].configb.tx_data[2] = ((VOVCode>>4)&0x0FF);
+	    ic[cic].configb.tx_data[3] = 0xFF;
+	    ic[cic].configb.tx_data[4] = 0x00;
+	    ic[cic].configb.tx_data[4] = 0x00;
+	  }
 }
 
 /* Helper Function to reset PEC counters */
@@ -188,14 +217,13 @@ void ADBMS6830B_adcv( uint8_t RD, //ADC Mode
 
 	cmd[0] = 0x02 + RD;
 	cmd[1] = 0x60 | (CONT << 7) | (DCP << 4) | (RSTF << 2) | OW;
-
 	cmd_68(cmd);
 }
 
 /* This function will block operation until the ADC has finished it's conversion */
 uint32_t ADBMS6830B_pollAdc()
 {
-	uint32_t counter = 0;
+		uint32_t counter = 0;
 		uint8_t finished = 0;
 		uint8_t current_time = 0;
 		uint8_t cmd[4];
@@ -234,136 +262,131 @@ The function is used to read the parsed Cell voltages codes of the LTC681x.
 This function will send the requested read commands parse the data
 and store the cell voltages in c_codes variable.
 */
+
 uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
                      	   cell_asic *ic // Array of the parsed cell codes
                     	  )
 {
-	/* OLD CODE
-	 * //parse data
-		int8_t c_ic=0;
-		for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
-			if (ic->isospi_reverse == false) {
-				c_ic = curr_ic;
-			} else {
-				c_ic = total_ic - curr_ic - 1;
-			}
-			//pec_error += parse_cells(c_ic, CELL, cell_data, &ic[c_ic].cells.c_codes[0], &ic[c_ic].cells.pec_match[0]);
-		}*/
-	uint8_t TxSize = 32+2;
-	uint8_t*cell_data;
-	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
-	transmitCMDR(RDACALL,cell_data,TxSize*total_ic);
+#ifdef READALL
+	uint8_t TxSize = 34;
+	uint8_t cell_data[TxSize*total_ic];
+	transmitCMDR(RDCVALL,cell_data,TxSize*total_ic);
+	for(int icn=0;icn<total_ic;icn++)
+		memcpy(&(ic[icn].cells.c_codes),cell_data+icn*TxSize,(size_t)TxSize);
 
-	for(int bank=0;bank<total_ic;bank++){
-		memcpy(&(ic[bank].cells.c_codes),cell_data+bank*TxSize,(size_t)TxSize);
-	}
 	int16_t c_data_pec=pec10_calc(TxSize-2,cell_data);
 	int16_t c_rx_pec=*(uint16_t*)(cell_data+TxSize-2);
 
-	transmitCMDR(RDSALL,cell_data,TxSize*total_ic);
-	for(int bank=0;bank<total_ic;bank++){
-		memcpy(&(ic[bank].cells.s_codes),cell_data+bank*TxSize,(size_t)TxSize);
-	}
-	int16_t s_data_pec=pec10_calc(TxSize-2,cell_data);
-	int16_t s_rx_pec=*(uint16_t*)(cell_data+TxSize-2);
-	free(cell_data);
-	return(c_data_pec!=c_rx_pec||s_data_pec!=s_rx_pec);
-}
+	return(c_data_pec!=c_rx_pec);
+#else
+	uint8_t errorCount = 0;
+	uint8_t TxSize = 8;
+	uint8_t cell_data[TxSize*total_ic];
+	uint16_t codes[6]={
+			RDCVA,
+			RDCVB,
+			RDCVC,
+			RDCVD,
+			RDCVE,
+			RDCVF
+	};
+	for(int REGGRP=0;REGGRP<6;REGGRP++){
+		if(REGGRP==5)TxSize=2;
+		wakeup_sleep(FEB_NUM_IC);
+		transmitCMDR(codes[REGGRP],cell_data,TxSize*total_ic);
+		for(int icn=0;icn<total_ic;icn++){
+			for(int byte=0;byte<6;byte++){
+				if(byte%2==0){
+					ic[icn].cells.c_codes[byte/2+3*REGGRP] = 0;
+					ic[icn].cells.c_codes[byte/2+3*REGGRP] |= cell_data[byte];
+				} else {
+					ic[icn].cells.c_codes[byte/2+3*REGGRP] |= cell_data[byte]<<8;
+				}
+			}
 
+		}
+		int16_t c_data_pec=pec10_calc(TxSize-2,cell_data);
+		int16_t c_rx_pec=*(uint16_t*)(cell_data+TxSize-2);
+		if(c_data_pec!=c_rx_pec)errorCount++;
+	}
+	return errorCount;
+#endif
+
+}
 
 uint8_t ADBMS6830B_rdsv(uint8_t total_ic, // The number of ICs in the system
                      	   cell_asic *ic // Array of the parsed cell codes
                     	  )
 {
-	/* OLD CODE
-	 * //parse data
-		int8_t c_ic=0;
-		for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
-			if (ic->isospi_reverse == false) {
-				c_ic = curr_ic;
-			} else {
-				c_ic = total_ic - curr_ic - 1;
-			}
-			//pec_error += parse_cells(c_ic, CELL, cell_data, &ic[c_ic].cells.c_codes[0], &ic[c_ic].cells.pec_match[0]);
-		}*/
+#ifdef READALL
 	uint8_t TxSize = 34;
-	uint8_t*cell_data;
-	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
-
-
-	transmitCMDR(RDSALL,cell_data,34*total_ic);
-	for(int bank=0;bank<total_ic;bank++){
-		memcpy(&(ic[bank].cells.s_codes),cell_data+bank*TxSize,(size_t)34);
-	}
-
+	uint8_t cell_data[TxSize*total_ic];
+	transmitCMDR(RDSALL,cell_data,TxSize*total_ic);
+	for(int icn=0;icn<total_ic;icn++)
+		memcpy(&(ic[icn].cells.s_codes),cell_data+icn*TxSize,(size_t)34);
 	uint16_t data_pec=pec10_calc(32,cell_data);
 	uint16_t rx_pec=*(uint16_t*)(cell_data+32);
 
-	free(cell_data);
 	return(data_pec!=rx_pec);
+#else
+	uint8_t errorCount = 0;
+	uint8_t TxSize = 8;
+	uint8_t cell_data[TxSize*total_ic];
+	uint16_t codes[6]={
+			RDSVA,
+			RDSVB,
+			RDSVC,
+			RDSVD,
+			RDSVE,
+			RDSVF
+	};
+	for(int REGGRP=0;REGGRP<6;REGGRP++){
+		if(REGGRP==5)TxSize=2;
+		wakeup_sleep(FEB_NUM_IC);
+		transmitCMDR(codes[REGGRP],cell_data,TxSize*total_ic);
+		for(int icn=0;icn<total_ic;icn++){
+					for(int byte=0;byte<6;byte++){
+						if(byte%2==0){
+							ic[icn].cells.s_codes[byte/2+3*REGGRP] = 0;
+							ic[icn].cells.s_codes[byte/2+3*REGGRP] |= cell_data[byte];
+						} else {
+							ic[icn].cells.s_codes[byte/2+3*REGGRP] |= cell_data[byte]<<8;
+						}
+					}
+
+				}
+		int16_t c_data_pec=pec10_calc(TxSize-2,cell_data);
+		int16_t c_rx_pec=*(uint16_t*)(cell_data+TxSize-2);
+		if(c_data_pec!=c_rx_pec)errorCount++;
+	}
+	return errorCount;
+#endif
 }
-/* Helper function that parses voltage measurement registers */
-int8_t parse_cells(uint8_t current_ic, // Current IC
-					uint8_t cell_reg,  // Type of register
-					uint8_t cell_data[], // Unparsed data
-					uint16_t *cell_codes, // Parsed data
-					uint8_t *ic_pec // PEC error
-					)
-{
-	const uint8_t BYT_IN_REG = 6;
-	const uint8_t CELL_IN_REG = 3;
-	int8_t pec_error = 0;
-	uint16_t parsed_cell;
-	uint16_t received_pec;
-	uint16_t data_pec;
-	uint8_t data_counter = current_ic * NUM_RX_BYT; //data counter
-
-
-	for (uint8_t current_cell = 0; current_cell < CELL_IN_REG; current_cell++) // This loop parses the read back data into the register codes, it
-	{																		// loops once for each of the 3 codes in the register
-
-		parsed_cell = cell_data[data_counter] + (cell_data[data_counter + 1] << 8);//Each code is received as two bytes and is combined to
-																				   // create the parsed code
-		cell_codes[current_cell + ((cell_reg - 1) * CELL_IN_REG)] = parsed_cell;
-
-		data_counter = data_counter + 2;                       //Because the codes are two bytes, the data counter
-															  //must increment by two for each parsed code
-	}
-	received_pec = ((cell_data[data_counter] & 0x03) << 8) | cell_data[data_counter + 1]; //The received PEC for the current_ic is transmitted as the 7th and 8th
-																			   //after the 6 cell voltage data bytes. Command counter is first 6 bits of first byte, which we don't care bout, so we do & 0x03
-	data_pec = pec10_calc(BYT_IN_REG, &cell_data[(current_ic) * NUM_RX_BYT]);
-
-	if (received_pec != data_pec)
-	{
-		pec_error = 1;                             //The pec_error variable is simply set negative if any PEC errors
-		ic_pec[cell_reg-1]=1;
-	}
-	else
-	{
-		ic_pec[cell_reg-1]=0;
-	}
-	data_counter=data_counter+2;
-
-	return(pec_error);
-}
-
 // ******************************** Temperature ********************************
 void ADBMS6830B_wrALL(uint8_t total_ic, //The number of ICs being written to
                       cell_asic ic[]  // A two dimensional array of the configuration data that will be written
                      )
 {
+	wakeup_sleep(total_ic);
 	ADBMS6830B_wrcfga(total_ic, ic);
+	wakeup_sleep(total_ic);
 	ADBMS6830B_wrcfgb(total_ic, ic);
-	ADBMS6830B_wrpwmga(total_ic, ic);
-	ADBMS6830B_wrpwmgb(total_ic, ic);
+	//wakeup_sleep(total_ic);
+	//ADBMS6830B_wrpwmga(total_ic, ic);
+	//wakeup_sleep(total_ic);
+	//ADBMS6830B_wrpwmgb(total_ic, ic);
 }
 void ADBMS6830B_rdALL(uint8_t total_ic, //The number of ICs being written to
                       cell_asic ic[]  // A two dimensional array of the configuration data that will be written
                      )
 {
+	wakeup_sleep(total_ic);
 	ADBMS6830B_rdcfga(total_ic, ic);
+	wakeup_sleep(total_ic);
 	ADBMS6830B_rdcfgb(total_ic, ic);
+	wakeup_sleep(total_ic);
 	ADBMS6830B_rdpwmga(total_ic, ic);
+	wakeup_sleep(total_ic);
 	ADBMS6830B_rdpwmgb(total_ic, ic);
 }
 /* Write the ADBMS6830B CFGRA */
@@ -371,7 +394,7 @@ void ADBMS6830B_wrcfga(uint8_t total_ic, //The number of ICs being written to
                    cell_asic ic[]  // A two dimensional array of the configuration data that will be written
                   )
 {
-	uint8_t write_buffer[256];
+	uint8_t write_buffer[total_ic*6];
 	uint8_t write_count = 0;
 	uint8_t c_ic = 0;
 	for (uint8_t current_ic = 0; current_ic<total_ic; current_ic++)
@@ -396,11 +419,15 @@ void ADBMS6830B_rdcfga(uint8_t total_ic, //The number of ICs being written to
 	uint8_t TxSize = 8;
 	uint8_t*cell_data;
 	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
+
 	transmitCMDR(RDCFGA,cell_data,8*total_ic);
 	for(int bank=0;bank<total_ic;bank++){
 		memcpy(&(ic[bank].configa.rx_data),cell_data+bank*TxSize,(size_t)8);
 	}
-
+	int16_t c_data_pec=pec10_calc(TxSize-2,cell_data);
+	int16_t c_rx_pec=*(uint16_t*)(cell_data+TxSize-2);
+	for(int bank=0;bank<total_ic;bank++)
+		ic[bank].configa.rx_pec_match=c_data_pec-c_rx_pec;
 }
 /* Write the ADBMS6830B CFGRB */
 void ADBMS6830B_wrcfgb(uint8_t total_ic, //The number of ICs being written to
@@ -587,13 +614,13 @@ void ADBMS6830B_CLRFLAG(uint8_t total_ic){
 /* Generic wakeup command to wake the ADBMS6830B from sleep state */
 void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 {
-	for (int i = 0; i < total_ic; i++) {
-		int nops =10;
-	   FEB_cs_low();
-	   while(nops-->0);
-	   FEB_cs_high();
-	   nops=200;
-	   while(nops-->0);
+	for (int i = 0; i < 1; i++) {
+		uint8_t nops = 10;
+		FEB_cs_low();
+		while(nops-->0);
+		FEB_cs_high();
+		nops=200;
+		while(nops-->0);
 	}
 }
 

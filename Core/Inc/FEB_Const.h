@@ -3,10 +3,12 @@
 
 #define FEB_SM_ST_DEBUG 1
 
-#define FEB_NUM_CELLS_PER_BANK 16
-#define FEB_NUM_TEMP_SENSE_PER_BANK 32
-#define FEB_NUM_BANKS 2
-#define FEB_NUM_IC FEB_NUM_BANKS
+#define FEB_NUM_CELLS_PER_IC 16
+#define FEB_NUM_TEMP_SENSE_PER_IC 32
+
+#define FEB_NUM_ICPBANK 2
+#define FEB_NUM_BANKS 1
+#define FEB_NUM_IC (FEB_NUM_ICPBANK*FEB_NUM_BANKS)
 
 #define FEB_CONFIG_CELL_MIN_VOLTAGE_mV 2500
 #define FEB_CONFIG_CELL_MAX_VOLTAGE_mV 4200
@@ -20,7 +22,7 @@
 #define RSTFVR RSTF_OFF
 #define OWVR OW_OFF_ALL_CH
 #define RDVR RD_ON
-
+#define READALL
 // *********************** States ***********************
 typedef enum {
 	FEB_SM_ST_BOOT,

@@ -2,7 +2,7 @@
 #include "FEB_ADBMS6830B_Driver.h"
 #include "stm32f4xx_hal.h"
 #include "FEB_ADBMS6830B.h"
-
+#include "FEB_HW.h"
 
 
 // ******************************** Voltage ********************************
@@ -72,17 +72,15 @@ static float convert_to_temp(float voltage){
 void FEB_ADBMS_Init() {
 	FEB_cs_high();
 	ADBMS6830B_init_cfg(FEB_NUM_IC, IC_Config);
-	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
-		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
-	}
 	ADBMS6830B_reset_crc_count(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_init_reg_limits(FEB_NUM_IC, IC_Config);
-	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
-	ADBMS6830B_wrcfgb(FEB_NUM_IC, IC_Config);
-	start_adc_cell_voltage_measurements();
+	wakeup_sleep(FEB_NUM_IC);
+	ADBMS6830B_wrALL(FEB_NUM_IC, IC_Config);
+	ADBMS6830B_rdALL(FEB_NUM_IC, IC_Config);
+
 
 }
-#define POLL_RATE 10
+#define POLL_RATE 20
 int poll = POLL_RATE;
 void FEB_ADBMS_Voltage_Process() {
 	start_adc_cell_voltage_measurements();
@@ -108,25 +106,34 @@ void FEB_ADBMS_Temperature_Process(){
 // ******************************** Voltage ********************************
 
 void start_adc_cell_voltage_measurements() {
+	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_adcv(1, 0, 1, 0, OWVR);
 	HAL_Delay(1);
 	//ADBMS6830B_pollAdc();
 }
 
 void read_cell_voltages() {
+	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_rdcv(FEB_NUM_IC, IC_Config);
+	HAL_Delay(5);
+	wakeup_sleep(FEB_NUM_IC);
+	ADBMS6830B_rdsv(FEB_NUM_IC, IC_Config);
 }
 
 void store_cell_voltages() {
 	FEB_ACC.total_voltage_V = 0;
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
-		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
-			uint8_t ic = bank;
-			float CVoltage = convert_voltage(IC_Config[bank].cells.c_codes[ic]);
-			FEB_ACC.banks[bank].cells[cell].voltage_V = CVoltage;
-			FEB_ACC.banks[bank].cells[cell].voltage_S = convert_voltage(IC_Config[bank].cells.s_codes[ic]);
-			FEB_ACC.total_voltage_V+=CVoltage;
+		for(uint8_t ic =0; ic<FEB_NUM_ICPBANK;ic++){
+			for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC; cell ++) {
+				float CVoltage = convert_voltage(IC_Config[ic+bank*FEB_NUM_ICPBANK].cells.c_codes[cell]);
+				FEB_ACC.banks[bank].cells[cell+ic*FEB_NUM_CELLS_PER_IC].voltage_V = CVoltage;
+				FEB_ACC.banks[bank].cells[cell+ic*FEB_NUM_CELLS_PER_IC].voltage_S = convert_voltage(IC_Config[ic+bank*FEB_NUM_ICPBANK].cells.s_codes[cell]);
+				FEB_ACC.total_voltage_V+=CVoltage;
+				//IC_Config[bank*FEB_NUM_ICPBANK+ic].cells.c_codes[ic]=0;
+				//IC_Config[bank*FEB_NUM_ICPBANK+ic].cells.s_codes[ic]=0;
+			}
 		}
+
 	}
 }
 
@@ -134,7 +141,7 @@ void validate_voltages() {
 	uint16_t vMax = FEB_Config_Get_Cell_Max_Voltage_mV();
 	uint16_t vMin = FEB_Config_Get_Cell_Min_Voltage_mV();
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
-		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
+		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC; cell ++) {
 			float voltage = FEB_ACC.banks[bank].cells[cell].voltage_V;
 			if (voltage > vMax || voltage < vMin) {
 				//FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
@@ -169,7 +176,7 @@ void read_aux_voltages() {
 }
 
 void store_cell_temps(uint8_t channel) {
-	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
+	for (uint8_t bank = 0; bank < FEB_NUM_IC; bank++) {
 		for (uint8_t mux = 0; mux < 4; mux++) {
 			uint8_t gpio = get_gpio_pin(mux);
 			uint16_t raw_code = IC_Config[bank].aux.a_codes[gpio];
@@ -190,8 +197,8 @@ void FEB_Cell_Balance_Process(){
 	uint64_t PWMBITS=determineDischarge();
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
 		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
-		memcpy( &(IC_Config[ic].pwm), (int8_t*)PWMBITS, 6);
-		memcpy( &(IC_Config[ic].pwmb), ((int8_t*)PWMBITS)+6, 2);
+		//memcpy( &(IC_Config[ic].pwm), (int8_t*)PWMBITS, 6);
+		//memcpy( &(IC_Config[ic].pwmb), ((int8_t*)PWMBITS)+6, 2);
 	}
 	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_wrcfgb(FEB_NUM_IC, IC_Config);
@@ -201,8 +208,8 @@ void FEB_Stop_Balance(){
 	uint64_t PWMBITS=0;
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
 		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
-		memcpy( &(IC_Config[ic].pwm), (int8_t*)PWMBITS, 6);
-		memcpy( &(IC_Config[ic].pwmb), ((int8_t*)PWMBITS)+6, 2);
+		//memcpy( &(IC_Config[ic].pwm), (int8_t*)PWMBITS, 6);
+		//memcpy( &(IC_Config[ic].pwmb), ((int8_t*)PWMBITS)+6, 2);
 	}
 
 	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
@@ -217,8 +224,8 @@ void determineMinV(){
 	validate_voltages();
 	MIN_CELL_VOLTAGE=FEB_ACC.banks[0].cells[0].voltage_V;
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
-		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
-			float volt =FEB_ACC.banks[FEB_NUM_BANKS].cells[FEB_NUM_CELLS_PER_BANK].voltage_V;
+		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC; cell ++) {
+			float volt =FEB_ACC.banks[bank].cells[cell].voltage_V;
 			MIN_CELL_VOLTAGE= MIN_CELL_VOLTAGE<volt?volt:MIN_CELL_VOLTAGE;
 		}
 	}
@@ -231,8 +238,8 @@ uint64_t determineDischarge(){
 	validate_voltages();
 	uint64_t bits=0;
 	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
-		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_BANK; cell ++) {
-			float volt =FEB_ACC.banks[FEB_NUM_BANKS].cells[FEB_NUM_CELLS_PER_BANK].voltage_V;
+		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC; cell ++) {
+			float volt = FEB_ACC.banks[bank].cells[cell].voltage_V;
 			float diff = volt-MIN_CELL_VOLTAGE;
 			uint8_t dutyCycle=0b1111;
 			if(diff<FEB_MIN_SLIPPAGE_V)

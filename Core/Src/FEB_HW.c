@@ -24,11 +24,13 @@ void FEB_cs_low() {
 void FEB_cs_high() {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 }
-void FEB_spi_write_array(uint8_t len, uint8_t data[]) {
-	if(HAL_SPI_Transmit(&hspi1, data, len, HAL_MAX_DELAY)!=HAL_OK){
-		//catch error
-	}
-}
+void FEB_spi_write_array(
+		uint16_t size,                     /*Option: Number of bytes to be written on the SPI port*/
+		uint8_t *tx_Data                       /*Array of bytes to be written on the SPI port*/
+		)
+		{
+		  HAL_SPI_Transmit(&hspi1, tx_Data, size, HAL_MAX_DELAY); /* SPI1 , data, size, timeout */
+		}
 uint8_t FEB_spi_read_byte(uint8_t tx_data) {
 	uint8_t data;
 	if(HAL_SPI_Receive(&hspi1, &data, 1, 100)!=HAL_OK){

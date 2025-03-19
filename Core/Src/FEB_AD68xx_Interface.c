@@ -71,21 +71,104 @@ uint16_t pec15_calc(uint8_t len, //Number of bytes that will be used to calculat
 }
 
 /* Calculates  and returns the CRC10 */
-uint16_t pec10_calc(uint8_t len, //Number of bytes that will be used to calculate a PEC
-                    uint8_t *data //Array of data that will be used to calculate  a PEC
-                   )
+uint16_t Pec10_calc( bool bIsRxCmd, uint8_t nLength, uint8_t *pDataBuf)
 {
-	uint16_t remainder, addr;
-	remainder = 16;//initialize the PEC
+    uint16_t nRemainder = 16u; /* PEC_SEED */
+    /* x10 + x7 + x3 + x2 + x + 1 <- the CRC10 polynomial 100 1000 1111 */
+    uint16_t nPolynomial = 0x8Fu;
+    uint8_t nByteIndex, nBitIndex;
 
-	for (uint8_t i = 0; i < len; i++) // loops for each byte in data array
-	{
-		addr = ((remainder >> 2) ^ data[i]) & 0xff;//calculate PEC table address
-		remainder = (remainder << 8) ^ crc10Table[addr];
-		remainder &= 0x3FF; //Ensure remainder stays within 10 bits
-	}
+    for (nByteIndex = 0u; nByteIndex < nLength; ++nByteIndex)
+  {
+    /* Bring the next byte into the remainder. */
+        nRemainder ^= (uint16_t)((uint16_t)pDataBuf[nByteIndex] << 2u);
 
-	return(remainder); // No 0 in LSB
+    /* Perform modulo-2 division, a bit at a time.*/
+        for (nBitIndex = 8u; nBitIndex > 0u; --nBitIndex)
+    {
+      /* Try to divide the current data bit. */
+            if ((nRemainder & 0x200u) > 0u)
+      {
+                nRemainder = (uint16_t)((nRemainder << 1u));
+                nRemainder = (uint16_t)(nRemainder ^ nPolynomial);
+      }
+      else
+      {
+                nRemainder = (uint16_t)(nRemainder << 1u);
+      }
+    }
+  }
+
+    /* If array is from received buffer add command counter to crc calculation */
+    if (bIsRxCmd == true)
+  {
+        nRemainder ^= (uint16_t)(((uint16_t)pDataBuf[nLength] & (uint8_t)0xFC) << 2u);
+  }
+  /* Perform modulo-2 division, a bit at a time */
+    for (nBitIndex = 6u; nBitIndex > 0u; --nBitIndex)
+  {
+    /* Try to divide the current data bit */
+        if ((nRemainder & 0x200u) > 0u)
+    {
+            nRemainder = (uint16_t)((nRemainder << 1u));
+            nRemainder = (uint16_t)(nRemainder ^ nPolynomial);
+    }
+    else
+    {
+            nRemainder = (uint16_t)((nRemainder << 1u));
+    }
+  }
+    return ((uint16_t)(nRemainder & 0x3FFu));
+}
+uint16_t pec10_calc(uint8_t nLength, uint8_t *pDataBuf)
+{
+	bool bIsRxCmd=true;
+    uint16_t nRemainder = 16u; /* PEC_SEED */
+    /* x10 + x7 + x3 + x2 + x + 1 <- the CRC10 polynomial 100 1000 1111 */
+    uint16_t nPolynomial = 0x8Fu;
+    uint8_t nByteIndex, nBitIndex;
+
+    for (nByteIndex = 0u; nByteIndex < nLength; ++nByteIndex)
+  {
+    /* Bring the next byte into the remainder. */
+        nRemainder ^= (uint16_t)((uint16_t)pDataBuf[nByteIndex] << 2u);
+
+    /* Perform modulo-2 division, a bit at a time.*/
+        for (nBitIndex = 8u; nBitIndex > 0u; --nBitIndex)
+    {
+      /* Try to divide the current data bit. */
+            if ((nRemainder & 0x200u) > 0u)
+      {
+                nRemainder = (uint16_t)((nRemainder << 1u));
+                nRemainder = (uint16_t)(nRemainder ^ nPolynomial);
+      }
+      else
+      {
+                nRemainder = (uint16_t)(nRemainder << 1u);
+      }
+    }
+  }
+
+    /* If array is from received buffer add command counter to crc calculation */
+    if (bIsRxCmd == true)
+  {
+        nRemainder ^= (uint16_t)(((uint16_t)pDataBuf[nLength] & (uint8_t)0xFC) << 2u);
+  }
+  /* Perform modulo-2 division, a bit at a time */
+    for (nBitIndex = 6u; nBitIndex > 0u; --nBitIndex)
+  {
+    /* Try to divide the current data bit */
+        if ((nRemainder & 0x200u) > 0u)
+    {
+            nRemainder = (uint16_t)((nRemainder << 1u));
+            nRemainder = (uint16_t)(nRemainder ^ nPolynomial);
+    }
+    else
+    {
+            nRemainder = (uint16_t)((nRemainder << 1u));
+    }
+  }
+    return ((uint16_t)(nRemainder & 0x3FFu));
 }
 //***************** Read and Write to SPI ****************
 /* Generic function to write 68xx commands. Function calculates PEC for tx_cmd data. */
@@ -99,7 +182,6 @@ void cmd_68(uint8_t tx_cmd[2]) //The command to be transmitted
 	cmd_pec = pec15_calc(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
-	wakeup_sleep(FEB_NUM_IC);
 	FEB_cs_low();
 	FEB_spi_write_array(4,cmd);
 	FEB_cs_high();
@@ -114,7 +196,6 @@ void cmd_68_r(uint8_t tx_cmd[2],uint8_t* data, uint8_t len) //The command to be 
 	cmd_pec = pec15_calc(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
-	wakeup_sleep(FEB_NUM_IC);
 	FEB_cs_low();
 	FEB_spi_write_read(cmd, 4, data, len);
 	FEB_cs_high();
@@ -128,6 +209,7 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 			  uint8_t data[] // Payload Data
 			  )
 {
+	/*
 	const uint8_t BYTES_IN_REG = 6;
 	const uint8_t CMD_LEN = 4+(8*total_ic);
 	uint8_t *cmd;
@@ -156,12 +238,45 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 		cmd[cmd_index + 1] = (uint8_t)data_pec;
 		cmd_index = cmd_index + 2;
 	}
-	wakeup_sleep(FEB_NUM_IC);
 	FEB_cs_low();
 	FEB_spi_write_array(CMD_LEN, cmd);
 	FEB_cs_high();
 
-	free(cmd);
+	free(cmd);*/
+	 uint8_t BYTES_IN_REG = 6;
+	 uint8_t CMD_LEN = 4 + (8 * total_ic);
+	 uint16_t data_pec, cmd_pec;
+	 uint8_t *cmd, copyArray[6], src_address = 0;
+	 uint8_t cmd_index;
+	 cmd = (uint8_t *)calloc(CMD_LEN, sizeof(uint8_t));
+	 cmd[0] = tx_cmd[0];
+	 cmd[1] = tx_cmd[1];
+	 cmd_pec = pec15_calc(2, cmd);
+	 cmd[2] = (uint8_t)(cmd_pec >> 8);
+	 cmd[3] = (uint8_t)(cmd_pec);
+	 cmd_index = 4;
+	 /* executes for each LTC68xx, this loops starts with the last IC on the stack */
+	 for (uint8_t current_ic = total_ic; current_ic > 0; current_ic--) {
+		 src_address = ((current_ic-1) * 6);
+	     /* The first configuration written is received by the last IC in the daisy chain */
+	     for (uint8_t current_byte = 0; current_byte < BYTES_IN_REG; current_byte++)
+	     {
+	        cmd[cmd_index] = data[((current_ic-1)*6)+current_byte];
+	        cmd_index = cmd_index + 1;
+	      }
+	     /* Copy each ic correspond data + pec value for calculate data pec */
+	     memcpy(&copyArray[0], &data[src_address], 6); /* dst, src, size */
+	     /* calculating the PEC for each Ics configuration register data */
+	     data_pec = (uint16_t)Pec10_calc(false, BYTES_IN_REG, &copyArray[0]);
+	     cmd[cmd_index] = (uint8_t)(data_pec >> 8);
+	     cmd_index = cmd_index + 1;
+	     cmd[cmd_index] = (uint8_t)data_pec;
+	     cmd_index = cmd_index + 1;
+	 }
+	 FEB_cs_low();
+	 FEB_spi_write_array(CMD_LEN, &cmd[0]);
+	 FEB_cs_high();
+	 free(cmd);
 }
 
 //****************** CMD Translation ****************************
@@ -182,5 +297,5 @@ void transmitCMDW(uint16_t cmdcode,uint8_t*data){
 	uint8_t cmd[2];
 	cmd[0]=(cmdcode/0x100);//selects first byte
 	cmd[1]=(cmdcode%0x100);//selects second byte
-	write_68(FEB_NUM_BANKS,cmd,data);
+	write_68(FEB_NUM_IC,cmd,data);
 }
