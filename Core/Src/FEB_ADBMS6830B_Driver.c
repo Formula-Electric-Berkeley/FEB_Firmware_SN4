@@ -28,11 +28,11 @@ void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
 	  for(uint8_t cic = 0; cic < total_ic; cic++)
 	  {
 	    /* Init config A */
-	    ic[cic].configa.tx_data[0] = 0x83;
-	    ic[cic].configa.tx_data[1] = 0x01;
+	    ic[cic].configa.tx_data[0] = 0x83; //REFON | | CTH[3]
+	    ic[cic].configa.tx_data[1] = 0x01; //FLAGS
 	    ic[cic].configa.tx_data[2] = 0x00;
-	    ic[cic].configa.tx_data[3] = 0xCC;
-	    ic[cic].configa.tx_data[4] = 0x02;
+	    ic[cic].configa.tx_data[3] = 0x00; //GPIO
+	    ic[cic].configa.tx_data[4] = 0x00;
 	    ic[cic].configa.tx_data[5] = 0x00;
 	    uint16_t VOVCode = SetOverVoltageThreshold(3.2);
 	    uint16_t VUVCode = SetUnderVoltageThreshold(2.0);
@@ -271,8 +271,17 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 	uint8_t TxSize = 34;
 	uint8_t cell_data[TxSize*total_ic];
 	transmitCMDR(RDCVALL,cell_data,TxSize*total_ic);
-	for(int icn=0;icn<total_ic;icn++)
-		memcpy(&(ic[icn].cells.c_codes),cell_data+icn*TxSize,(size_t)TxSize);
+	for(int icn=0;icn<total_ic;icn++){
+			for(int byte=0;byte<34;byte++){
+				if(byte%2==0){
+					ic[icn].cells.c_codes[byte/2] = 0;
+					ic[icn].cells.c_codes[byte/2] |= cell_data[byte+TxSize*icn];
+				} else {
+					ic[icn].cells.c_codes[byte/2] |= cell_data[byte+TxSize*icn]<<8;
+				}
+			}
+		}
+	//memcpy(&(ic[icn].cells.c_codes),cell_data+icn*TxSize,(size_t)TxSize);
 
 	int16_t c_data_pec=pec10_calc(TxSize-2,cell_data);
 	int16_t c_rx_pec=*(uint16_t*)(cell_data+TxSize-2);
@@ -291,16 +300,16 @@ uint8_t ADBMS6830B_rdcv(uint8_t total_ic, // The number of ICs in the system
 			RDCVF
 	};
 	for(int REGGRP=0;REGGRP<6;REGGRP++){
-		if(REGGRP==5)TxSize=2;
 		wakeup_sleep(FEB_NUM_IC);
 		transmitCMDR(codes[REGGRP],cell_data,TxSize*total_ic);
+		uint8_t bytesInGroup = (REGGRP==5)?2:6;
 		for(int icn=0;icn<total_ic;icn++){
-			for(int byte=0;byte<6;byte++){
+			for(int byte=0;byte<bytesInGroup;byte++){
 				if(byte%2==0){
 					ic[icn].cells.c_codes[byte/2+3*REGGRP] = 0;
-					ic[icn].cells.c_codes[byte/2+3*REGGRP] |= cell_data[byte];
+					ic[icn].cells.c_codes[byte/2+3*REGGRP] |= cell_data[byte+TxSize*icn];
 				} else {
-					ic[icn].cells.c_codes[byte/2+3*REGGRP] |= cell_data[byte]<<8;
+					ic[icn].cells.c_codes[byte/2+3*REGGRP] |= cell_data[byte+TxSize*icn]<<8;
 				}
 			}
 
@@ -322,8 +331,17 @@ uint8_t ADBMS6830B_rdsv(uint8_t total_ic, // The number of ICs in the system
 	uint8_t TxSize = 34;
 	uint8_t cell_data[TxSize*total_ic];
 	transmitCMDR(RDSALL,cell_data,TxSize*total_ic);
-	for(int icn=0;icn<total_ic;icn++)
-		memcpy(&(ic[icn].cells.s_codes),cell_data+icn*TxSize,(size_t)34);
+	for(int icn=0;icn<total_ic;icn++){
+		for(int byte=0;byte<34;byte++){
+			if(byte%2==0){
+				ic[icn].cells.s_codes[byte/2] = 0;
+				ic[icn].cells.s_codes[byte/2] |= cell_data[byte+TxSize*icn];
+			} else {
+				ic[icn].cells.s_codes[byte/2] |= cell_data[byte+TxSize*icn]<<8;
+			}
+		}
+	}
+	//memcpy(&(ic[icn].cells.s_codes),cell_data+icn*TxSize,(size_t)34);
 	uint16_t data_pec=pec10_calc(32,cell_data);
 	uint16_t rx_pec=*(uint16_t*)(cell_data+32);
 
@@ -341,23 +359,24 @@ uint8_t ADBMS6830B_rdsv(uint8_t total_ic, // The number of ICs in the system
 			RDSVF
 	};
 	for(int REGGRP=0;REGGRP<6;REGGRP++){
-		if(REGGRP==5)TxSize=2;
 		wakeup_sleep(FEB_NUM_IC);
 		transmitCMDR(codes[REGGRP],cell_data,TxSize*total_ic);
+		uint8_t bytesInGroup = (REGGRP==5)?2:6;
 		for(int icn=0;icn<total_ic;icn++){
-					for(int byte=0;byte<6;byte++){
-						if(byte%2==0){
-							ic[icn].cells.s_codes[byte/2+3*REGGRP] = 0;
-							ic[icn].cells.s_codes[byte/2+3*REGGRP] |= cell_data[byte];
-						} else {
-							ic[icn].cells.s_codes[byte/2+3*REGGRP] |= cell_data[byte]<<8;
-						}
-					}
-
+			for(int byte=0;byte<bytesInGroup;byte++){
+				if(byte%2==0){
+					ic[icn].cells.s_codes[byte/2+3*REGGRP] = 0;
+					ic[icn].cells.s_codes[byte/2+3*REGGRP] |= cell_data[byte+TxSize*icn];
+				} else {
+					ic[icn].cells.s_codes[byte/2+3*REGGRP] |= cell_data[byte+TxSize*icn]<<8;
 				}
+			}
+
+		}
 		int16_t c_data_pec=pec10_calc(TxSize-2,cell_data);
 		int16_t c_rx_pec=*(uint16_t*)(cell_data+TxSize-2);
 		if(c_data_pec!=c_rx_pec)errorCount++;
+		HAL_Delay(1);
 	}
 	return errorCount;
 #endif
@@ -590,7 +609,7 @@ uint8_t ADBMS6830B_rdaux(uint8_t total_ic, // The number of ICs in the system
 			} else {
 				c_ic = total_ic - curr_ic - 1;
 			}
-			pec_error += parse_cells(c_ic, cell_reg, cell_data, &ic[c_ic].aux.a_codes[0], &ic[c_ic].aux.pec_match[0]);
+			//pec_error += parse_cells(c_ic, cell_reg, cell_data, &ic[c_ic].aux.a_codes[0], &ic[c_ic].aux.pec_match[0]);
 		}
 	}
 
@@ -614,14 +633,10 @@ void ADBMS6830B_CLRFLAG(uint8_t total_ic){
 /* Generic wakeup command to wake the ADBMS6830B from sleep state */
 void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 {
-	for (int i = 0; i < 1; i++) {
-		uint8_t nops = 10;
-		FEB_cs_low();
-		while(nops-->0);
-		FEB_cs_high();
-		nops=200;
-		while(nops-->0);
-	}
+	FEB_cs_low();
+	HAL_Delay(1);
+	FEB_cs_high();
+	HAL_Delay(2);
 }
 
 void ADBMS6830B_check_pec(uint8_t total_ic, //Number of ICs in the system

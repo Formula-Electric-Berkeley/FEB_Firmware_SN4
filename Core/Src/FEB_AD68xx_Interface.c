@@ -182,6 +182,7 @@ void cmd_68(uint8_t tx_cmd[2]) //The command to be transmitted
 	cmd_pec = pec15_calc(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
+	wakeup_sleep(FEB_NUM_IC);
 	FEB_cs_low();
 	FEB_spi_write_array(4,cmd);
 	FEB_cs_high();
@@ -196,6 +197,7 @@ void cmd_68_r(uint8_t tx_cmd[2],uint8_t* data, uint8_t len) //The command to be 
 	cmd_pec = pec15_calc(2, cmd);
 	cmd[2] = (uint8_t)(cmd_pec >> 8);
 	cmd[3] = (uint8_t)(cmd_pec);
+	wakeup_sleep(FEB_NUM_IC);
 	FEB_cs_low();
 	FEB_spi_write_read(cmd, 4, data, len);
 	FEB_cs_high();
@@ -273,6 +275,7 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 	     cmd[cmd_index] = (uint8_t)data_pec;
 	     cmd_index = cmd_index + 1;
 	 }
+	 wakeup_sleep(FEB_NUM_IC);
 	 FEB_cs_low();
 	 FEB_spi_write_array(CMD_LEN, &cmd[0]);
 	 FEB_cs_high();

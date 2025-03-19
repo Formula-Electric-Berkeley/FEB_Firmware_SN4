@@ -74,13 +74,12 @@ void FEB_ADBMS_Init() {
 	ADBMS6830B_init_cfg(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_reset_crc_count(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_init_reg_limits(FEB_NUM_IC, IC_Config);
-	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_wrALL(FEB_NUM_IC, IC_Config);
-	ADBMS6830B_rdALL(FEB_NUM_IC, IC_Config);
+	//ADBMS6830B_rdALL(FEB_NUM_IC, IC_Config);
 
 
 }
-#define POLL_RATE 20
+#define POLL_RATE 4
 int poll = POLL_RATE;
 void FEB_ADBMS_Voltage_Process() {
 	start_adc_cell_voltage_measurements();
@@ -106,17 +105,13 @@ void FEB_ADBMS_Temperature_Process(){
 // ******************************** Voltage ********************************
 
 void start_adc_cell_voltage_measurements() {
-	wakeup_sleep(FEB_NUM_IC);
-	ADBMS6830B_adcv(1, 0, 1, 0, OWVR);
-	HAL_Delay(1);
+	ADBMS6830B_adcv(1, 0, 0, 0, OWVR);
+	HAL_Delay(5);
 	//ADBMS6830B_pollAdc();
 }
 
 void read_cell_voltages() {
-	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_rdcv(FEB_NUM_IC, IC_Config);
-	HAL_Delay(5);
-	wakeup_sleep(FEB_NUM_IC);
 	ADBMS6830B_rdsv(FEB_NUM_IC, IC_Config);
 }
 
@@ -129,8 +124,6 @@ void store_cell_voltages() {
 				FEB_ACC.banks[bank].cells[cell+ic*FEB_NUM_CELLS_PER_IC].voltage_V = CVoltage;
 				FEB_ACC.banks[bank].cells[cell+ic*FEB_NUM_CELLS_PER_IC].voltage_S = convert_voltage(IC_Config[ic+bank*FEB_NUM_ICPBANK].cells.s_codes[cell]);
 				FEB_ACC.total_voltage_V+=CVoltage;
-				//IC_Config[bank*FEB_NUM_ICPBANK+ic].cells.c_codes[ic]=0;
-				//IC_Config[bank*FEB_NUM_ICPBANK+ic].cells.s_codes[ic]=0;
 			}
 		}
 

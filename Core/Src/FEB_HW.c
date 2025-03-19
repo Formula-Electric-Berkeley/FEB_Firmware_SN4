@@ -29,7 +29,7 @@ void FEB_spi_write_array(
 		uint8_t *tx_Data                       /*Array of bytes to be written on the SPI port*/
 		)
 		{
-		  HAL_SPI_Transmit(&hspi1, tx_Data, size, HAL_MAX_DELAY); /* SPI1 , data, size, timeout */
+			HAL_SPI_Transmit(&hspi1, tx_Data, size, HAL_MAX_DELAY); /* SPI1 , data, size, timeout */
 		}
 uint8_t FEB_spi_read_byte(uint8_t tx_data) {
 	uint8_t data;
@@ -39,10 +39,9 @@ uint8_t FEB_spi_read_byte(uint8_t tx_data) {
 	return data;
 }
 
-void FEB_spi_write_read(uint8_t tx_Data[], uint8_t tx_len, uint8_t *rx_data, uint8_t rx_len) {
-	if(HAL_SPI_Transmit(&hspi1,tx_Data,tx_len,HAL_MAX_DELAY) != HAL_OK){
+void FEB_spi_write_read(uint8_t tx_Data[], uint8_t tx_len, uint8_t *rx_data, size_t rx_len) {
+	HAL_SPI_Transmit(&hspi1,tx_Data,tx_len,HAL_MAX_DELAY);
 		//catch error
-	}
 	if(HAL_SPI_Receive(&hspi1,rx_data,rx_len,HAL_MAX_DELAY) != HAL_OK){
 		//catch error
 	}
