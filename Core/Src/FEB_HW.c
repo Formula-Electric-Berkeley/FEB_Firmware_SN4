@@ -16,13 +16,29 @@ void FEB_delay_u(uint16_t micro) {
 void FEB_delay_m(uint16_t milli) {
 	HAL_Delay(milli);
 }
+void FEB_Siren_Activate(){
+	int period = 4500;
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+		while(1){
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+			int nops=4000+period;
+			while(nops-->0);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+			nops=1400+period;
+			while(nops-->0);
+			period-=1;
+			if(period==10)period=4500;
+		}
 
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+}
 void FEB_cs_low() {
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
 }
 
+
 void FEB_cs_high() {
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
 }
 void FEB_spi_write_array(
 		uint16_t size,                     /*Option: Number of bytes to be written on the SPI port*/

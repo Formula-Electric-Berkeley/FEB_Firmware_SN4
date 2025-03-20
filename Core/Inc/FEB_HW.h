@@ -61,6 +61,7 @@ void FEB_cs_high(void);
 void FEB_spi_write_read(uint8_t tx_Data[], uint8_t tx_len, uint8_t *rx_data, size_t rx_len);
 void FEB_spi_write_array(uint16_t, uint8_t[]);
 uint8_t FEB_spi_read_byte(uint8_t tx_data);
+void FEB_Siren_Activate();
 
 // ******************************** Relay Control ********************************
 void FEB_PIN_RST(FEB_GPIO);

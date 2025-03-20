@@ -1,7 +1,7 @@
 ../Core/Inc/FEB_Task_Queue.h:25:13:FEB_Queue	32	static
 ../Core/Inc/FEB_Task_Queue.h:52:13:FEB_Pop_Head	32	static
 ../Core/Inc/FEB_Task_Queue.h:64:13:FEB_Pop_Tail	32	static
-../Core/Src/FEB_UART_Transmit.c:14:6:FEB_ADBMS_UART_Transmit	216	dynamic
+../Core/Src/FEB_UART_Transmit.c:14:6:FEB_ADBMS_UART_Transmit	232	dynamic
 ../Core/Src/FEB_UART_Transmit.c:47:6:FEB_UART_Transmit_Process	2056	static
 ../Core/Src/FEB_UART_Transmit.c:57:6:FEB_UART_Transmit_PingPong_Members	2056	static
 ../Core/Src/FEB_UART_Transmit.c:65:6:FEB_UART_Transmit_CAN_Error	2064	static

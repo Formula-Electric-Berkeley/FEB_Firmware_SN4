@@ -331,11 +331,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, INDICATOR_Pin|BMS_IND_Pin|BMS_A_Pin|PC_AIR_Pin
-                          |CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, INDICATOR_Pin|BMS_IND_Pin|BMS_A_Pin|PC_AIR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(PC_REL_GPIO_Port, PC_REL_Pin, GPIO_PIN_RESET);
@@ -353,7 +355,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : CS_Pin */
   GPIO_InitStruct.Pin = CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(CS_GPIO_Port, &GPIO_InitStruct);
 
@@ -361,7 +363,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = BUZZER_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(BUZZER_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : AIR__SENSE_Pin AIR__SENSEC5_Pin SHS_IMD_Pin SHS_TSMS_Pin

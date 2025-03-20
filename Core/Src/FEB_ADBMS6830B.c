@@ -71,6 +71,7 @@ static float convert_to_temp(float voltage){
 
 void FEB_ADBMS_Init() {
 	FEB_cs_high();
+	//if(FEB_PIN_RD(P_PB0))FEB_Siren_Activate();
 	ADBMS6830B_init_cfg(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_reset_crc_count(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_init_reg_limits(FEB_NUM_IC, IC_Config);
@@ -81,11 +82,15 @@ void FEB_ADBMS_Init() {
 }
 #define POLL_RATE 4
 int poll = POLL_RATE;
+
 void FEB_ADBMS_Voltage_Process() {
 	start_adc_cell_voltage_measurements();
 	read_cell_voltages();
 	store_cell_voltages();
 	validate_voltages();
+	for(int icn =0;icn<FEB_NUM_IC;icn++)
+		IC_Config[icn].configa.tx_data[4]^=0x02;
+	ADBMS6830B_wrALL(FEB_NUM_IC, IC_Config);
 	if(poll-- == 0){
 		FEB_ADBMS_UART_Transmit(&FEB_ACC);
 		poll=POLL_RATE;
