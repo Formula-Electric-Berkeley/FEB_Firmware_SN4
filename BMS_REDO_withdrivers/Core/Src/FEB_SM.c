@@ -1,5 +1,7 @@
 #include "FEB_HW.h"
 #include "FEB_SM.h"
+#include "FEB_IVT.h" //Include for precharge stuff
+#include "FEB_DASH_CAN.h" //Include for r2r from DASH
 
 //extern osMutexId_t FEB_SM_LockHandle;
 //extern osMutexId_t FEB_UART_LockHandle;
@@ -54,6 +56,9 @@ static void transition(FEB_SM_ST_t next_state) {
 void FEB_SM_Init(void) {
 	SM_Current_State=FEB_SM_ST_BOOT;
 	//FEB_Config_Update(FEB_Current_State);
+
+	// Make sure air plus, and precharge are open.
+	// Set BMS Shutdown relay and bms indicator
 	FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_HW_RELAY_OPEN);
 	FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_HW_RELAY_OPEN);
 	FEB_PIN_SET(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_CLOSE);
@@ -101,14 +106,21 @@ void FEB_SM_Process(void) {
 static void fault(FEB_SM_ST_t FAULT_TYPE) {
 	SM_Current_State = FAULT_TYPE;
 	//FEB_Config_Update(SM_Current_State);
+
 	FEB_PIN_RST(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_RELAY_STATE_OPEN);
-	FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
-	FEB_PIN_RST(PN_PC_REL); //FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
 	FEB_PIN_SET(PN_BUZZER);
 	FEB_PIN_SET(PN_INDICATOR);
 
+	//Delay before resetting signals
+	HAL_Delay(500);
+
+	//Reset air plus and precharge for redundancy
+	FEB_PIN_RST(PN_PC_AIR); //FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN)
+	FEB_PIN_RST(PN_PC_REL); //FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+
 }
 
+// This simply seems to toggle the state.
 /** Transition Functions **/
 static FEB_SM_ST_t updateStateProtected(FEB_SM_ST_t next_state){
 	//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
@@ -194,6 +206,7 @@ static void ESCCompleteTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_PRECHARGE:
+		//Should be open but included for redundancy
 		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 		FEB_PIN_SET(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_CLOSE);
 		updateStateProtected(next_state);
@@ -205,11 +218,14 @@ static void ESCCompleteTransition(FEB_SM_ST_t next_state){
 		//This should be a general safety check
 		if(FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN)
 					ESCCompleteTransition(FEB_SM_ST_LV);
+
+		// AIR minus closed, air plus opened, precharge open make sure tsms
 		else if(FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE &&
 				FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN
 			//Precharge Sense????? FEB_PIN_RD() == FEB_RELAY_STATE_OPEN
-			)
+		){
 			ESCCompleteTransition(FEB_SM_ST_PRECHARGE);
+		}
 		break;
 
 	default:
@@ -228,6 +244,9 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_LV:
+		break;
+
+	//TODO: Make sure this transition is needed
 	case FEB_SM_ST_ESC:
 		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
@@ -236,14 +255,30 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 
 	case FEB_SM_ST_ENERGIZED:
 		FEB_PIN_SET(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_CLOSE);
-		HAL_Delay(10);//osDelay(100);
+		HAL_Delay(500);//osDelay(100);
 		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
 		updateStateProtected(FEB_SM_ST_ENERGIZED);
 		break;
 
 	case FEB_SM_ST_DEFAULT:
+
+		//Keep air plus open for redundancy
 		FEB_PIN_RST(PN_PC_AIR);
+
+		//Hold precharge relay closed for redundancy
 		FEB_PIN_SET(PN_PC_REL);
+
+		float voltage_V = (float) FEB_CAN_IVT_Message.voltage_1_mV * 0.001;
+		float target_voltage_V = FEB_ADBMS_Get_Total_Voltage() * FEB_CONST_PRECHARGE_PCT;
+
+		//TODO: Make sure to change this to target_voltage
+		if (voltage_V >= 0.9*30) {
+			updateStateProtected(FEB_SM_ST_ENERGIZED);
+		}
+
+		//The conditions below are good to have just in case. Transition to energized should probably just use
+		// IVT process... but I can also just move that stuff here
+
 //		if( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN ||
 //			FEB_PIN_RD(PN_AIRM_SENSE)==FEB_RELAY_STATE_OPEN//FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN
 //			)PrechargeTransition(FEB_SM_ST_LV);
@@ -273,6 +308,8 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_LV:
+
+	//How the fuck does that work
 	case FEB_SM_ST_ESC:
 		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
@@ -280,9 +317,10 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_DEFAULT:
-		FEB_PIN_SET(PN_PC_AIR);
-		HAL_Delay(500);
-		FEB_PIN_RST(PN_PC_REL);
+		if(FEB_CAN_DASH_Get_R2R()){
+			updateStateProtected(FEB_SM_ST_DRIVE);
+		}
+
 //		if( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN||
 //			FEB_PIN_RD(PN_AIRM_SENSE)==FEB_RELAY_STATE_OPEN//FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN
 //			)EnergizedTransition(FEB_SM_ST_LV);
@@ -306,6 +344,9 @@ static void DriveTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_LV:
+		//This transition should only happen by a fault
+		break;
+
 	case FEB_SM_ST_ESC:
 		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
@@ -317,12 +358,18 @@ static void DriveTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_DEFAULT:
+		//If shutdown fails, or air minus is no longer connected
 		if( FEB_PIN_RD(PN_SHS_IN)== FEB_RELAY_STATE_OPEN ||
 			FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_OPEN //FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN
-			)DriveTransition(FEB_SM_ST_LV);
-		else if(0//!FEB_CAN_ICS_Ready_To_Drive() <-TODO:replace with task
-				)
+			){
+			fault(FEB_SM_ST_FAULT_BMS);
+
+
+		// if driver no longer requests r2r, set back to energized
+		}else if(!FEB_CAN_DASH_Get_R2R()){
+			//Toggle to energized
 			DriveTransition(FEB_SM_ST_ENERGIZED);
+		}
 		break;
 
 	default:
@@ -420,9 +467,22 @@ static void BalanceTransition(FEB_SM_ST_t next_state){
 
 /** Hard Fault Functions **/
 static void BMSFaultTransition(FEB_SM_ST_t next_state){
-	if (next_state==FEB_SM_ST_DEFAULT)return;
-	fault(SM_Current_State);
+
+	switch(next_state){
+	case FEB_SM_ST_DEFAULT:
+		// perpetually fault until cleared
+		fault(FEB_SM_ST_FAULT_BMS);
+		if(FEB_PIN_RD(PN_RST) == FEB_RELAY_STATE_CLOSE){
+			updateStateProtected(FEB_SM_ST_LV);
+		}
+		break;
+
+	default:
+		break;
+	}
+
 }
+
 static void BSPDFaultTransition(FEB_SM_ST_t next_state){
 	if (next_state==FEB_SM_ST_DEFAULT)return;
 	fault(SM_Current_State);

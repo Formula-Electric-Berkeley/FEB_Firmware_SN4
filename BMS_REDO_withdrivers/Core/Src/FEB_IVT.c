@@ -88,15 +88,6 @@ void FEB_CAN_IVT_Process(void) {
 	}
 	if (IVT_CAN_flag.voltage_1) {
 		IVT_CAN_flag.voltage_1 = false;
-		if (FEB_SM_Get_Current_State() == FEB_SM_ST_PRECHARGE) {
-			// TODO: Check precharge complete
-			float voltage_V = (float) FEB_CAN_IVT_Message.voltage_1_mV * 0.001;
-			float target_voltage_V = FEB_ADBMS_Get_Total_Voltage() * FEB_CONST_PRECHARGE_PCT;
-
-			//Make sure to change this to target_voltage
-			if (voltage_V >= 0.9*30) {
-				FEB_SM_Transition(FEB_SM_ST_ENERGIZED);			}
-		}
 	}
 	if (IVT_CAN_flag.voltage_2) {
 		IVT_CAN_flag.voltage_2 = false;
