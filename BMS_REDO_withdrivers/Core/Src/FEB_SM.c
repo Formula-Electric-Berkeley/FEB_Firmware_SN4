@@ -58,6 +58,8 @@ void FEB_SM_Init(void) {
 	FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_HW_RELAY_OPEN);
 	FEB_PIN_SET(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_CLOSE);
 	FEB_PIN_SET(PN_BMS_IND);
+
+
 	//FEB_CAN_Charger_Init();
 
 	/*
@@ -67,6 +69,10 @@ void FEB_SM_Init(void) {
 		return;
 	}
 	*/
+
+
+	//All pins initialized, transition to LV
+	FEB_SM_Transition(FEB_SM_ST_LV);
 
 }
 
@@ -149,15 +155,25 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_ESC:
+		//This is just a middle step to idle
+		updateStateProtected(next_state);
+		break;
 	case FEB_SM_ST_FREE:
 		updateStateProtected(next_state);
 		break;
 
 	case FEB_SM_ST_DEFAULT:
-		if(FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE)
+		//Make sure shutdown loop is completed before going to idle
+		if(FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE){
 			LVPowerTransition(FEB_SM_ST_ESC);
+
+			//Add an else case to output that shutdown loop was not completed.
+		}
+
+		//I'm not sure if this is actually good. Maybe we should use the
+		// charge sense input instead
 		if (0)//FEB_CAN_Charger_Received()
-			LVPowerTransition(FEB_SM_ST_FREE);
+//			LVPowerTransition(FEB_SM_ST_FREE);
 		break;
 
 	default:
@@ -184,6 +200,9 @@ static void ESCCompleteTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_DEFAULT:
+
+		//Go back to LV if shutdown not completed
+		//This should be a general safety check
 		if(FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN)
 					ESCCompleteTransition(FEB_SM_ST_LV);
 		else if(FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE &&

@@ -2,6 +2,9 @@
 // **************************************** Includes & External ****************************************
 #include "FEB_HW.h"
 #include "FEB_CAN.h"
+#include "FEB_IVT.h"
+#include "FEB_DASH_CAN.h"
+#include "FEB_UART_Transmit.h"
 
 extern CAN_HandleTypeDef hcan1;
 
@@ -30,6 +33,7 @@ void FEB_CAN_Init(void) {
 void FEB_CAN_Filter_Config(void) {
 	uint8_t filter_bank = 0;
 	filter_bank = FEB_CAN_IVT_Filter_Config(&hcan1, CAN_RX_FIFO0, filter_bank);
+	filter_bank = FEB_CAN_DASH_Filter_Config(&hcan1,CAN_RX_FIFO0, filter_bank);
 //	filter_bank = FEB_CAN_Filter(&hcan1, CAN_RX_FIFO0, filter_bank);
 
 //    if(FEB_CAN_PINGPONG_MODE) filter_bank =FEB_CAN_PINGPONG_Filter(&hcan1, CAN_RX_FIFO0, filter_bank);
@@ -47,6 +51,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 //		}
 
 		FEB_CAN_IVT_Store_Msg(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
+		FEB_CAN_DASH_Store_Msg(&FEB_CAN_Rx_Header,FEB_CAN_Rx_Data);
 
 	}
 }
@@ -56,7 +61,7 @@ void FEB_SM_CAN_Transmit(void) {
 
 	// Initialize transmission header
 	FEB_CAN_Tx_Header.DLC = 3;
-	FEB_CAN_Tx_Header.StdId = FEB_CAN_ID_BMS_STATE;
+	FEB_CAN_Tx_Header.StdId = FEB_CAN_BMS_STATE_FRAME_ID;
 	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
 	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
@@ -83,7 +88,7 @@ void FEB_CAN_PING(void) {
 	FEB_CAN_PONGED=0;
 
 	FEB_CAN_Tx_Header.DLC = 8;
-	FEB_CAN_Tx_Header.StdId = FEB_CAN_PINGER_A;
+	FEB_CAN_Tx_Header.StdId = FEB_CAN_FEB_PING_PONG_COUNTER1_FRAME_ID;
 	//FEB_CAN_Tx_Header.StdId = FEB_CAN_PINGER_B;
 	//FEB_CAN_Tx_Header.StdId = FEB_CAN_PINGER_C;
 	//FEB_CAN_Tx_Header.StdId = FEB_CAN_PINGER_D;

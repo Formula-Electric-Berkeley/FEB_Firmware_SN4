@@ -7,10 +7,12 @@
 
 void FEB_Main_Setup() {
 	//SM setup
-//	FEB_ADBMS_Init();
-	FEB_SM_Init();
+	FEB_ADBMS_Init();
 	FEB_CAN_Init();
+	FEB_SM_Init(); //this occurs last to transition out of boot
 	HAL_Delay(500);
+
+
 	//IVT Setup
 }
 
