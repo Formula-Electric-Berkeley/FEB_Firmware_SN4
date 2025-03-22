@@ -575,41 +575,17 @@ uint8_t ADBMS6830B_rdaux(uint8_t total_ic, // The number of ICs in the system
 	uint8_t c_ic = 0;
 	cell_data = (uint8_t *) malloc((NUM_RX_BYT * total_ic) * sizeof(uint8_t));
 
-	for (uint8_t cell_reg = 1; cell_reg <= ic[0].ic_reg.num_cv_reg; cell_reg++) {
-		uint8_t cmd[4];
-		switch(cell_reg) {
-			case 1: //Reg A
-				cmd[0] = 0x00;
-				cmd[1] = 0x19;
-				break;
-			case 2: //Reg B
-				cmd[0] = 0x00;
-				cmd[1] = 0x1A;
-				break;
-			case 3: //Reg C
-				cmd[0] = 0x00;
-				cmd[1] = 0x1B;
-				break;
-			case 4: //Reg D
-				cmd[0] = 0x00;
-				cmd[1] = 0x1F;
-				break;
-		}
-		uint16_t cmd_pec = pec15_calc(2, cmd);
-		cmd[2] = (uint8_t)(cmd_pec >> 8);
-		cmd[3] = (uint8_t)(cmd_pec);
-		FEB_cs_low();
-		FEB_spi_write_read(cmd, 4, cell_data, (REG_LEN * total_ic));
-		FEB_cs_high();
-
-		//parse data
-		for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
-			if (ic->isospi_reverse == false) {
-				c_ic = curr_ic;
-			} else {
-				c_ic = total_ic - curr_ic - 1;
+	for (uint8_t tempg = 0; tempg < 5; tempg++) {
+		commandtransmitCMDR(RDAUXA,cell_data,NUM_RX_BYT * total_ic);
+		for(int icn=0;icn<total_ic;icn++){
+			for(int byte=0;byte<4;byte++){
+				if(byte%2==0){
+					ic[icn].aux.a_codes[byte/2+2*tempg] = 0;
+					ic[icn].aux.a_codes[byte/2+2*tempg] |= cell_data[byte+TxSize*icn];
+				} else {
+					ic[icn].aux.a_codes[byte/2+2*tempg] |= cell_data[byte+TxSize*icn]<<8;
+				}
 			}
-			//pec_error += parse_cells(c_ic, cell_reg, cell_data, &ic[c_ic].aux.a_codes[0], &ic[c_ic].aux.pec_match[0]);
 		}
 	}
 

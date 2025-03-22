@@ -147,26 +147,15 @@ void validate_voltages() {
 		}
 	}
 }
-void configure_gpio_bits(uint8_t channel) {
-	gpio_bits[0] = 0b1; /* ADC Channel */
-	gpio_bits[1] = 0b1; /* ADC Channel */
-	gpio_bits[2] = (channel >> 0) & 0b1; /* MUX Sel 1 */
-	gpio_bits[3] = (channel >> 1) & 0b1; /* MUX Sel 1 */
-	gpio_bits[4] = (channel >> 2) & 0b1; /* MUX Sel 1 */
-	gpio_bits[5] = 0b1; /* ADC Channel */
-	gpio_bits[6] = 0b1; /* ADC Channel */
-	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
-		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
-	}
-	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
-	ADBMS6830B_wrcfgb(FEB_NUM_IC, IC_Config);
 
-}
 
 // ******************************** Temperature ********************************
 void start_aux_voltage_measurements() {
-	ADBMS6830B_adax(AUX_OW_OFF, PUP_DOWN, AUX_ALL);
-	ADBMS6830B_pollAdc();
+	ADBMS6830B_adax(AUX_OW_OFF, PUP_DOWN, 0b1);
+	HAL_Delay(1);
+	ADBMS6830B_adax(AUX_OW_OFF, PUP_DOWN, 0b10);
+	HAL_Delay(1);
+	//ADBMS6830B_pollAdc();
 }
 
 void read_aux_voltages() {
@@ -183,7 +172,21 @@ void store_cell_temps(uint8_t channel) {
 		}
 	}
 }
+void configure_gpio_bits(uint8_t channel) {
+	gpio_bits[0] = 0b1; /* ADC Channel */
+	gpio_bits[1] = 0b1; /* ADC Channel */
+	gpio_bits[2] = (channel >> 0) & 0b1; /* MUX Sel 1 */
+	gpio_bits[3] = (channel >> 1) & 0b1; /* MUX Sel 1 */
+	gpio_bits[4] = (channel >> 2) & 0b1; /* MUX Sel 1 */
+	gpio_bits[5] = 0b1; /* ADC Channel */
+	gpio_bits[6] = 0b1; /* ADC Channel */
+	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
+		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
+	}
+	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
+	ADBMS6830B_wrcfgb(FEB_NUM_IC, IC_Config);
 
+}
 //************************** Cell Balancing **********************
 void FEB_Cell_Balance_Start(){
 	FEB_cs_high();
