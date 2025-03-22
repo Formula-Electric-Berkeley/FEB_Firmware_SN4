@@ -164,11 +164,14 @@ void read_aux_voltages() {
 
 void store_cell_temps(uint8_t channel) {
 	for (uint8_t bank = 0; bank < FEB_NUM_IC; bank++) {
-		for (uint8_t mux = 0; mux < 4; mux++) {
-			uint8_t gpio = get_gpio_pin(mux);
-			uint16_t raw_code = IC_Config[bank].aux.a_codes[gpio];
-			uint8_t sensor = get_sensor(mux, channel);
-			FEB_ACC.banks[bank].temp_sensor_readings_V[sensor] = convert_voltage(raw_code);
+		for(uint8_t ic =0; ic < FEB_NUM_ICPBANK;ic++){
+			for (uint8_t tempsense = 0; tempsense < FEB_NUM_TEMP_SENSE_PER_IC; tempsense++) {
+				uint16_t raw_code = IC_Config[ic+bank*FEB_NUM_ICPBANK].aux.a_codes[tempsense+ic*FEB_NUM_TEMP_SENSE_PER_IC];
+				if(tempsense%2==0)
+					FEB_ACC.banks[bank].temp_sensor_readings_V[tempsense/2+FEB_NUM_ICPBANK*FEB_NUM_TEMP_SENSE_PER_IC] = convert_voltage(raw_code);
+				if(tempsense%2==1)
+					FEB_ACC.banks[bank].temp_sensor_readings_V[tempsense/2+FEB_NUM_TEMP_SENSE_PER_IC/2+FEB_NUM_ICPBANK*FEB_NUM_TEMP_SENSE_PER_IC] = convert_voltage(raw_code);
+			}
 		}
 	}
 }
