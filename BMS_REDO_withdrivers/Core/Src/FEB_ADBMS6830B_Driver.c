@@ -28,9 +28,9 @@ void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
 	  for(uint8_t cic = 0; cic < total_ic; cic++)
 	  {
 	    /* Init config A */
-	    ic[cic].configa.tx_data[0] = 0x83; //REFON | | CTH[3]
-	    ic[cic].configa.tx_data[1] = 0x01; //FLAGS
-	    ic[cic].configa.tx_data[2] = 0x00;
+	    ic[cic].configa.tx_data[0] = 0x03; //REFON | | CTH[3]
+	    ic[cic].configa.tx_data[1] = 0xFF; //FLAGS
+	    ic[cic].configa.tx_data[2] = 0x02;
 	    ic[cic].configa.tx_data[3] = 0x00; //GPIO
 	    ic[cic].configa.tx_data[4] = 0x00;
 	    ic[cic].configa.tx_data[5] = 0x00;
@@ -41,7 +41,7 @@ void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
 	    ic[cic].configb.tx_data[2] = ((VOVCode>>4)&0x0FF);
 	    ic[cic].configb.tx_data[3] = 0xFF;
 	    ic[cic].configb.tx_data[4] = 0x00;
-	    ic[cic].configb.tx_data[4] = 0x00;
+	    ic[cic].configb.tx_data[5] = 0x00;
 	  }
 }
 
@@ -376,7 +376,6 @@ uint8_t ADBMS6830B_rdsv(uint8_t total_ic, // The number of ICs in the system
 		int16_t c_data_pec=pec10_calc(TxSize-2,cell_data);
 		int16_t c_rx_pec=*(uint16_t*)(cell_data+TxSize-2);
 		if(c_data_pec!=c_rx_pec)errorCount++;
-		HAL_Delay(1);
 	}
 	return errorCount;
 #endif
@@ -399,13 +398,13 @@ void ADBMS6830B_rdALL(uint8_t total_ic, //The number of ICs being written to
                       cell_asic ic[]  // A two dimensional array of the configuration data that will be written
                      )
 {
-	wakeup_sleep(total_ic);
+	//wakeup_sleep(total_ic);
 	ADBMS6830B_rdcfga(total_ic, ic);
-	wakeup_sleep(total_ic);
+	//wakeup_sleep(total_ic);
 	ADBMS6830B_rdcfgb(total_ic, ic);
-	wakeup_sleep(total_ic);
+	//wakeup_sleep(total_ic);
 	ADBMS6830B_rdpwmga(total_ic, ic);
-	wakeup_sleep(total_ic);
+	//wakeup_sleep(total_ic);
 	ADBMS6830B_rdpwmgb(total_ic, ic);
 }
 /* Write the ADBMS6830B CFGRA */
@@ -574,46 +573,10 @@ uint8_t ADBMS6830B_rdaux(uint8_t total_ic, // The number of ICs in the system
 	uint8_t *cell_data;
 	uint8_t c_ic = 0;
 	cell_data = (uint8_t *) malloc((NUM_RX_BYT * total_ic) * sizeof(uint8_t));
-
-	for (uint8_t cell_reg = 1; cell_reg <= ic[0].ic_reg.num_cv_reg; cell_reg++) {
-		uint8_t cmd[4];
-		switch(cell_reg) {
-			case 1: //Reg A
-				cmd[0] = 0x00;
-				cmd[1] = 0x19;
-				break;
-			case 2: //Reg B
-				cmd[0] = 0x00;
-				cmd[1] = 0x1A;
-				break;
-			case 3: //Reg C
-				cmd[0] = 0x00;
-				cmd[1] = 0x1B;
-				break;
-			case 4: //Reg D
-				cmd[0] = 0x00;
-				cmd[1] = 0x1F;
-				break;
-		}
-		uint16_t cmd_pec = pec15_calc(2, cmd);
-		cmd[2] = (uint8_t)(cmd_pec >> 8);
-		cmd[3] = (uint8_t)(cmd_pec);
-		FEB_cs_low();
-		FEB_spi_write_read(cmd, 4, cell_data, (REG_LEN * total_ic));
-		FEB_cs_high();
-
-		//parse data
-		for (int curr_ic = 0; curr_ic < total_ic; curr_ic++) {
-			if (ic->isospi_reverse == false) {
-				c_ic = curr_ic;
-			} else {
-				c_ic = total_ic - curr_ic - 1;
-			}
-			//pec_error += parse_cells(c_ic, cell_reg, cell_data, &ic[c_ic].aux.a_codes[0], &ic[c_ic].aux.pec_match[0]);
-		}
-	}
-
-	ADBMS6830B_check_pec(total_ic, CELL, ic);
+	transmitCMDR(RDAUXA,cell_data,NUM_RX_BYT * total_ic);
+	for(int i=0;i<total_ic;i++)
+		memcpy(&(ic[i].aux.a_codes),cell_data+i*NUM_RX_BYT,NUM_RX_BYT);
+	//ADBMS6830B_check_pec(total_ic, CELL, ic);
 	free(cell_data);
 	return(pec_error);
 }

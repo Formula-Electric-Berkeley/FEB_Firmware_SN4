@@ -114,13 +114,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  FEB_Task_ADBMS();
-	  FEB_Task_SM();
+	  FEB_Task_ADBMS();
+//	  FEB_Task_SM();
 	  //FEB_Task_Charge();
 	  //FEB_Task_Balance();
-	  FEB_Task_IVT();
+//	  FEB_Task_IVT();
 
-	  HAL_Delay(500);
+	  HAL_Delay(50);
 
 
 
@@ -303,7 +303,7 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_EVEN;
+  huart2.Init.Parity = UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
@@ -368,7 +368,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = BUZZER_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(BUZZER_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : AIR__SENSE_Pin AIR__SENSEC5_Pin SHS_IMD_Pin SHS_TSMS_Pin

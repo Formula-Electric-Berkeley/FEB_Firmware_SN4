@@ -8,9 +8,9 @@
 void FEB_Main_Setup() {
 	//SM setup
 	FEB_ADBMS_Init();
-	FEB_CAN_Init();
-	FEB_SM_Init(); //this occurs last to transition out of boot
-	HAL_Delay(500);
+	//FEB_CAN_Init();
+	//FEB_SM_Init(); //this occurs last to transition out of boot
+	HAL_Delay(50);
 
 
 	//IVT Setup
@@ -19,7 +19,7 @@ void FEB_Main_Setup() {
 void FEB_Task_ADBMS() {
 	FEB_ADBMS_Voltage_Process();
 	//FEB_Siren_Activate();
-	//FEB_ADBMS_Temperature_Process();
+	FEB_ADBMS_Temperature_Process();
 	HAL_Delay(50);
 }
 

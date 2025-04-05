@@ -17,20 +17,20 @@ void FEB_delay_m(uint16_t milli) {
 	HAL_Delay(milli);
 }
 void FEB_Siren_Activate(){
-	int period = 4500;
+	int period = 900;
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 		while(1){
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
-			int nops=4000+period;
+			int nops=2200+period;
 			while(nops-->0);
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
-			nops=1400+period;
+			nops=1100+period;
 			while(nops-->0);
 			period-=1;
-			if(period==10)period=4500;
+			if(period==10)period=1000;
 		}
 
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
 }
 void FEB_cs_low() {
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);

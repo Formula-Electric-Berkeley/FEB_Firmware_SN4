@@ -3,8 +3,8 @@
 #include "stm32f4xx_hal.h"
 #include "FEB_ADBMS6830B.h"
 #include "FEB_HW.h"
-
-
+#include "FEB_Temp_LUT.h"
+#include "FEB_UART_Transmit.h"
 // ******************************** Voltage ********************************
 
 void start_adc_cell_voltage_measurements();
@@ -27,7 +27,7 @@ extern UART_HandleTypeDef huart2;
 
 // ******************************** Config Bits ********************************
 
-static bool refon = 1;
+static bool refon = 0;
 static bool cth_bits[3] = {0, 0, 1};
 static bool gpio_bits[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static bool dcc_bits[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -80,7 +80,7 @@ void FEB_ADBMS_Init() {
 
 
 }
-#define POLL_RATE 4
+#define POLL_RATE 1
 int poll = POLL_RATE;
 
 void FEB_ADBMS_Voltage_Process() {
@@ -88,9 +88,6 @@ void FEB_ADBMS_Voltage_Process() {
 	read_cell_voltages();
 	store_cell_voltages();
 	validate_voltages();
-	for(int icn =0;icn<FEB_NUM_IC;icn++)
-		IC_Config[icn].configa.tx_data[4]^=0x02;
-	ADBMS6830B_wrALL(FEB_NUM_IC, IC_Config);
 	if(poll-- == 0){
 		FEB_ADBMS_UART_Transmit(&FEB_ACC);
 		poll=POLL_RATE;
@@ -99,7 +96,8 @@ void FEB_ADBMS_Voltage_Process() {
 }
 
 void FEB_ADBMS_Temperature_Process(){
-	for (uint8_t channel = 0; channel < 8; channel++) {
+	gpio_bits[9] = !gpio_bits[9];
+	for (uint8_t channel = 0; channel < 5; channel++) {
 			configure_gpio_bits(channel);
 			start_aux_voltage_measurements();
 			read_aux_voltages();
@@ -110,8 +108,8 @@ void FEB_ADBMS_Temperature_Process(){
 // ******************************** Voltage ********************************
 
 void start_adc_cell_voltage_measurements() {
-	ADBMS6830B_adcv(1, 0, 0, 0, OWVR);
-	HAL_Delay(5);
+	ADBMS6830B_adcv(1, 0, 1, 0, OWVR);
+	HAL_Delay(1);
 	//ADBMS6830B_pollAdc();
 }
 
@@ -158,15 +156,16 @@ void configure_gpio_bits(uint8_t channel) {
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
 		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
 	}
-	ADBMS6830B_wrcfga(FEB_NUM_IC, IC_Config);
-	ADBMS6830B_wrcfgb(FEB_NUM_IC, IC_Config);
-
+	ADBMS6830B_wrALL(FEB_NUM_IC, IC_Config);
 }
 
 // ******************************** Temperature ********************************
 void start_aux_voltage_measurements() {
-	ADBMS6830B_adax(AUX_OW_OFF, PUP_DOWN, AUX_ALL);
-	ADBMS6830B_pollAdc();
+	ADBMS6830B_adax(AUX_OW_OFF, PUP_DOWN, 1);
+	HAL_Delay(1);
+	//ADBMS6830B_pollAdc();
+	ADBMS6830B_adax(AUX_OW_OFF, PUP_DOWN, 2);
+	HAL_Delay(1);
 }
 
 void read_aux_voltages() {
@@ -175,11 +174,11 @@ void read_aux_voltages() {
 
 void store_cell_temps(uint8_t channel) {
 	for (uint8_t bank = 0; bank < FEB_NUM_IC; bank++) {
-		for (uint8_t mux = 0; mux < 4; mux++) {
-			uint8_t gpio = get_gpio_pin(mux);
-			uint16_t raw_code = IC_Config[bank].aux.a_codes[gpio];
-			uint8_t sensor = get_sensor(mux, channel);
-			FEB_ACC.banks[bank].temp_sensor_readings_V[sensor] = convert_voltage(raw_code);
+		for (uint8_t icn = 0; icn < FEB_NUM_ICPBANK; icn++) {
+			uint16_t mux1 = IC_Config[bank].aux.a_codes[0];
+			uint16_t mux2 = IC_Config[bank].aux.a_codes[1];
+			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel] = FEB_Temp_LUT_Get_Temp_100mC( (int) (convert_voltage(mux1)*1000))*0.1;
+			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel+5] = FEB_Temp_LUT_Get_Temp_100mC( (int) (convert_voltage(mux2)*1000))*0.1;
 		}
 	}
 }

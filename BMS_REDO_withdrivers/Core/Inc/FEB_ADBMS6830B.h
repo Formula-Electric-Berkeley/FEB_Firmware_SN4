@@ -3,6 +3,7 @@
 
 // ******************************** Includes ********************************
 #include "FEB_Config.h"
+
 // ********************************** ADBMS6830B Configuration **********************************
 
 typedef enum {
@@ -89,7 +90,7 @@ typedef struct {
 void FEB_ADBMS_Init();
 
 void FEB_ADBMS_Voltage_Process();
-void FEB_Cell_Temperature_Process();
+void FEB_ADBMS_Temperature_Process();
 
 void FEB_Cell_Balance_Start();
 void FEB_Cell_Balance_Process();

@@ -108,7 +108,7 @@ static void fault(FEB_SM_ST_t FAULT_TYPE) {
 	//FEB_Config_Update(SM_Current_State);
 
 	FEB_PIN_RST(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_RELAY_STATE_OPEN);
-	FEB_PIN_SET(PN_BUZZER);
+	//FEB_PIN_SET(PN_BUZZER);
 	FEB_PIN_SET(PN_INDICATOR);
 
 	//Delay before resetting signals
@@ -134,9 +134,7 @@ static FEB_SM_ST_t updateStateProtected(FEB_SM_ST_t next_state){
 static void bootTransition(FEB_SM_ST_t next_state){
 	switch(next_state){
 	case FEB_SM_ST_FAULT_BMS:
-		break;
 	case FEB_SM_ST_FAULT_IMD:
-		break;
 	case FEB_SM_ST_FAULT_BSPD:
 		fault(next_state);
 		break;
@@ -268,13 +266,13 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 		//Hold precharge relay closed for redundancy
 		FEB_PIN_SET(PN_PC_REL);
 
+		/*   TODO: Move to precharge file
 		float voltage_V = (float) FEB_CAN_IVT_Message.voltage_1_mV * 0.001;
 		float target_voltage_V = FEB_ADBMS_Get_Total_Voltage() * FEB_CONST_PRECHARGE_PCT;
-
-		//TODO: Make sure to change this to target_voltage
 		if (voltage_V >= 0.9*30) {
 			updateStateProtected(FEB_SM_ST_ENERGIZED);
 		}
+		*/
 
 		//The conditions below are good to have just in case. Transition to energized should probably just use
 		// IVT process... but I can also just move that stuff here
