@@ -27,8 +27,8 @@ extern UART_HandleTypeDef huart2;
 
 // ******************************** Config Bits ********************************
 
-static bool refon = 0;
-static bool cth_bits[3] = {0, 0, 1};
+static bool refon = 1;
+static bool cth_bits[3] = {0, 1, 1};
 static bool gpio_bits[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static bool dcc_bits[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static bool dcto_bits[10] = {0, 0, 0, 0};
@@ -89,7 +89,7 @@ void FEB_ADBMS_Voltage_Process() {
 	store_cell_voltages();
 	validate_voltages();
 	if(poll-- == 0){
-		FEB_ADBMS_UART_Transmit(&FEB_ACC);
+		FEB_MONITOR_UART_Transmit(&FEB_ACC);
 		poll=POLL_RATE;
 	}
 
@@ -175,8 +175,8 @@ void read_aux_voltages() {
 void store_cell_temps(uint8_t channel) {
 	for (uint8_t bank = 0; bank < FEB_NUM_IC; bank++) {
 		for (uint8_t icn = 0; icn < FEB_NUM_ICPBANK; icn++) {
-			uint16_t mux1 = IC_Config[bank].aux.a_codes[0];
-			uint16_t mux2 = IC_Config[bank].aux.a_codes[1];
+			uint16_t mux1 = IC_Config[FEB_NUM_ICPBANK*bank+icn].aux.a_codes[0];
+			uint16_t mux2 = IC_Config[FEB_NUM_ICPBANK*bank+icn].aux.a_codes[1];
 			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel] = FEB_Temp_LUT_Get_Temp_100mC( (int) (convert_voltage(mux1)*1000))*0.1;
 			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel+5] = FEB_Temp_LUT_Get_Temp_100mC( (int) (convert_voltage(mux2)*1000))*0.1;
 		}

@@ -28,11 +28,11 @@ void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
 	  for(uint8_t cic = 0; cic < total_ic; cic++)
 	  {
 	    /* Init config A */
-	    ic[cic].configa.tx_data[0] = 0x03; //REFON | | CTH[3]
-	    ic[cic].configa.tx_data[1] = 0xFF; //FLAGS
-	    ic[cic].configa.tx_data[2] = 0x02;
-	    ic[cic].configa.tx_data[3] = 0x00; //GPIO
-	    ic[cic].configa.tx_data[4] = 0x00;
+	    ic[cic].configa.tx_data[0] = 0x83; //REFON | | CTH[3]
+	    ic[cic].configa.tx_data[1] = 0x00; //FLAGS
+	    ic[cic].configa.tx_data[2] = 0x00;
+	    ic[cic].configa.tx_data[3] = 0xFF; //GPIO
+	    ic[cic].configa.tx_data[4] = 0x01;
 	    ic[cic].configa.tx_data[5] = 0x00;
 	    uint16_t VOVCode = SetOverVoltageThreshold(3.2);
 	    uint16_t VUVCode = SetUnderVoltageThreshold(2.0);
