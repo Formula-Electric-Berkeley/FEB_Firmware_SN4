@@ -10,7 +10,8 @@
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart2;
 extern CAN_HandleTypeDef hcan1;
-#define FEB_CAN_ID_GPS_DATA = 0x1F1
+#define FEB_CAN_ID_GPS_DATA 0x1F1
+
 float longitude_num;
 float latitude_num;
 uint8_t GPS_Buffer[164];
@@ -70,7 +71,7 @@ void Parse_NMEA_Message(void)
 		HAL_UART_Transmit(&huart2, (uint8_t *) msg, sizeof((uint8_t *) msg), HAL_MAX_DELAY);
 //		Error_Handler();
 	}
-	token = strtok_r(GPS_Buffer, ",", &saveptr);
+	token = strtok_r((char*) GPS_Buffer, ",", &saveptr);
 	count = 0;
 	while (token != NULL) {
 	        count++;

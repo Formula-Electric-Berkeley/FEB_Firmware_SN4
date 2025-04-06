@@ -73,7 +73,7 @@ void UART_Transmit_ADC2_Readings(void) {
 	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
 }
 
-void Fill_CAN_Data(void) {
+void Fill_CAN_Data_ADC(void) {
 
 	uint16_t LinPot1 = LinearPotentiometerConversion(ADC2_Readings[0]);
 	uint16_t LinPot2 = LinearPotentiometerConversion(ADC2_Readings[1]);
@@ -128,7 +128,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 	if (hadc->Instance == ADC2) {
 		UART_Transmit_ADC2_Readings();
 
-		Fill_CAN_Data();
+		Fill_CAN_Data_ADC();
 
 		CAN_ADC_Transmit();
 	}

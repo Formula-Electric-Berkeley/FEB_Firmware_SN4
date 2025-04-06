@@ -17,7 +17,7 @@ extern UART_HandleTypeDef huart2;
 #define CAN_IMU_ID 0x1FF
 char debug_buffer[100];
 
-uint8_t TxData[8];
+uint8_t IMUData[8];
 int16_t accelX;
 int16_t accelY;
 int16_t accelZ;
@@ -126,15 +126,15 @@ void BNO08X_GetRawData(void) {
     }
 }
 
-void Fill_CAN_Data(void) {
-    TxData[0] = (accelX >> 8) & 0xFF;
-    TxData[1] = accelX & 0xFF;
-    TxData[2] = (accelY >> 8) & 0xFF;
-    TxData[3] = accelY & 0xFF;
-    TxData[4] = (accelZ >> 8) & 0xFF;
-    TxData[5] = accelZ & 0xFF;
-    TxData[6] = 0; // Padding byte
-    TxData[7] = 0; // Padding byte
+void Fill_CAN_Data_IMU(void) {
+	IMUData[0] = (accelX >> 8) & 0xFF;
+	IMUData[1] = accelX & 0xFF;
+	IMUData[2] = (accelY >> 8) & 0xFF;
+	IMUData[3] = accelY & 0xFF;
+	IMUData[4] = (accelZ >> 8) & 0xFF;
+	IMUData[5] = accelZ & 0xFF;
+	IMUData[6] = 0; // Padding byte
+	IMUData[7] = 0; // Padding byte
 }
 
 void CAN_IMU_Transmit(void) {
@@ -149,7 +149,7 @@ void CAN_IMU_Transmit(void) {
 
     while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {} // Wait for a free mailbox
 
-    if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK) {
+    if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, IMUData, &TxMailbox) != HAL_OK) {
         // Transmission request error
     }
 }
@@ -159,7 +159,7 @@ void CAN_IMU_Transmit(void) {
 void IMU_Main(void) {
 
 	BNO08X_GetRawData();
-	Fill_CAN_Data();
+	Fill_CAN_Data_IMU();
 	CAN_IMU_Transmit();
 
 }

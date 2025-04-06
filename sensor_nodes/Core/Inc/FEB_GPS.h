@@ -13,6 +13,7 @@
 // **************************************** Includes ****************************************
 
 #include "stm32f4xx_hal.h"
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
