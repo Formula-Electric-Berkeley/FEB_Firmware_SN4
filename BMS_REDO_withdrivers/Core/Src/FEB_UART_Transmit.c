@@ -178,22 +178,50 @@ void FEB_IVT_V1_Transmit(){
 void FEB_SM_State_Transmit(){
 	FEB_SM_ST_t state = FEB_SM_Get_Current_State();
 	static char str[128];
+
 	switch(state){
 		case FEB_SM_ST_BOOT:
 			sprintf(str,"State: Boot\n\r");
 			break;
-		case FEB_SM_ST_DEFAULT:
-			sprintf(str,"State: default\n\r");
-
+		case FEB_SM_ST_LV:
+			sprintf(str,"State: LV\n\r");
+			break;
+		case FEB_SM_ST_ESC:
+			sprintf(str,"State: ESC\n\r");
 			break;
 		case FEB_SM_ST_PRECHARGE:
-
-			sprintf(str,"State: precharge\n\r");
+			sprintf(str,"State: Precharge\n\r");
 			break;
-
 		case FEB_SM_ST_ENERGIZED:
 			sprintf(str,"State: energized\n\r");
-
+			break;
+		case FEB_SM_ST_DRIVE:
+			sprintf(str,"State: drive\n\r");
+			break;
+		case FEB_SM_ST_FREE:
+			sprintf(str,"State: free\n\r");
+			break;
+		case FEB_SM_ST_CHARGING:
+			sprintf(str,"State: charging\n\r");
+			break;
+		case FEB_SM_ST_BALANCE:
+			sprintf(str,"State: balance\n\r");
+			break;
+		case FEB_SM_ST_FAULT_BMS:
+			sprintf(str,"State: fault BMS\n\r");
+			break;
+		case FEB_SM_ST_FAULT_BSPD:
+			sprintf(str,"State: fault BSPD\n\r");
+			break;
+		case FEB_SM_ST_FAULT_IMD:
+			sprintf(str,"State: fault IMD\n\r");
+			break;
+		case FEB_SM_ST_FAULT_CHARGING:
+			sprintf(str,"State: fault charging\n\r");
+			break;
+		case FEB_SM_ST_DEFAULT:
+			sprintf(str,"State: default\n\r");
+			break;
 		default:
 			sprintf(str,"State: NA\n\r");
 
@@ -205,6 +233,10 @@ void FEB_SM_State_Transmit(){
 void FEB_Transmit_AIR_Status(){
 	static char str1[128];
 	static char str2[128];
+	static char str3[128];
+	static char str4[128];
+	static char str5[128];
+	static char str6[128];
 
 	if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_4)){
 		sprintf(str1,"AIRMINUS SET\n\r");
@@ -219,6 +251,16 @@ void FEB_Transmit_AIR_Status(){
 		sprintf(str2,"AIRPLUS RESET\n\r");
 	}
 
+	sprintf(str3,"BMS SHUTDOWN: %d\n\r", FEB_PIN_RD(PN_BMS_A));
+	sprintf(str4,"IMD SHUTDOWN: %d\n\r", FEB_PIN_RD(PN_SHS_IMD));
+	sprintf(str5,"RELAY STATE: %d\n\r", FEB_PIN_RD(PN_PC_REL));
+
+	sprintf(str6,"——————————————————————————————————————\n\r");
+
 	HAL_UART_Transmit(&huart2, (uint8_t*) str1, strlen(str1), 100);
 	HAL_UART_Transmit(&huart2, (uint8_t*) str2, strlen(str2), 100);
+	HAL_UART_Transmit(&huart2, (uint8_t*) str5, strlen(str5), 100);
+	HAL_UART_Transmit(&huart2, (uint8_t*) str3, strlen(str3), 100);
+	HAL_UART_Transmit(&huart2, (uint8_t*) str4, strlen(str4), 100);
+	HAL_UART_Transmit(&huart2, (uint8_t*) str6, strlen(str6), 100);
 }

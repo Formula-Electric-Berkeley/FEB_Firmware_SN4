@@ -1,3 +1,4 @@
+#include "FEB_CAN.h"
 #include "FEB_HW.h"
 #include "FEB_SM.h"
 #include "FEB_IVT.h" //Include for precharge stuff
@@ -5,6 +6,8 @@
 
 //extern osMutexId_t FEB_SM_LockHandle;
 //extern osMutexId_t FEB_UART_LockHandle;
+
+extern FEB_CAN_IVT_Message_t FEB_CAN_IVT_Message;
 
 /* List of transition functions*/
 static void bootTransition(FEB_SM_ST_t);
@@ -165,9 +168,9 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_ESC:
-		//This is just a middle step to idle
 		updateStateProtected(next_state);
 		break;
+
 	case FEB_SM_ST_FREE:
 		updateStateProtected(next_state);
 		break;
@@ -266,13 +269,13 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 		//Hold precharge relay closed for redundancy
 		FEB_PIN_SET(PN_PC_REL);
 
-		/*   TODO: Move to precharge file
+//		  TODO: Move to precharge file
 		float voltage_V = (float) FEB_CAN_IVT_Message.voltage_1_mV * 0.001;
-		float target_voltage_V = FEB_ADBMS_Get_Total_Voltage() * FEB_CONST_PRECHARGE_PCT;
-		if (voltage_V >= 0.9*30) {
-			updateStateProtected(FEB_SM_ST_ENERGIZED);
+//		float target_voltage_V = FEB_ADBMS_Get_Total_Voltage() * FEB_CONST_PRECHARGE_PCT;
+		if (voltage_V >= 0.9*93) {
+			PrechargeTransition(FEB_SM_ST_ENERGIZED);
 		}
-		*/
+
 
 		//The conditions below are good to have just in case. Transition to energized should probably just use
 		// IVT process... but I can also just move that stuff here
@@ -316,7 +319,7 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 
 	case FEB_SM_ST_DEFAULT:
 		if(FEB_CAN_DASH_Get_R2R()){
-			updateStateProtected(FEB_SM_ST_DRIVE);
+			EnergizedTransition(FEB_SM_ST_DRIVE);
 		}
 
 //		if( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN||
@@ -357,9 +360,8 @@ static void DriveTransition(FEB_SM_ST_t next_state){
 
 	case FEB_SM_ST_DEFAULT:
 		//If shutdown fails, or air minus is no longer connected
-		if( FEB_PIN_RD(PN_SHS_IN)== FEB_RELAY_STATE_OPEN ||
-			FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_OPEN //FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN
-			){
+		if( FEB_PIN_RD(PN_SHS_IN)== FEB_RELAY_STATE_OPEN \
+				|| FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_OPEN ){
 			fault(FEB_SM_ST_FAULT_BMS);
 
 

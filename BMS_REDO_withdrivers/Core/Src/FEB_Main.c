@@ -7,9 +7,9 @@
 
 void FEB_Main_Setup() {
 	//SM setup
-	FEB_ADBMS_Init();
-	//FEB_CAN_Init();
-	//FEB_SM_Init(); //this occurs last to transition out of boot
+//	FEB_ADBMS_Init();
+	FEB_CAN_Init();
+	FEB_SM_Init(); //this occurs last to transition out of boot
 	HAL_Delay(50);
 
 
@@ -49,6 +49,6 @@ void FEB_Task_CAN() {
 void FEB_Task_UART() {
 	if(FEB_SM_ST_DEBUG){
 		//FEB_ADBMS_UART_Transmit();
-		//FEB_SM_UART_Transmit();
+//		FEB_SM_UART_Transmit();
 	}
 }

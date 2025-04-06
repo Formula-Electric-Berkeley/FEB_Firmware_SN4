@@ -226,17 +226,20 @@ uint32_t ADBMS6830B_pollAdc()
 		uint32_t counter = 0;
 		uint8_t finished = 0;
 		uint8_t current_time = 0;
-		uint8_t cmd[4];
-		uint16_t cmd_pec;
+		uint8_t temp[1] = {0x00};
+//		uint8_t cmd[4];
+//		uint16_t cmd_pec;
 
-		cmd[0] = 0x07;
-		cmd[1] = 0x18;
-		cmd_pec = pec15_calc(2, cmd);
-		cmd[2] = (uint8_t) (cmd_pec >> 8);
-		cmd[3] = (uint8_t) (cmd_pec);
+//		cmd[0] = 0x07;
+//		cmd[1] = 0x18;
+//		cmd_pec = pec15_calc(2, cmd);
+//		cmd[2] = (uint8_t) (cmd_pec >> 8);
+//		cmd[3] = (uint8_t) (cmd_pec);
 
-		FEB_cs_low();
-		FEB_spi_write_array(4, cmd);
+//		FEB_cs_low();
+//		FEB_spi_write_array(4, cmd);
+
+		transmitCMDR(ADSV, temp, 1);
 
 		while ((counter < 200000) && (finished == 0))
 		{
@@ -251,7 +254,7 @@ uint32_t ADBMS6830B_pollAdc()
 			}
 		}
 
-		FEB_cs_high();
+//		FEB_cs_high();
 
 		return(counter);
 }
