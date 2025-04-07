@@ -114,13 +114,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  FEB_Task_ADBMS();
-	  FEB_Task_SM();
+	  FEB_Task_ADBMS();
+	  //FEB_Task_SM();
 	  //FEB_Task_Charge();
 	  //FEB_Task_Balance();
-	  FEB_Task_IVT();
-
-	  HAL_Delay(50);
+	  //FEB_Task_IVT();
 
 
 

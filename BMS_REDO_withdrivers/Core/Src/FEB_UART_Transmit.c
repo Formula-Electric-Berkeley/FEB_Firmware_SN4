@@ -14,7 +14,7 @@ static uint8_t counter = 0;
 // **************************************** Functions ****************************************
 void FEB_ADBMS_UART_Transmit(accumulator_t* FEB_ACC) {
 	int NUMLINES=4;
-	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
+	for (uint8_t bank = 0; bank < FEB_NBANKS; bank++) {
 		char UART_line[NUMLINES][32*FEB_NUM_CELLS_PER_IC*FEB_NUM_ICPBANK];
 		int offset[NUMLINES];
 		offset[0]=sprintf((char*)(UART_line[0]),"|Bnk %d|",bank);
@@ -45,7 +45,7 @@ void FEB_ADBMS_UART_Transmit(accumulator_t* FEB_ACC) {
 }
 void FEB_MONITOR_UART_Transmit(accumulator_t*FEB_ACC){
 	char UART_line[32*FEB_NUM_CELLS_PER_IC*FEB_NUM_ICPBANK];
-	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank++) {
+	for (uint8_t bank = 0; bank < FEB_NBANKS; bank++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC*FEB_NUM_ICPBANK; cell++) {
 			sprintf(((char*)(UART_line)),"cell %d %d %.6f %.6f\n",
 					bank,

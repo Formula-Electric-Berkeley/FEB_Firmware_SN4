@@ -7,6 +7,7 @@
 #include "FEB_CAN_IDs.h"
 #include "FEB_Config.h"
 #include "FEB_Task_Queue.h"
+#include "FEB_SM.h"
 #include "stm32f446xx.h"
 #include "stm32f4xx_hal.h"
 

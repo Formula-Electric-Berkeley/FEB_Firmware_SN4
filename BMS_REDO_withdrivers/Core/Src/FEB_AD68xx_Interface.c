@@ -211,40 +211,6 @@ void write_68(uint8_t total_ic, //Number of ICs to be written to
 			  uint8_t data[] // Payload Data
 			  )
 {
-	/*
-	const uint8_t BYTES_IN_REG = 6;
-	const uint8_t CMD_LEN = 4+(8*total_ic);
-	uint8_t *cmd;
-	uint16_t data_pec;
-	uint16_t cmd_pec;
-	uint8_t cmd_index;
-
-	cmd = (uint8_t *)malloc(CMD_LEN*sizeof(uint8_t));
-	cmd[0] = tx_cmd[0];
-	cmd[1] = tx_cmd[1];
-	cmd_pec = pec15_calc(2, cmd);
-	cmd[2] = (uint8_t)(cmd_pec >> 8);
-	cmd[3] = (uint8_t)(cmd_pec);
-
-	cmd_index = 4;
-	for (uint8_t current_ic = total_ic; current_ic > 0; current_ic--)               // Executes for each ADBMS630B, this loops starts with the last IC on the stack.
-    {	                                                                            //The first configuration written is received by the last IC in the daisy chain
-		for (uint8_t current_byte = 0; current_byte < BYTES_IN_REG; current_byte++)
-		{
-			cmd[cmd_index] = data[((current_ic-1)*6)+current_byte];
-			cmd_index = cmd_index + 1;
-		}
-
-		data_pec = (uint16_t)pec10_calc(BYTES_IN_REG, &data[(current_ic-1)*6]);    // Calculating the PEC for each ICs configuration register data
-		cmd[cmd_index] = (uint8_t)(data_pec >> 8);
-		cmd[cmd_index + 1] = (uint8_t)data_pec;
-		cmd_index = cmd_index + 2;
-	}
-	FEB_cs_low();
-	FEB_spi_write_array(CMD_LEN, cmd);
-	FEB_cs_high();
-
-	free(cmd);*/
 	 uint8_t BYTES_IN_REG = 6;
 	 uint8_t CMD_LEN = 4 + (8 * total_ic);
 	 uint16_t data_pec, cmd_pec;

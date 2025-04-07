@@ -28,7 +28,7 @@ void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
 	  for(uint8_t cic = 0; cic < total_ic; cic++)
 	  {
 	    /* Init config A */
-	    ic[cic].configa.tx_data[0] = 0x83; //REFON | | CTH[3]
+	    ic[cic].configa.tx_data[0] = 0x03; //REFON | | CTH[3]
 	    ic[cic].configa.tx_data[1] = 0x00; //FLAGS
 	    ic[cic].configa.tx_data[2] = 0x00;
 	    ic[cic].configa.tx_data[3] = 0xFF; //GPIO
@@ -94,7 +94,6 @@ void ADBMS6830B_set_cfgr(uint8_t nIC, // Current IC
 	ADBMS6830B_set_cfgr_uv(nIC, ic, uv);
 	ADBMS6830B_set_cfgr_ov(nIC, ic, ov);
 	ADBMS6830B_set_cfgr_flags(nIC, ic, 255);
-	ic[nIC].configa.tx_data[2] = 0;
 }
 
 /* Helper function to set the REFON bit */
@@ -122,7 +121,7 @@ void ADBMS6830B_set_cfgr_cth(uint8_t nIC, cell_asic *ic, bool cth[3])
 }
 
 /* Helper function to set GPIO bits */
-void ADBMS6830B_set_cfgr_gpio(uint8_t nIC, cell_asic *ic,bool gpio[10])
+void ADBMS6830B_set_cfgr_gpio(uint8_t nIC, cell_asic *ic, bool gpio[10])
 {
 	for (int i = 0; i < 8; i++) {
 		if (gpio[i]) {
@@ -392,13 +391,9 @@ void ADBMS6830B_wrALL(uint8_t total_ic, //The number of ICs being written to
                       cell_asic ic[]  // A two dimensional array of the configuration data that will be written
                      )
 {
-	wakeup_sleep(total_ic);
 	ADBMS6830B_wrcfga(total_ic, ic);
-	wakeup_sleep(total_ic);
 	ADBMS6830B_wrcfgb(total_ic, ic);
-	wakeup_sleep(total_ic);
 	ADBMS6830B_wrpwmga(total_ic, ic);
-	wakeup_sleep(total_ic);
 	ADBMS6830B_wrpwmgb(total_ic, ic);
 }
 void ADBMS6830B_rdALL(uint8_t total_ic, //The number of ICs being written to
@@ -603,10 +598,13 @@ void ADBMS6830B_CLRFLAG(uint8_t total_ic){
 /* Generic wakeup command to wake the ADBMS6830B from sleep state */
 void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 {
-	FEB_cs_low();
-	HAL_Delay(1);
-	FEB_cs_high();
-	HAL_Delay(1);
+	for(int i=0;i<1;i++){
+		FEB_cs_low();
+		HAL_Delay(1);
+		FEB_cs_high();
+		HAL_Delay(1);
+	}
+
 }
 
 void ADBMS6830B_check_pec(uint8_t total_ic, //Number of ICs in the system

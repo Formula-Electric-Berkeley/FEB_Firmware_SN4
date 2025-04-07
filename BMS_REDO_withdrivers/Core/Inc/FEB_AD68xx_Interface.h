@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "FEB_CMDCODES.h"
+#include "FEB_Const.h"
 
 // ****************** Error Correction *******************
 /*!

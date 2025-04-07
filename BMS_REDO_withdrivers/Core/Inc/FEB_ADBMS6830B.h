@@ -65,25 +65,6 @@ typedef enum {
 	VRES
 } AUX_CH;
 
-// ******************************** Struct ********************************
-
-typedef struct {
-	float voltage_V;
-	float voltage_S;
-	uint8_t dischargeAmount;
-} cell_t;
-
-typedef struct {
-	float total_voltage_V;
-	float temp_sensor_readings_V[FEB_NUM_TEMP_SENSE_PER_IC*FEB_NUM_ICPBANK];
-	cell_t cells[FEB_NUM_CELLS_PER_IC*FEB_NUM_ICPBANK];
-} bank_t;
-
-typedef struct {
-	float total_voltage_V;
-	bank_t banks[FEB_NUM_BANKS];
-} accumulator_t;
-
 
 // ******************************** Functions ********************************
 

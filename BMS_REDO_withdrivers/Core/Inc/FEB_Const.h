@@ -6,9 +6,9 @@
 #define FEB_NUM_CELLS_PER_IC 10
 #define FEB_NUM_TEMP_SENSE_PER_IC 10
 
-#define FEB_NUM_ICPBANK 1
-#define FEB_NUM_BANKS 1
-#define FEB_NUM_IC (FEB_NUM_ICPBANK*FEB_NUM_BANKS)
+#define FEB_NUM_ICPBANK 2
+#define FEB_NBANKS 1
+#define FEB_NUM_IC (FEB_NUM_ICPBANK*FEB_NBANKS)
 
 #define FEB_CONFIG_CELL_MIN_VOLTAGE_mV 2500
 #define FEB_CONFIG_CELL_MAX_VOLTAGE_mV 4200
@@ -46,4 +46,22 @@ typedef enum {
 	FEB_RELAY_STATE_CLOSE
 
 }FEB_Relay_State;
+typedef struct {
+	float voltage_V;
+	float voltage_S;
+	uint8_t dischargeAmount;
+} cell_t;
+
+typedef struct {
+	float total_voltage_V;
+	float temp_sensor_readings_V[FEB_NUM_TEMP_SENSE_PER_IC*FEB_NUM_ICPBANK];
+	cell_t cells[FEB_NUM_CELLS_PER_IC*FEB_NUM_ICPBANK];
+} bank_t;
+
+typedef struct {
+	float total_voltage_V;
+	bank_t banks[FEB_NBANKS];
+} accumulator_t;
+
+static accumulator_t FEB_ACC = {0};
 #endif /* INC_FEB_CONST_H_ */

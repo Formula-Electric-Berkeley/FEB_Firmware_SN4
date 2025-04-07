@@ -22,16 +22,16 @@ uint64_t determineDischarge();
 void determineMinV();
 // ******************************** Global Variabls ********************************
 cell_asic IC_Config[FEB_NUM_IC];
-extern accumulator_t FEB_ACC;
+accumulator_t FEB_ACC = {0};
 extern UART_HandleTypeDef huart2;
 
 // ******************************** Config Bits ********************************
 
-static bool refon = 0;
+static bool refon = 1;
 static bool cth_bits[3] = {0, 1, 1};
-static bool gpio_bits[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+static bool gpio_bits[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static bool dcc_bits[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-static bool dcto_bits[4] = {1, 1, 1, 1};
+static bool dcto_bits[10] = {0, 0, 0, 0};
 static uint8_t gpio_map[4] = {0,1,5,6};
 static uint16_t uv = 0x800;
 static uint16_t ov = 0x7FF;
@@ -80,7 +80,7 @@ void FEB_ADBMS_Init() {
 
 
 }
-#define POLL_RATE 10
+#define POLL_RATE 1
 int poll = POLL_RATE;
 
 void FEB_ADBMS_Voltage_Process() {
@@ -88,8 +88,14 @@ void FEB_ADBMS_Voltage_Process() {
 	read_cell_voltages();
 	store_cell_voltages();
 	validate_voltages();
+	for(int i = 0; i<FEB_NUM_IC;i++)
+			//IC_Config[i].configa.tx_data[4]^=0x02;
+	//ADBMS6830B_wrALL(FEB_NUM_IC, IC_Config);
 	if(poll-- == 0){
+<<<<<<< HEAD
+=======
 //		FEB_MONITOR_UART_Transmit(&FEB_ACC);
+>>>>>>> ee4d92a7ab8292379031d8620daed491e248257c
 		FEB_ADBMS_UART_Transmit(&FEB_ACC);
 		poll=POLL_RATE;
 	}
@@ -97,7 +103,7 @@ void FEB_ADBMS_Voltage_Process() {
 }
 
 void FEB_ADBMS_Temperature_Process(){
-	gpio_bits[9]^=0b1;
+	gpio_bits[9] ^= 0b1;
 	for (uint8_t channel = 0; channel < 5; channel++) {
 			configure_gpio_bits(channel);
 			start_aux_voltage_measurements();
@@ -111,7 +117,8 @@ void FEB_ADBMS_Temperature_Process(){
 void start_adc_cell_voltage_measurements() {
 	ADBMS6830B_adcv(1, 0, 0, 0, OWVR);
 	HAL_Delay(1);
-	//ADBMS6830B_pollAdc();
+	ADBMS6830B_pollAdc();
+	HAL_Delay(1);
 }
 
 void read_cell_voltages() {
@@ -121,7 +128,7 @@ void read_cell_voltages() {
 
 void store_cell_voltages() {
 	FEB_ACC.total_voltage_V = 0;
-	for (uint8_t bank = 0; bank < FEB_NBANKS; bank ++) {
+	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for(uint8_t ic =0; ic<FEB_NUM_ICPBANK;ic++){
 			for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC; cell ++) {
 				float CVoltage = convert_voltage(IC_Config[ic+bank*FEB_NUM_ICPBANK].cells.c_codes[cell]);
@@ -137,7 +144,7 @@ void store_cell_voltages() {
 void validate_voltages() {
 	uint16_t vMax = FEB_Config_Get_Cell_Max_Voltage_mV();
 	uint16_t vMin = FEB_Config_Get_Cell_Min_Voltage_mV();
-	for (uint8_t bank = 0; bank < FEB_NBANKS; bank ++) {
+	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC; cell ++) {
 			float voltage = FEB_ACC.banks[bank].cells[cell].voltage_V;
 			if (voltage > vMax || voltage < vMin) {
@@ -154,8 +161,8 @@ void configure_gpio_bits(uint8_t channel) {
 	gpio_bits[4] = ((channel >> 2) & 0b1 ); /* MUX Sel 1 */
 	gpio_bits[5] = 0b1; /* ADC Channel */
 	gpio_bits[6] = 0b1; /* ADC Channel */
-	for (uint8_t icn = 0; icn < FEB_NUM_IC; icn++) {
-		ADBMS6830B_set_cfgr(icn, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
+	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
+		ADBMS6830B_set_cfgr(ic, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
 	}
 	ADBMS6830B_wrALL(FEB_NUM_IC, IC_Config);
 }
@@ -174,14 +181,14 @@ void read_aux_voltages() {
 }
 
 void store_cell_temps(uint8_t channel) {
-	for (uint8_t bank = 0; bank < FEB_NBANKS; bank++) {
+	for (uint8_t bank = 0; bank < FEB_NUM_IC; bank++) {
 		for (uint8_t icn = 0; icn < FEB_NUM_ICPBANK; icn++) {
 			uint16_t mux1 = IC_Config[FEB_NUM_ICPBANK*bank+icn].aux.a_codes[0];
 			uint16_t mux2 = IC_Config[FEB_NUM_ICPBANK*bank+icn].aux.a_codes[1];
 			float V1=(convert_voltage(mux1)*1000);
 			float V2=(convert_voltage(mux2)*1000);
 			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel] = FEB_Temp_LUT_Get_Temp_100mC( (int) V1)*0.1;
-			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel+5] = FEB_Temp_LUT_Get_Temp_100mC( (int) V2)*0.1;
+			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel+5] = FEB_Temp_LUT_Get_Temp_100mC( (int) V2);
 		}
 	}
 }
@@ -223,7 +230,7 @@ void determineMinV(){
 	store_cell_voltages();
 	validate_voltages();
 	MIN_CELL_VOLTAGE=FEB_ACC.banks[0].cells[0].voltage_V;
-	for (uint8_t bank = 0; bank < FEB_NBANKS; bank ++) {
+	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC; cell ++) {
 			float volt =FEB_ACC.banks[bank].cells[cell].voltage_V;
 			MIN_CELL_VOLTAGE= MIN_CELL_VOLTAGE<volt?volt:MIN_CELL_VOLTAGE;
@@ -237,7 +244,7 @@ uint64_t determineDischarge(){
 	store_cell_voltages();
 	validate_voltages();
 	uint64_t bits=0;
-	for (uint8_t bank = 0; bank < FEB_NBANKS; bank ++) {
+	for (uint8_t bank = 0; bank < FEB_NUM_BANKS; bank ++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC; cell ++) {
 			float volt = FEB_ACC.banks[bank].cells[cell].voltage_V;
 			float diff = volt-MIN_CELL_VOLTAGE;

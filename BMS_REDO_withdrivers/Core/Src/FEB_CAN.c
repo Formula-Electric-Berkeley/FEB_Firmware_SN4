@@ -7,7 +7,7 @@
 #include "FEB_UART_Transmit.h"
 
 extern CAN_HandleTypeDef hcan1;
-
+extern accumulator_t FEB_ACC;
 // **************************************** CAN Configuration ****************************************
 
 CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
