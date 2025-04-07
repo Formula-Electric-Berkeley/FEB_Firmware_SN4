@@ -88,6 +88,7 @@ void FEB_CAN_IVT_Process(void) {
 	}
 	if (IVT_CAN_flag.voltage_1) {
 		IVT_CAN_flag.voltage_1 = false;
+
 	}
 	if (IVT_CAN_flag.voltage_2) {
 		IVT_CAN_flag.voltage_2 = false;

@@ -92,6 +92,7 @@ void FEB_ADBMS_Voltage_Process() {
 			//IC_Config[i].configa.tx_data[4]^=0x02;
 	//ADBMS6830B_wrALL(FEB_NUM_IC, IC_Config);
 	if(poll-- == 0){
+//		FEB_MONITOR_UART_Transmit(&FEB_ACC);
 		FEB_ADBMS_UART_Transmit(&FEB_ACC);
 		poll=POLL_RATE;
 	}
@@ -113,7 +114,8 @@ void FEB_ADBMS_Temperature_Process(){
 void start_adc_cell_voltage_measurements() {
 	ADBMS6830B_adcv(1, 0, 0, 0, OWVR);
 	HAL_Delay(1);
-	//ADBMS6830B_pollAdc();
+	ADBMS6830B_pollAdc();
+	HAL_Delay(1);
 }
 
 void read_cell_voltages() {
@@ -263,5 +265,9 @@ float FEB_ADBMS_Get_Total_Voltage(){
 	return FEB_ACC.total_voltage_V;
 }
 
+
+float FEB_ADBMS_Get_Cell_Voltage() {
+
+}
 
 
