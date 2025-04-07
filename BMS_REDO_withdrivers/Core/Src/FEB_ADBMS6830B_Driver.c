@@ -32,7 +32,7 @@ void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
 	    ic[cic].configa.tx_data[1] = 0x00; //FLAGS
 	    ic[cic].configa.tx_data[2] = 0x00;
 	    ic[cic].configa.tx_data[3] = 0xFF; //GPIO
-	    ic[cic].configa.tx_data[4] = 0x01;
+	    ic[cic].configa.tx_data[4] = 0x03;
 	    ic[cic].configa.tx_data[5] = 0x00;
 	    uint16_t VOVCode = SetOverVoltageThreshold(3.2);
 	    uint16_t VUVCode = SetUnderVoltageThreshold(2.0);
@@ -42,6 +42,10 @@ void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
 	    ic[cic].configb.tx_data[3] = 0xFF;
 	    ic[cic].configb.tx_data[4] = 0x00;
 	    ic[cic].configb.tx_data[5] = 0x00;
+	    for(int i =0;i<6;i++){
+	    	ic[cic].pwm.tx_data[i] = 0x00;
+	    	ic[cic].pwmb.tx_data[i] = 0x00;
+	    }
 	  }
 }
 
@@ -389,10 +393,10 @@ void ADBMS6830B_wrALL(uint8_t total_ic, //The number of ICs being written to
 	ADBMS6830B_wrcfga(total_ic, ic);
 	wakeup_sleep(total_ic);
 	ADBMS6830B_wrcfgb(total_ic, ic);
-	//wakeup_sleep(total_ic);
-	//ADBMS6830B_wrpwmga(total_ic, ic);
-	//wakeup_sleep(total_ic);
-	//ADBMS6830B_wrpwmgb(total_ic, ic);
+	wakeup_sleep(total_ic);
+	ADBMS6830B_wrpwmga(total_ic, ic);
+	wakeup_sleep(total_ic);
+	ADBMS6830B_wrpwmgb(total_ic, ic);
 }
 void ADBMS6830B_rdALL(uint8_t total_ic, //The number of ICs being written to
                       cell_asic ic[]  // A two dimensional array of the configuration data that will be written
@@ -599,7 +603,7 @@ void wakeup_sleep(uint8_t total_ic) //Number of ICs in the system
 	FEB_cs_low();
 	HAL_Delay(1);
 	FEB_cs_high();
-	HAL_Delay(2);
+	HAL_Delay(1);
 }
 
 void ADBMS6830B_check_pec(uint8_t total_ic, //Number of ICs in the system

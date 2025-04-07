@@ -88,15 +88,18 @@ void FEB_ADBMS_Voltage_Process() {
 	read_cell_voltages();
 	store_cell_voltages();
 	validate_voltages();
+	for(int i = 0; i<FEB_NUM_IC;i++)
+			//IC_Config[i].configa.tx_data[4]^=0x02;
+	//ADBMS6830B_wrALL(FEB_NUM_IC, IC_Config);
 	if(poll-- == 0){
-		FEB_MONITOR_UART_Transmit(&FEB_ACC);
+		FEB_ADBMS_UART_Transmit(&FEB_ACC);
 		poll=POLL_RATE;
 	}
 
 }
 
 void FEB_ADBMS_Temperature_Process(){
-	gpio_bits[9] = !gpio_bits[9];
+	gpio_bits[9] ^= 0b1;
 	for (uint8_t channel = 0; channel < 5; channel++) {
 			configure_gpio_bits(channel);
 			start_aux_voltage_measurements();
@@ -108,7 +111,7 @@ void FEB_ADBMS_Temperature_Process(){
 // ******************************** Voltage ********************************
 
 void start_adc_cell_voltage_measurements() {
-	ADBMS6830B_adcv(1, 0, 1, 0, OWVR);
+	ADBMS6830B_adcv(1, 0, 0, 0, OWVR);
 	HAL_Delay(1);
 	//ADBMS6830B_pollAdc();
 }
@@ -148,9 +151,9 @@ void validate_voltages() {
 void configure_gpio_bits(uint8_t channel) {
 	gpio_bits[0] = 0b1; /* ADC Channel */
 	gpio_bits[1] = 0b1; /* ADC Channel */
-	gpio_bits[2] = (channel >> 0) & 0b1; /* MUX Sel 1 */
-	gpio_bits[3] = (channel >> 1) & 0b1; /* MUX Sel 1 */
-	gpio_bits[4] = (channel >> 2) & 0b1; /* MUX Sel 1 */
+	gpio_bits[2] = ((channel >> 0) & 0b1 ); /* MUX Sel 1 */
+	gpio_bits[3] = ((channel >> 1) & 0b1 ); /* MUX Sel 1 */
+	gpio_bits[4] = ((channel >> 2) & 0b1 ); /* MUX Sel 1 */
 	gpio_bits[5] = 0b1; /* ADC Channel */
 	gpio_bits[6] = 0b1; /* ADC Channel */
 	for (uint8_t ic = 0; ic < FEB_NUM_IC; ic++) {
@@ -177,8 +180,10 @@ void store_cell_temps(uint8_t channel) {
 		for (uint8_t icn = 0; icn < FEB_NUM_ICPBANK; icn++) {
 			uint16_t mux1 = IC_Config[FEB_NUM_ICPBANK*bank+icn].aux.a_codes[0];
 			uint16_t mux2 = IC_Config[FEB_NUM_ICPBANK*bank+icn].aux.a_codes[1];
-			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel] = FEB_Temp_LUT_Get_Temp_100mC( (int) (convert_voltage(mux1)*1000))*0.1;
-			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel+5] = FEB_Temp_LUT_Get_Temp_100mC( (int) (convert_voltage(mux2)*1000))*0.1;
+			float V1=(convert_voltage(mux1)*1000);
+			float V2=(convert_voltage(mux2)*1000);
+			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel] = FEB_Temp_LUT_Get_Temp_100mC( (int) V1)*0.1;
+			FEB_ACC.banks[bank].temp_sensor_readings_V[icn*FEB_NUM_TEMP_SENSE_PER_IC+channel+5] = FEB_Temp_LUT_Get_Temp_100mC( (int) V2);
 		}
 	}
 }

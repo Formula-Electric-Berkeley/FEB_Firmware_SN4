@@ -10,9 +10,9 @@ static int16_t temp_lut[1081] = {1200, 1195, 1190, 1185, 1180, 1175, 1170, 1165,
 
 int16_t FEB_Temp_LUT_Get_Temp_100mC(uint16_t voltage_mV) {
 	if (voltage_mV < FEB_TEMP_LUT_MIN_VOLT_mV)
-		return 0x8000;
+		return 0xFFF80000;
 	else if (voltage_mV > FEB_TEMP_LUT_MAX_VOLT_mV)
-		return 0x7FFF;
+		return 0x7FF80000;
     uint16_t index = voltage_mV - FEB_TEMP_LUT_MIN_VOLT_mV;
     return temp_lut[index];
 }
