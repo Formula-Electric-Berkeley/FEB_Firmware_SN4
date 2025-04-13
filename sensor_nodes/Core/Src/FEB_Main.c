@@ -44,11 +44,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim->Instance == TIM6) {
 		WSS_Main();
 		Tire_Temp_Main();
-		Steer_ENC_Main();
 		ADC_Main();
-		GPS_Main();
-		IMU_Main();
-		Coolant_ReedSW_Main();
+
+		if (IS_FRONT_NODE) {
+			Steer_ENC_Main();
+		} else {
+			Coolant_ReedSW_Main();
+			IMU_Main();
+			GPS_Main();
+		}
+
 	}
 }
 

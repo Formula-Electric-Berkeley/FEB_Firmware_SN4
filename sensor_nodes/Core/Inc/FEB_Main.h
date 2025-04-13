@@ -14,6 +14,7 @@
 #include <stm32f4xx_hal.h>
 #include <stdint.h>
 
+#include "FEB_Comms.h"
 #include "FEB_WSS.h"
 #include "FEB_Steering.h"
 #include "FEB_Tire_Temp.h"
