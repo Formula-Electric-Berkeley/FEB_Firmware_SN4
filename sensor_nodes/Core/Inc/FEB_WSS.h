@@ -10,6 +10,8 @@
 
 // **************************************** Includes ****************************************
 
+#include "FEB_Comms.h"
+
 #include "stm32f4xx_hal.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -18,8 +20,7 @@
 // **************************************** Functions ****************************************
 
 void WSS_Init(void);
-void UART_transmit(const char *string);
-void CAN_transmit(void);
+void Fill_WSS_Data(void);
 void update_WSS_ticks(int32_t *ticks, uint16_t *prev_counter, TIM_HandleTypeDef *htim);
 void handle_reverse_ticks(int32_t *ticks, char *direction);
 void WSS_Main(void);

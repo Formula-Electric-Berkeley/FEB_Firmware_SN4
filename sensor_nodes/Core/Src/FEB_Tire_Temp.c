@@ -15,14 +15,7 @@ extern UART_HandleTypeDef huart2;
 
 // ******************************************** Variables **********************************************
 
-#define IS_FRONT_NODE 1
 #define TIRE_TEMP_BASE_CAN_ID 0x4B0
-
-// Add to FEB_CAN_ID.h
-#define FEB_CAN_ID_FRONT_LEFT_TIRE_TEMP 0x1A
-#define FEB_CAN_ID_FRONT_RIGHT_TIRE_TEMP 0x1B
-#define FEB_CAN_ID_REAR_LEFT_TIRE_TEMP 0x1C
-#define FEB_CAN_ID_REAR_RIGHT_TIRE_TEMP 0x1D
 
 uint16_t tire_temp_left[4];
 uint16_t tire_temp_right[4];
@@ -54,37 +47,6 @@ void Tire_Temp_Init(void)
 void UART_Transmit(const char *string)
 {
 	HAL_UART_Transmit(&huart2, (uint8_t*)string, strlen(string), 1000);
-}
-
-void CAN_Transmit_Tire_Temp(uint16_t CAN_ID, uint16_t *tire_temp)
-{
-
-	// Set up the CAN message
-	CAN_TxHeaderTypeDef TxHeader;
-	uint8_t TxData[8];
-	uint32_t TxMailbox;
-
-	TxHeader.DLC = 8; // Data length
-	TxHeader.IDE = CAN_ID_STD;
-	TxHeader.RTR = CAN_RTR_DATA; // Data frame
-	TxHeader.StdId = CAN_ID; // Current CAN ID of the sensor
-	TxHeader.ExtId = 0; // Not used with standard ID
-
-	for (int i = 0; i < 4; i++)
-	{
-		TxData[i * 2] = (tire_temp[i] >> 8) & 0xFF;
-		TxData[i * 2 + 1] = tire_temp[i] & 0xFF;
-	}
-
-	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-	{
-		// Transmission request error
-		char msg[50];
-		sprintf(msg, "CAN transmit error");
-		UART_Transmit(msg);
-//		Error_Handler();
-	}
-
 }
 
 void Configure_Tire_Temp_Sensor(uint16_t currentCAN_ID, uint16_t newCAN_ID, float emissivity,
@@ -131,7 +93,7 @@ void Configure_Tire_Temp_Sensor(uint16_t currentCAN_ID, uint16_t newCAN_ID, floa
 void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
 {
 	// Calculate the first channel in the message
-	uint8_t channelStart = ((RxHeader.ExtId - TIRE_TEMP_BASE_CAN_ID) % 4) * 4 + 1;
+	uint8_t channelStart = ((RxHeader.StdId - TIRE_TEMP_BASE_CAN_ID) % 4) * 4 + 1;
 	uint16_t average_temp = 0;
 
 	// Calculate the temperature from all four channels and transmit them
@@ -149,15 +111,15 @@ void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
 	}
 
 	average_temp /= 4;
-	if (RxHeader.ExtId % 16 < 4 || (RxHeader.ExtId % 16 >= 8 && RxHeader.ExtId % 16 < 12)) // Check if it is the right tire
+	if (RxHeader.StdId % 16 < 4 || (RxHeader.StdId % 16 >= 8 && RxHeader.StdId % 16 < 12)) // Check if it is the right tire
 	{
-		tire_temp_right[RxHeader.ExtId % 4] = average_temp >> 8 & 0xFF;
-		tire_temp_right[RxHeader.ExtId % 4 + 1] = average_temp & 0xFF;
+		tire_temp_right[RxHeader.StdId % 4] = average_temp >> 8 & 0xFF;
+		tire_temp_right[RxHeader.StdId % 4 + 1] = average_temp & 0xFF;
 	}
 	else // Check case if it is the left tire
 	{
-		tire_temp_left[RxHeader.ExtId % 4] = average_temp >> 8 & 0xFF;
-		tire_temp_left[RxHeader.ExtId % 4 + 1] = average_temp & 0xFF;
+		tire_temp_left[RxHeader.StdId % 4] = average_temp >> 8 & 0xFF;
+		tire_temp_left[RxHeader.StdId % 4 + 1] = average_temp & 0xFF;
 	}
 
 }
@@ -174,7 +136,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 //	    	Error_Handler();
 	    }
 
-	    if ((RxHeader.ExtId >> 4) == (TIRE_TEMP_BASE_CAN_ID >> 4)) // Check if the message is from one of the tire temp sensors
+	    if ((RxHeader.StdId >> 4) == (TIRE_TEMP_BASE_CAN_ID >> 4)) // Check if the message is from one of the tire temp sensors
 	    {
 	    	Read_Tire_Temp_Data(RxHeader, RxData);
 	    }
@@ -186,12 +148,12 @@ void Tire_Temp_Main(void)
 {
 	if (IS_FRONT_NODE)
 	{
-		CAN_Transmit_Tire_Temp(FEB_CAN_ID_FRONT_LEFT_TIRE_TEMP, tire_temp_left);
-		CAN_Transmit_Tire_Temp(FEB_CAN_ID_FRONT_RIGHT_TIRE_TEMP, tire_temp_right);
+		CAN_Transmit(FEB_CAN_ID_FRONT_LEFT_TIRE_TEMP, (uint8_t*) tire_temp_right);
+		CAN_Transmit(FEB_CAN_ID_FRONT_RIGHT_TIRE_TEMP, (uint8_t*) tire_temp_left);
 	}
 	else
 	{
-		CAN_Transmit_Tire_Temp(FEB_CAN_ID_REAR_LEFT_TIRE_TEMP, tire_temp_left);
-		CAN_Transmit_Tire_Temp(FEB_CAN_ID_REAR_RIGHT_TIRE_TEMP, tire_temp_right);
+		CAN_Transmit(FEB_CAN_ID_REAR_LEFT_TIRE_TEMP, (uint8_t*) tire_temp_right);
+		CAN_Transmit(FEB_CAN_ID_REAR_RIGHT_TIRE_TEMP, (uint8_t*) tire_temp_left);
 	}
 }

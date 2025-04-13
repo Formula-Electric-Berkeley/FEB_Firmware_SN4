@@ -137,29 +137,11 @@ void Fill_CAN_Data_IMU(void) {
 	IMUData[7] = 0; // Padding byte
 }
 
-void CAN_IMU_Transmit(void) {
-    CAN_TxHeaderTypeDef TxHeader;
-    uint32_t TxMailbox;
-
-    TxHeader.DLC = 8; // Data length
-    TxHeader.IDE = CAN_ID_STD; // Standard ID
-    TxHeader.RTR = CAN_RTR_DATA; // Data frame
-    TxHeader.StdId = CAN_IMU_ID; // Example CAN ID for IMU data
-    TxHeader.ExtId = 0; // Not used with standard ID
-
-    while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {} // Wait for a free mailbox
-
-    if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, IMUData, &TxMailbox) != HAL_OK) {
-        // Transmission request error
-    }
-}
-
-
-
 void IMU_Main(void) {
 
 	BNO08X_GetRawData();
 	Fill_CAN_Data_IMU();
-	CAN_IMU_Transmit();
-
+	CAN_Transmit(CAN_ID_IMU, IMUData);
 }
+
+

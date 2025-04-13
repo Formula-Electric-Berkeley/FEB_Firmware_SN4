@@ -21,10 +21,23 @@ extern CAN_HandleTypeDef hcan1;
 
 uint32_t ADC1_Readings[7];
 uint32_t ADC2_Readings[4]; // 1st and 2nd are linear potentiometer, 3rd and 4th are coolant pressure
+
+uint8_t Strain_Gauge_Data[8];
+uint8_t Thermocouple_Data[8];
+uint8_t Lin_Pot_Data[8];
+uint8_t Coolant_Pressure_Data[8];
+
 char buf[164];
-uint8_t TxData[8];
 
 // ******************************************** Functions **********************************************
+
+uint16_t StrainGaugeConversion(uint32_t adc_value) {
+	return  adc_value & 0xFFFF;
+}
+
+uint16_t ThermocoupleConversion(uint32_t adc_value) {
+	return adc_value & 0xFFFF;
+}
 
 uint16_t LinearPotentiometerConversion(uint32_t adc_value) {
 	return (uint16_t) adc_value / ADC_RESOLUTION * LIN_POT_LENGTH;
@@ -37,108 +50,137 @@ uint16_t CoolantPressureConversion(uint32_t adc_value) {
 
 
 void UART_Transmit_ADC1_Readings(void) {
-	sprintf(buf, "Strain Gauge 1: %u\r\n", (unsigned) ADC1_Readings[0]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
 
-	sprintf(buf, "Strain Gauge 2: %u\r\n", (unsigned) ADC1_Readings[1]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+	for (int i = 0; i < 4; i++) {
+		sprintf(buf, "Strain Gauge %d: %u\r\n", i, (unsigned) ADC1_Readings[i]);
+		UART_Console(buf);
+	}
 
-	sprintf(buf, "Strain Gauge 3: %u\r\n", (unsigned) ADC1_Readings[2]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+	for (int i = 4; i < 7; i++) {
+		sprintf(buf, "Thermocouple %d: %u\r\n", i, (unsigned) ADC1_Readings[i]);
+		UART_Console(buf);
+	}
 
-	sprintf(buf, "Strain Gauge 4: %u\r\n", (unsigned) ADC1_Readings[3]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
-
-	sprintf(buf, "Thermocouple 1: %u\r\n", (unsigned) ADC1_Readings[4]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
-
-	sprintf(buf, "Thermocouple 2: %u\r\n", (unsigned) ADC1_Readings[5]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
-
-	sprintf(buf, "Thermocouple 3: %u\r\n", (unsigned) ADC1_Readings[6]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
 }
 
 void UART_Transmit_ADC2_Readings(void) {
-	sprintf(buf, "LIN_POT 1: %u\r\n", (unsigned) ADC2_Readings[0]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
 
-	sprintf(buf, "LIN_POT 2: %u\r\n", (unsigned) ADC2_Readings[1]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+	for (int i = 0; i < 2; i++) {
+		sprintf(buf, "Linear Potentiometer %d: %u\r\n", i, (unsigned) ADC2_Readings[i]);
+		UART_Console(buf);
+	}
 
-	sprintf(buf, "Coolant Pressure 1: %u\r\n", (unsigned) ADC2_Readings[2]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
+	for (int i = 2; i < 4; i++) {
+		sprintf(buf, "Coolant Pressure %d: %u\r\n", i, (unsigned) ADC2_Readings[i]);
+		UART_Console(buf);
+	}
 
-	sprintf(buf, "Coolant Pressure 2: %u\r\n", (unsigned) ADC2_Readings[3]);
-	HAL_UART_Transmit(&huart2, (uint8_t *) buf, strlen(buf), HAL_MAX_DELAY);
 }
 
-void Fill_CAN_Data_ADC(void) {
+void Fill_Strain_Gauge_Data(void) {
+
+	uint16_t StGa1 = StrainGaugeConversion(ADC1_Readings[0]);
+	uint16_t StGa2 = StrainGaugeConversion(ADC1_Readings[1]);
+	uint16_t StGa3 = StrainGaugeConversion(ADC1_Readings[2]);
+	uint16_t StGa4 = StrainGaugeConversion(ADC1_Readings[3]);
+
+	// Fill the data
+	Strain_Gauge_Data[0] = (StGa1 >> 8) & 0xFF;
+	Strain_Gauge_Data[1] = StGa1 & 0xFF;
+	Strain_Gauge_Data[2] = (StGa2 >> 8) & 0xFF;
+	Strain_Gauge_Data[3] = StGa2 & 0xFF;
+	Strain_Gauge_Data[4] = (StGa3 >> 8) & 0xFF;
+	Strain_Gauge_Data[5] = StGa3 & 0xFF;
+	Strain_Gauge_Data[6] = (StGa4 >> 8) & 0xFF;
+	Strain_Gauge_Data[7] = StGa4 & 0xFF;
+
+}
+
+void Fill_Thermocouple_Data(void) {
+
+	uint16_t Thermo1 = ThermocoupleConversion(ADC1_Readings[4]);
+	uint16_t Thermo2 = ThermocoupleConversion(ADC1_Readings[5]);
+	uint16_t Thermo3 = ThermocoupleConversion(ADC1_Readings[6]);
+
+	// Fill the data
+	Thermocouple_Data[0] = (Thermo1 >> 8) & 0xFF;
+	Thermocouple_Data[1] = Thermo1 & 0xFF;
+	Thermocouple_Data[2] = (Thermo2 >> 8) & 0xFF;
+	Thermocouple_Data[3] = Thermo2 & 0xFF;
+	Thermocouple_Data[4] = (Thermo3 >> 8) & 0xFF;
+	Thermocouple_Data[5] = Thermo3 & 0xFF;
+
+}
+
+void Fill_Lin_Pot_Data(void) {
 
 	uint16_t LinPot1 = LinearPotentiometerConversion(ADC2_Readings[0]);
 	uint16_t LinPot2 = LinearPotentiometerConversion(ADC2_Readings[1]);
+
+	// Fill the data
+	Lin_Pot_Data[0] = (LinPot1 >> 8) & 0xFF;
+	Lin_Pot_Data[1] = LinPot1 & 0xFF;
+	Lin_Pot_Data[2] = (LinPot2 >> 8) & 0xFF;
+	Lin_Pot_Data[3] = LinPot2 & 0xFF;
+
+}
+
+void Fill_Coolant_Pressure_Data(void) {
+
 	uint16_t CoPr1 = CoolantPressureConversion(ADC2_Readings[2]);
 	uint16_t CoPr2 = CoolantPressureConversion(ADC2_Readings[3]);
 
 	// Fill the data
-	TxData[0] = (LinPot1 >> 8) & 0xFF;
-	TxData[1] = LinPot1 & 0xFF;
-	TxData[2] = (LinPot2 >> 8) & 0xFF;
-	TxData[3] = LinPot2 & 0xFF;
-	TxData[4] = (CoPr1 >> 8) & 0xFF;
-	TxData[5] = CoPr1 & 0xFF;
-	TxData[6] = (CoPr2 >> 8) & 0xFF;
-	TxData[7] = CoPr2 & 0xFF;
+	Coolant_Pressure_Data[0] = (CoPr1 >> 8) & 0xFF;
+	Coolant_Pressure_Data[1] = CoPr1 & 0xFF;
+	Coolant_Pressure_Data[2] = (CoPr2 >> 8) & 0xFF;
+	Coolant_Pressure_Data[3] = CoPr2 & 0xFF;
 
-
-}
-
-void CAN_ADC_Transmit(void)
-{
-	CAN_TxHeaderTypeDef TxHeader;
-	uint32_t TxMailbox;
-
-	TxHeader.DLC = 8; // Data length
-	TxHeader.IDE = CAN_ID_STD; // Standard ID
-	TxHeader.RTR = CAN_RTR_DATA; // Data frame
-	TxHeader.StdId = 0x545; // CAN ID
-	TxHeader.ExtId = 0; // Not used with standard ID
-
-
-	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
-
-	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-	{
-		// Transmission request error
-		char msg[50];
-		sprintf(msg, "CAN transmit error");
-		HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlen(msg), HAL_MAX_DELAY);
-//		Error_Handler();
-	}
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 	if (hadc->Instance == ADC1) {
-
 		UART_Transmit_ADC1_Readings();
 
+		Fill_Strain_Gauge_Data();
+
+		if (!IS_FRONT_NODE) {
+			Fill_Thermocouple_Data();
+		}
 	}
 
 	if (hadc->Instance == ADC2) {
 		UART_Transmit_ADC2_Readings();
 
-		Fill_CAN_Data_ADC();
+		Fill_Lin_Pot_Data();
 
-		CAN_ADC_Transmit();
+		if (!IS_FRONT_NODE) {
+			Fill_Coolant_Pressure_Data();
+		}
 	}
 
 }
 
-void ADC2_Main(void) {
+void ADC_Main(void) {
 
 	HAL_ADC_Start_DMA(&hadc1, ADC1_Readings, 7);
 	HAL_ADC_Start_DMA(&hadc2, ADC2_Readings, 4);
+
+	if (IS_FRONT_NODE) {
+
+		CAN_Transmit(CAN_ID_LIN_POT_FRONT, Lin_Pot_Data);
+		CAN_Transmit(CAN_ID_STRAIN_GAUGE_FRONT, Strain_Gauge_Data);
+
+	} else {
+
+		CAN_Transmit(CAN_ID_LIN_POT_REAR, Lin_Pot_Data);
+		CAN_Transmit(CAN_ID_STRAIN_GAUGE_REAR, Strain_Gauge_Data);
+
+		CAN_Transmit(CAN_ID_COOLANT_PRESSURE, Coolant_Pressure_Data);
+		CAN_Transmit(CAN_ID_THERMOCOUPLE, Thermocouple_Data);
+
+	}
 
 }
 

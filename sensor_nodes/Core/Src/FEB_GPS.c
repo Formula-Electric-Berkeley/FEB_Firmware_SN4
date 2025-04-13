@@ -10,7 +10,9 @@
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart2;
 extern CAN_HandleTypeDef hcan1;
-#define FEB_CAN_ID_GPS_DATA 0x1F1
+
+
+uint8_t GPS_Data[8];
 
 float longitude_num;
 float latitude_num;
@@ -23,6 +25,7 @@ uint8_t *longitudearray;
 uint8_t *latitudearray;
 
 int count;
+
 void Read_GPS_Data(void)
 {
 
@@ -88,43 +91,25 @@ void Parse_NMEA_Message(void)
 	longitude_num = convertToDegrees(longitude);
 	latitude_num = convertToDegrees(latitude);
 }
-void CAN_TRANSMIT_GPS () {
-	CAN_TxHeaderTypeDef TxHeader;
-	uint8_t TxData[8];
-	uint32_t TxMailbox;
 
-	TxHeader.DLC = 8; // Data length
-	TxHeader.IDE = CAN_ID_STD;
-	TxHeader.RTR = CAN_RTR_DATA; // Data frame
-	TxHeader.StdId = FEB_CAN_ID_GPS_DATA; // Current CAN ID of the sensor
-	TxHeader.ExtId = 0;
+void Fill_GPS_Data () {
 	
 	longitudearray = (uint8_t*)(&longitude_num);
 	latitudearray = (uint8_t*)(&latitude_num);
 	
-	TxData[0] = longitudearray[0];
-	TxData[1] = longitudearray[1];
-	TxData[2] = longitudearray[2];
-	TxData[3] = longitudearray[3];
-	TxData[4] = latitudearray[0];
-	TxData[5] = latitudearray[1];
-	TxData[6] = latitudearray[2];
-	TxData[7] = latitudearray[3];
-	
-	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-	{
-		// Transmission request error
-		char msg[50];
-		sprintf(msg, "CAN transmit error");
-		UART_Transmit(msg);
-//		Error_Handler();
-	}
-
+	GPS_Data[0] = longitudearray[0];
+	GPS_Data[1] = longitudearray[1];
+	GPS_Data[2] = longitudearray[2];
+	GPS_Data[3] = longitudearray[3];
+	GPS_Data[4] = latitudearray[0];
+	GPS_Data[5] = latitudearray[1];
+	GPS_Data[6] = latitudearray[2];
+	GPS_Data[7] = latitudearray[3];
 	
 }
 void GPS_Main(void)
 {
 	Read_GPS_Data();
 	Parse_NMEA_Message();
-	CAN_TRANSMIT_GPS();
+	CAN_Transmit(FEB_CAN_ID_GPS, GPS_Data);
 }

@@ -16,6 +16,8 @@ extern UART_HandleTypeDef huart2;
 
 // ******************************************** Variables **********************************************
 
+uint8_t WSS_Data[8];
+
 #define TIMER_ELAPSED_HZ 1000 // # of times TIM6 elapses per second
 #define TICKS_PER_ROTATION 84 * 4
 #define RPM_to_MPH 0.06098555871
@@ -41,37 +43,12 @@ void WSS_Init(void)
 	HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL);
 }
 
-void UART_transmit(const char *string)
+void Fill_WSS_Data(void)
 {
-    HAL_UART_Transmit(&huart2, (uint8_t*)string, strlen(string), 1000);
-}
 
-void CAN_transmit(void)
-{
-	CAN_TxHeaderTypeDef TxHeader;
-	uint8_t TxData[8];
-	uint32_t TxMailbox;
+	WSS_Data[0] = wss_right;
+	WSS_Data[1] = wss_left;
 
-	TxHeader.DLC = 8; // Data length
-	TxHeader.IDE = CAN_ID_STD; // Standard ID
-	TxHeader.RTR = CAN_RTR_DATA; // Data frame
-	TxHeader.StdId = 0x545; // CAN ID
-	TxHeader.ExtId = 0; // Not used with standard ID
-
-	// Fill the data
-	TxData[0] = wss_right;
-	TxData[1] = wss_left;
-
-	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
-
-	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
-	{
-		// Transmission request error
-		char msg[50];
-		sprintf(msg, "CAN transmit error");
-		UART_transmit(msg);
-//		Error_Handler();
-	}
 }
 
 void update_WSS_ticks(int32_t *ticks, uint16_t *prev_counter, TIM_HandleTypeDef *htim)
@@ -131,10 +108,17 @@ void WSS_Main(void)
 	wss_left = (uint8_t) ((float) ticks_left * TIMER_ELAPSED_HZ / TICKS_PER_ROTATION * 60);
 
 	// Send the wheel speed data
-	char send[50];
-	sprintf(send, "Right: %c%d rpm  %d mph\tLeft: %c%d  %d mph\r\n", direction_right, wss_right, direction_left, wss_left, (int) (wss_right * RPM_to_MPH), (int) (wss_left * RPM_to_MPH));
-	UART_transmit(send);
+	char buf[164];
+	sprintf(buf, "Right: %c%d rpm  %d mph\tLeft: %c%d  %d mph\r\n", direction_right, wss_right, direction_left, wss_left, (int) (wss_right * RPM_to_MPH), (int) (wss_left * RPM_to_MPH));
+	UART_Console(buf);
 
-	CAN_transmit();
+	Fill_WSS_Data();
+
+	if (IS_FRONT_NODE) {
+		CAN_Transmit(CAN_ID_WSS_FRONT, WSS_Data);
+	} else {
+		CAN_Transmit(CAN_ID_WSS_REAR, WSS_Data);
+	}
+
 }
 

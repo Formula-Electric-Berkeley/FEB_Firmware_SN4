@@ -224,28 +224,10 @@ void Steer_ENC_CAN_Message(uint8_t *canTx) {
 	memcpy(canTx, &can_data, sizeof(can_data));
 }
 
-void Steer_ENC_CAN_Transmit(void) {
-	CAN_TxHeaderTypeDef TxHeader;
-	uint32_t TxMailbox;
-
-	TxHeader.DLC = 8; // Data length
-	TxHeader.IDE = CAN_ID_STD; // Standard ID
-	TxHeader.RTR = CAN_RTR_DATA; // Data frame
-	TxHeader.StdId = FEB_CAN_ID_Steer_Wheel_ENC; // CAN ID
-	TxHeader.ExtId = 0; // Not used with standard ID
-
-	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
-
-	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, canTx, &TxMailbox) != HAL_OK) {
-		// Transmission request error
-//		Error_Handler();
-	}
-}
-
 void Steer_ENC_Main(void) {
 	Steer_ENC_I2C_Read();
 	Steer_ENC_CAN_Message(canTx);
-	Steer_ENC_CAN_Transmit();
+	CAN_Transmit(CAN_ID_STEER_ENC, canTx);
 }
 
 

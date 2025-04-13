@@ -43,9 +43,9 @@ void FEB_Main_While(void) {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim->Instance == TIM6) {
 		WSS_Main();
-		Steer_ENC_Main();
 		Tire_Temp_Main();
-		ADC2_Main();
+		Steer_ENC_Main();
+		ADC_Main();
 		GPS_Main();
 		IMU_Main();
 		Coolant_ReedSW_Main();

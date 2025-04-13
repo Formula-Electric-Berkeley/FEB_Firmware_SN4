@@ -10,6 +10,7 @@
 
 // **************************************** Includes ****************************************
 
+#include "FEB_Comms.h"
 #include "main.h"
 
 #include "stm32f4xx_hal.h"
