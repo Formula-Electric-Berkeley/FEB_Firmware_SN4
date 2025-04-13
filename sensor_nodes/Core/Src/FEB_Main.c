@@ -48,7 +48,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		ADC2_Main();
 		GPS_Main();
 		IMU_Main();
-
+		Coolant_ReedSW_Main();
 	}
 }
 

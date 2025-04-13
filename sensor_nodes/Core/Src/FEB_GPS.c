@@ -97,7 +97,7 @@ void CAN_TRANSMIT_GPS () {
 	TxHeader.IDE = CAN_ID_STD;
 	TxHeader.RTR = CAN_RTR_DATA; // Data frame
 	TxHeader.StdId = FEB_CAN_ID_GPS_DATA; // Current CAN ID of the sensor
-	TxHeader.ExtId = 0; // plz check!!
+	TxHeader.ExtId = 0;
 	
 	longitudearray = (uint8_t*)(&longitude_num);
 	latitudearray = (uint8_t*)(&latitude_num);

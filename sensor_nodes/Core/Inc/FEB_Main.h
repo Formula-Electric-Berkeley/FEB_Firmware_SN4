@@ -20,6 +20,7 @@
 #include "FEB_ADC.h"
 #include "FEB_GPS.h"
 #include "FEB_IMU.h"
+#include "FEB_Coolant_ReedSW.h"
 
 // ******************************** Functions ********************************
 
