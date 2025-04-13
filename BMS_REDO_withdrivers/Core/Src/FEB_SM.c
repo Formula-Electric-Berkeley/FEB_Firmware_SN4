@@ -120,6 +120,7 @@ static void fault(FEB_SM_ST_t FAULT_TYPE) {
 	//Reset air plus and precharge for redundancy
 	FEB_PIN_RST(PN_PC_AIR); //FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN)
 	FEB_PIN_RST(PN_PC_REL); //FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+//	FEB_Siren_Activate();
 
 }
 
@@ -141,6 +142,10 @@ static void bootTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_FAULT_BSPD:
 		fault(next_state);
 		break;
+
+	case FEB_SM_ST_LV:
+		updateStateProtected(FEB_SM_ST_LV);
+		break;
 	case FEB_SM_ST_DEFAULT:
 		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5)){
 			if(!HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_5) && FEB_PIN_RD(PN_PC_REL) == FEB_RELAY_STATE_OPEN && FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE){
@@ -149,10 +154,6 @@ static void bootTransition(FEB_SM_ST_t next_state){
 		}
 
 		break;
-	case FEB_SM_ST_LV:
-		updateStateProtected(FEB_SM_ST_LV);
-		break;
-
 	default:
 		return;
 	}
@@ -308,15 +309,6 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 		updateStateProtected(next_state);
 		break;
 
-	case FEB_SM_ST_LV:
-
-	//How the fuck does that work
-	case FEB_SM_ST_ESC:
-		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
-		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
-		updateStateProtected(next_state);
-		break;
-
 	case FEB_SM_ST_DEFAULT:
 		if(FEB_CAN_DASH_Get_R2R()){
 			EnergizedTransition(FEB_SM_ST_DRIVE);
@@ -342,16 +334,6 @@ static void DriveTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_FAULT_IMD:
 	case FEB_SM_ST_FAULT_BSPD:
 		fault(next_state);
-		break;
-
-	case FEB_SM_ST_LV:
-		//This transition should only happen by a fault
-		break;
-
-	case FEB_SM_ST_ESC:
-		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
-		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
-		updateStateProtected(next_state);
 		break;
 
 	case FEB_SM_ST_ENERGIZED:
