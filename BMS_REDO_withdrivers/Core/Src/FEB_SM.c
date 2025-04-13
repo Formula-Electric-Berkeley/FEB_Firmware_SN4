@@ -12,7 +12,7 @@ extern FEB_CAN_IVT_Message_t FEB_CAN_IVT_Message;
 /* List of transition functions*/
 static void bootTransition(FEB_SM_ST_t);
 static void LVPowerTransition(FEB_SM_ST_t);
-static void ESCCompleteTransition(FEB_SM_ST_t);
+static void HealthCheckTransition(FEB_SM_ST_t);
 static void PrechargeTransition(FEB_SM_ST_t);
 static void EnergizedTransition(FEB_SM_ST_t);
 static void DriveTransition(FEB_SM_ST_t);
@@ -27,7 +27,7 @@ static void ChargingFaultTransition(FEB_SM_ST_t);
 static void (*transitionVector[13])(FEB_SM_ST_t)={
 		bootTransition,
 		LVPowerTransition,
-		ESCCompleteTransition,
+		HealthCheckTransition,
 		PrechargeTransition,
 		EnergizedTransition,
 		DriveTransition,
@@ -167,7 +167,7 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		fault(next_state);
 		break;
 
-	case FEB_SM_ST_ESC:
+	case FEB_SM_ST_HEALTH_CHECK:
 		updateStateProtected(next_state);
 		break;
 
@@ -178,7 +178,7 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_DEFAULT:
 		//Make sure shutdown loop is completed before going to idle
 		if(FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE){
-			LVPowerTransition(FEB_SM_ST_ESC);
+			LVPowerTransition(FEB_SM_ST_HEALTH_CHECK);
 
 			//Add an else case to output that shutdown loop was not completed.
 		}
@@ -194,7 +194,7 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 	}
 }
 
-static void ESCCompleteTransition(FEB_SM_ST_t next_state){
+static void HealthCheckTransition(FEB_SM_ST_t next_state){
 	switch(next_state){
 	case FEB_SM_ST_FAULT_BMS:
 	case FEB_SM_ST_FAULT_IMD:
@@ -218,14 +218,14 @@ static void ESCCompleteTransition(FEB_SM_ST_t next_state){
 		//Go back to LV if shutdown not completed
 		//This should be a general safety check
 		if(FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN)
-					ESCCompleteTransition(FEB_SM_ST_LV);
+					HealthCheckTransition(FEB_SM_ST_LV);
 
 		// AIR minus closed, air plus opened, precharge open make sure tsms
 		else if(FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE &&
 				FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN
 			//Precharge Sense????? FEB_PIN_RD() == FEB_RELAY_STATE_OPEN
 		){
-			ESCCompleteTransition(FEB_SM_ST_PRECHARGE);
+			HealthCheckTransition(FEB_SM_ST_PRECHARGE);
 		}
 		break;
 
@@ -248,7 +248,7 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 		break;
 
 	//TODO: Make sure this transition is needed
-	case FEB_SM_ST_ESC:
+	case FEB_SM_ST_HEALTH_CHECK:
 		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
 		updateStateProtected(next_state);
@@ -311,7 +311,7 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_LV:
 
 	//How the fuck does that work
-	case FEB_SM_ST_ESC:
+	case FEB_SM_ST_HEALTH_CHECK:
 		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
 		updateStateProtected(next_state);
@@ -348,7 +348,7 @@ static void DriveTransition(FEB_SM_ST_t next_state){
 		//This transition should only happen by a fault
 		break;
 
-	case FEB_SM_ST_ESC:
+	case FEB_SM_ST_HEALTH_CHECK:
 		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
 		updateStateProtected(next_state);
@@ -394,14 +394,16 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_CHARGING:
 		HAL_Delay(10);//osDelay(100);
 		FEB_PIN_SET(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_CLOSE);
+		FEB_CAN_Charger_Init();
+		FEB_CAN_Charger_Start_Charge();
+
 		updateStateProtected(next_state);
 		break;
 	case FEB_SM_ST_BALANCE:
 		updateStateProtected(next_state);
 		break;
 	case FEB_SM_ST_DEFAULT:
-		if( FEB_PIN_RD(PN_AIRM_SENSE)== FEB_RELAY_STATE_CLOSE &&//FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_CLOSE &&
-			0//FEB_CAN_Charger_Received()
+		if( FEB_PIN_RD(PN_AIRM_SENSE)== FEB_RELAY_STATE_CLOSE && FEB_CAN_Charger_Received() //FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_CLOSE &&
 		) FreeTransition(FEB_SM_ST_CHARGING);
 	default:
 		return;
@@ -414,6 +416,7 @@ static void ChargingTransition(FEB_SM_ST_t next_state){
 
 	case FEB_SM_ST_FAULT_BMS:
 	case FEB_SM_ST_FAULT_IMD:
+		FEB_CAN_Charger_Stop_Charge();
 		fault(FEB_SM_ST_FAULT_CHARGING);
 		break;
 
@@ -421,6 +424,7 @@ static void ChargingTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_FREE:
 		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
 		FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_RELAY_STATE_OPEN);
+		FEB_CAN_Charger_Stop_Charge();
 		updateStateProtected(FEB_SM_ST_FREE);
 		break;
 ;

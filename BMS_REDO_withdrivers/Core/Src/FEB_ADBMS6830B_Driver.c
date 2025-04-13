@@ -34,9 +34,9 @@ void ADBMS6830B_init_cfg(uint8_t total_ic, //Number of ICs in the system
 	    ic[cic].configa.tx_data[3] = 0xFF; //GPIO
 	    ic[cic].configa.tx_data[4] = 0x03;
 	    ic[cic].configa.tx_data[5] = 0x00;
-	    uint16_t VOVCode = SetOverVoltageThreshold(3.2);
+	    uint16_t VOVCode = SetOverVoltageThreshold(5.0);
 	    uint16_t VUVCode = SetUnderVoltageThreshold(2.0);
-	    ic[cic].configb.tx_data[0] = VUVCode;
+	    ic[cic].configb.tx_data[0] = VUVCode&0xFFFF;
 	    ic[cic].configb.tx_data[1] = (((VOVCode & 0x000F) << 4) | ((VUVCode ) >> 8));
 	    ic[cic].configb.tx_data[2] = ((VOVCode>>4)&0x0FF);
 	    ic[cic].configb.tx_data[3] = 0xFF;
@@ -80,8 +80,8 @@ void ADBMS6830B_set_cfgr(uint8_t nIC, // Current IC
 					 bool refon, // The REFON bit
 					 bool cth[3], // The CTH bits
 					 bool gpio[10], // The GPIO bits
-					 bool dcc[12], // The DCC bits
-					 bool dcto[4], // The Dcto bits
+					 bool dcc[16], // The DCC bits
+					 bool dcto[6], // The Dcto bits
 					 uint16_t uv, // The UV value
 					 uint16_t  ov // The OV value
 					 )
@@ -141,7 +141,7 @@ void ADBMS6830B_set_cfgr_gpio(uint8_t nIC, cell_asic *ic, bool gpio[10])
 }
 
 /* Helper function to control discharge */
-void ADBMS6830B_set_cfgr_dis(uint8_t nIC, cell_asic *ic, bool dcc[12])
+void ADBMS6830B_set_cfgr_dis(uint8_t nIC, cell_asic *ic, bool dcc[16])
 {
 	for (int i = 0; i < 8; i++) {
 		if (dcc[i]) {
@@ -161,9 +161,9 @@ void ADBMS6830B_set_cfgr_dis(uint8_t nIC, cell_asic *ic, bool dcc[12])
 }
 
 /* Helper function to control discharge time value */
-void ADBMS6830B_set_cfgr_dcto(uint8_t nIC, cell_asic *ic, bool dcto[5])
+void ADBMS6830B_set_cfgr_dcto(uint8_t nIC, cell_asic *ic, bool dcto[6])
 {
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 6; i++) {
 		if (dcto[i]) {
             ic[nIC].configb.tx_data[3] = ic[nIC].configb.tx_data[3] | (0b01 << i);
         } else {
@@ -175,7 +175,7 @@ void ADBMS6830B_set_cfgr_dcto(uint8_t nIC, cell_asic *ic, bool dcto[5])
 /* Helper Function to set UV value in CFG register */
 void ADBMS6830B_set_cfgr_uv(uint8_t nIC, cell_asic *ic, uint16_t uv)
 {
-	uint16_t tmp = (uv / 16) - 1;
+	uint16_t tmp = (uv / 16);
 	ic[nIC].configb.tx_data[0] = 0x00FF & tmp;
 	ic[nIC].configb.tx_data[1] = ic[nIC].configb.tx_data[1] & 0xF0;
 	ic[nIC].configb.tx_data[1] = ic[nIC].configb.tx_data[1] | ((0x0F00 & tmp) >> 8);
@@ -393,8 +393,8 @@ void ADBMS6830B_wrALL(uint8_t total_ic, //The number of ICs being written to
 {
 	ADBMS6830B_wrcfga(total_ic, ic);
 	ADBMS6830B_wrcfgb(total_ic, ic);
-	ADBMS6830B_wrpwmga(total_ic, ic);
-	ADBMS6830B_wrpwmgb(total_ic, ic);
+	//ADBMS6830B_wrpwmga(total_ic, ic);
+	//ADBMS6830B_wrpwmgb(total_ic, ic);
 }
 void ADBMS6830B_rdALL(uint8_t total_ic, //The number of ICs being written to
                       cell_asic ic[]  // A two dimensional array of the configuration data that will be written
@@ -478,8 +478,9 @@ void ADBMS6830B_rdcfgb(uint8_t total_ic, //The number of ICs being written to
 	uint8_t*cell_data;
 	cell_data=(uint8_t*)malloc(TxSize * total_ic * sizeof(uint8_t));
 	transmitCMDR(RDCFGB,cell_data,8*total_ic);
+
 	for(int bank=0;bank<total_ic;bank++){
-		memcpy(&(ic[bank].configa.rx_data),cell_data+bank*TxSize,(size_t)8);
+		memcpy(&(ic[bank].configb.rx_data),cell_data+bank*TxSize,(size_t)8);
 	}
 
 }
