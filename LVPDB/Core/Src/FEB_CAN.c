@@ -103,7 +103,7 @@ void FEB_CAN_Transmit(CAN_HandleTypeDef *hcan, FEB_LVPDB_CAN_Data *can_data) {
 	FEB_CAN_Tx_Header.DLC = 8;
 
 	// Configure FEB_CAN_Tx_Data
-    memcpy(FEB_CAN_Tx_Data, &((uint8_t *)can_data)[8 * (packetCount + 1)], 8);
+    memcpy(FEB_CAN_Tx_Data, ((uint8_t *)(&can_data->flags) + (packetCount * 8)), 8);
 
     // Delay until mailbox available
 	while (HAL_CAN_GetTxMailboxesFreeLevel(hcan) == 0) {}

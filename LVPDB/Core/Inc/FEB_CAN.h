@@ -14,11 +14,11 @@ typedef struct __attribute__((packed)) {
 	uint32_t tim_ms; // rollover handled by logging device
 	/*
 	 *  Flags:
-	 *  Bit 31: New current reading ready
-	 *  Bit 30: New bus voltage reading ready
+	 ~  Bit 31: New current reading ready
+	 X  Bit 30: New bus voltage reading ready
 	 *  Bit 29: Bus undervoltage (Todo: define metric for undervoltage)
 	 *  Bit 28: Bus overvoltage (Todo: define metric for overvoltage)
-	 *  Bits [24:27] LVPDB first word ID (should be 0)
+	 X  Bits [24:27] LVPDB first word ID (should be 0)
 	 *  Bits [16:23] Bus shutdown (V_bus = 0 -> fuse blown)
 	 *  Bits [8:15]: Power good
 	 *  Bits [0:7]: Alert pins for overcurrent

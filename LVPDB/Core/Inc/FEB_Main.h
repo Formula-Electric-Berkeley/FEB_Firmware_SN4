@@ -35,21 +35,23 @@
 #define AB_ADDR TPS2482_I2C_ADDR(TPS2482_I2C_ADDR_GND,TPS2482_I2C_ADDR_SDA) // A1:GND	A0:SDA
 
 // All TPS2482 implementation share the same WSR52L000FEA .002 ohm shunt resistor
-#define R_SHUNT	(float)(.002) 	// Ohm
+#define R_SHUNT	(double)(.002) 	// Ohm
 
 // Fuse max are the current ratings for the fuses, and are used as current maximums
 // Fuse max can be exceeded safely in "peak current" scenarios so maybe not best metric
-#define BATTERY_FUSE_MAX	(float)(30) 	// A from +24BAT -> +24GLV
-#define LV_FUSE_MAX			(float)(5)	// mA from +24GLV -> +24V
-#define CP_FUSE_MAX			(float)(6.3)	// A
-#define AF_FUSE_MAX			(float)(20) 	// A
-#define RF_FUSE_MAX			(float)(3) 		// A
-#define SH_FUSE_MAX			(float)(5) 		// A
-#define L_FUSE_MAX			(float)(5) 		// A
-#define AS_FUSE_MAX			(float)(20)		// A
-#define AB_FUSE_MAX			(float)(5) 		// A
+#define BATTERY_FUSE_MAX	(double)(30) 		// A from +24BAT -> +24GLV
+#define LV_FUSE_MAX			(double)(5)			// mA from +24GLV -> +24V
+#define CP_FUSE_MAX			(double)(6.3)		// A
+#define AF_FUSE_MAX			(double)(20) 		// A
+#define RF_FUSE_MAX			(double)(3) 		// A
+#define SH_FUSE_MAX			(double)(5) 		// A
+#define L_FUSE_MAX			(double)(5) 		// A
+#define AS_FUSE_MAX			(double)(20)		// A
+#define AB_FUSE_MAX			(double)(5) 		// A
 
-#define FLOAT_TO_UINT16_T(n)		((uint16_t)(n * 1000))
+#define FLOAT_TO_UINT16_T(n)		((uint16_t)(n * 1000)) // for voltage (mV)
+#define FLOAT_TO_INT16_T(n)			((int16_t)(n * 1000)) // for voltage (mV)
+#define SIGN_MAGNITUDE(n)			(int16_t)((((n >> 15) & 0x01) == 1) ? -(n & 0x7FFF) : (n & 0x7FFF)) // for current reg
 
 // Todo figure out of fuse max is what we want to do as it gives resolution at the cost of range
 #define LV_CURRENT_LSB	TPS2482_CURRENT_LSB_EQ(LV_FUSE_MAX)
@@ -70,6 +72,15 @@
 #define AS_CAL_VAL	TPS2482_CAL_EQ(AS_CURRENT_LSB,R_SHUNT)
 #define AB_CAL_VAL	TPS2482_CAL_EQ(AB_CURRENT_LSB,R_SHUNT)
 
+#define LV_CAL_CORRECTED 	5838
+#define CP_CAL_CORRECTED 	5838
+#define AF_CAL_CORRECTED 	1459
+#define RF_CAL_CORRECTED 	5838
+#define SH_CAL_CORRECTED 	5838
+#define L_CAL_CORRECTED 	5838
+#define AS_CAL_CORRECTED 	5838
+#define AB_CAL_CORRECTED 	5838
+
 // This calculation is needed to have an alert go out when current exceeds fuse ratings
 #define LV_ALERT_LIM_VAL	TPS2482_SHUNT_VOLT_REG_VAL_EQ((uint16_t)(LV_FUSE_MAX / LV_CURRENT_LSB),LV_CAL_VAL)
 #define CP_ALERT_LIM_VAL	TPS2482_SHUNT_VOLT_REG_VAL_EQ((uint16_t)(CP_FUSE_MAX / CP_CURRENT_LSB),CP_CAL_VAL)
@@ -88,6 +99,8 @@
 #define L_POWER_LSB		TPS2482_POWER_LSB_EQ(L_CURRENT_LSB)
 #define AS_POWER_LSB	TPS2482_POWER_LSB_EQ(AS_CURRENT_LSB)
 #define AB_POWER_LSB	TPS2482_POWER_LSB_EQ(AB_CURRENT_LSB)
+
+#define FEB_BREAK_THRESHOLD	(uint8_t)10
 
 #define SLEEP_TIME 10
 

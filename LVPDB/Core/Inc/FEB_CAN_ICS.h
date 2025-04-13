@@ -3,7 +3,7 @@
 
 // **************************************** Includes ****************************************
 
-#include "FEB_CAN_Library/FEB_CAN_ID.h"
+#include <FEB_CAN_Library_SN4/gen/feb_can.h>
 #include <stdbool.h>
 #include "stm32f4xx_hal.h"
 
