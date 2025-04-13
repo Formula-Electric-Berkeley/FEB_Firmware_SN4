@@ -118,7 +118,7 @@ void ADBMS6830B_set_cfgr(uint8_t nIC, //!< Current IC
                       bool refon,  //!< The REFON bit
                       bool cth[3], //!< The CTH bits
                       bool gpio[10],//!< The GPIO bits
-                      bool dcc[12],//!< The DCC bits
+					  uint16_t dcc,//!< The DCC bits
 					  bool dcto[4],//!< The Dcto bits
 					  uint16_t uv, //!< The UV value
 					  uint16_t ov  //!< The OV value
@@ -157,7 +157,7 @@ void ADBMS6830B_set_cfgr_gpio(uint8_t nIC, //!< Current IC
  */
 void ADBMS6830B_set_cfgr_dis(uint8_t nIC, //!< Current IC
                           cell_asic *ic, //!< A two dimensional array that will store the data
-                          bool dcc[12] //!< The DCC bits
+                          uint16_t dcc //!< The DCC bits
 						  );
 
 /*!

@@ -80,7 +80,7 @@ void ADBMS6830B_set_cfgr(uint8_t nIC, // Current IC
 					 bool refon, // The REFON bit
 					 bool cth[3], // The CTH bits
 					 bool gpio[10], // The GPIO bits
-					 bool dcc[16], // The DCC bits
+					 uint16_t dcc, // The DCC bits
 					 bool dcto[6], // The Dcto bits
 					 uint16_t uv, // The UV value
 					 uint16_t  ov // The OV value
@@ -141,23 +141,10 @@ void ADBMS6830B_set_cfgr_gpio(uint8_t nIC, cell_asic *ic, bool gpio[10])
 }
 
 /* Helper function to control discharge */
-void ADBMS6830B_set_cfgr_dis(uint8_t nIC, cell_asic *ic, bool dcc[16])
+void ADBMS6830B_set_cfgr_dis(uint8_t nIC, cell_asic *ic, uint16_t dcc)
 {
-	for (int i = 0; i < 8; i++) {
-		if (dcc[i]) {
-            ic[nIC].configb.tx_data[4] = ic[nIC].configb.tx_data[4] | (0b01 << i);
-        } else {
-             ic[nIC].configb.tx_data[4] = ic[nIC].configb.tx_data[4] & ~(0b01 << i);
-        }
-	}
-
-    for (int i = 0; i < 8; i++) {
-        if (dcc[i + 8]) {
-            ic[nIC].configb.tx_data[5] = ic[nIC].configb.tx_data[5] | (0b01 << i);
-        } else {
-             ic[nIC].configb.tx_data[5] = ic[nIC].configb.tx_data[5] & ~(0b01 << i);
-        }
-    }
+	ic[nIC].configb.tx_data[4] = dcc&0xFF;
+	ic[nIC].configb.tx_data[5] = (dcc>>8)&0xFF;
 }
 
 /* Helper function to control discharge time value */

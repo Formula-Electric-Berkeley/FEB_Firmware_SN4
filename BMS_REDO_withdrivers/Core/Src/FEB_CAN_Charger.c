@@ -5,11 +5,11 @@
 #include "stm32f4xx_hal.h"
 #include "string.h"
 #include "stdio.h"
-
+#define charger
 #ifdef charger
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart2;
-extern osMutexId_t FEB_UART_LockHandle;
+//extern osMutexId_t FEB_UART_LockHandle;
 extern uint8_t FEB_CAN_Tx_Data[8];
 extern CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
 extern uint32_t FEB_CAN_Tx_Mailbox;
@@ -96,7 +96,7 @@ static void charger_CAN_transmit(void) {
 // ******** Interface Functions ********
 
 void FEB_CAN_Charger_Init(void) {
-	BMS_message.max_voltage_dV = FEB_CONFIG_NUM_BANKS * FEB_CONFIG_NUM_CELLS_PER_BANK * (FEB_CONFIG_CELL_MAX_VOLTAGE_mV * 1e-2);
+	BMS_message.max_voltage_dV = FEB_NBANKS * FEB_NUM_CELL_PER_BANK * (FEB_Config_Get_Cell_Max_Voltage_mV() * 1e-2);
 	BMS_message.max_current_dA = 50;
 	CCS_message.received = false;
 }
@@ -127,8 +127,8 @@ void FEB_CAN_Charger_UART_Transmit(void) {
 		BMS_message.max_voltage_dV, BMS_message.max_current_dA, BMS_message.control,
 		CCS_message.op_voltage_dV, CCS_message.op_current_dA, CCS_message.status);
 
-	while (osMutexAcquire(FEB_UART_LockHandle, UINT32_MAX) != osOK);
+	//while (osMutexAcquire(FEB_UART_LockHandle, UINT32_MAX) != osOK);
 	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
-	osMutexRelease(FEB_UART_LockHandle);
+	//osMutexRelease(FEB_UART_LockHandle);
 }
 #endif

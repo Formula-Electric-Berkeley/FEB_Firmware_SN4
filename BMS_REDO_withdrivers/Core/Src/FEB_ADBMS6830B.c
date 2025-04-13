@@ -5,6 +5,7 @@
 #include "FEB_HW.h"
 #include "FEB_Temp_LUT.h"
 #include "FEB_UART_Transmit.h"
+
 // ******************************** Voltage ********************************
 
 void start_adc_cell_voltage_measurements();
@@ -30,7 +31,7 @@ extern UART_HandleTypeDef huart2;
 static bool refon = 0;
 static bool cth_bits[3] = {1,1,1};
 static bool gpio_bits[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
-static bool dcc_bits[16] = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1,0,0,0,0,0,0};
+static uint16_t dcc_bits = 0x03FF;
 static bool dcto_bits[6] = {1,1,1,1,1,1};
 static uint8_t gpio_map[4] = {0,1,5,6};
 static uint16_t uv = 0x0010;
@@ -47,17 +48,6 @@ Channel							0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7	0	1	2	3	4	5	6	7
 
 
 // ******************************** Helper Functions ********************************
-
-
-static uint8_t get_gpio_pin(uint8_t mux) {
-	if(mux<0||mux>3)return -1;
-
-	return gpio_map[mux];
-}
-
-static uint8_t get_sensor(uint8_t mux, uint8_t channel) {
-	return mux * 8 + channel;
-}
 
 static float convert_voltage(int16_t raw_code) {
 	return raw_code * 0.000150f + 1.5f;
@@ -151,7 +141,7 @@ void validate_voltages() {
 		FEB_ACC.banks[bank].badReadV=0;
 		for (uint8_t cell = 0; cell < FEB_NUM_CELL_PER_BANK; cell ++) {
 			float voltageC = FEB_ACC.banks[bank].cells[cell].voltage_V*1000;
-			float voltageV = FEB_ACC.banks[bank].cells[cell].voltage_V*1000;
+			float voltageS = FEB_ACC.banks[bank].cells[cell].voltage_V*1000;
 			if (voltageC > vMax|| voltageC < vMin) {
 				if(voltageC==-1000){
 					FEB_ACC.banks[bank].badReadV+=1;
@@ -159,7 +149,7 @@ void validate_voltages() {
 				if(voltageS > vMax && voltageS < vMin){
 					FEB_ACC.banks[bank].cells[cell].violations+=1;
 					if(FEB_ACC.banks[bank].cells[cell].violations == FEB_ERROR_THRESH) {
-						FEB_SM_FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
+						FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 					}
 				}
 			} else {
@@ -222,14 +212,14 @@ void validate_temps() {
 			if (temp > tMax || temp < tMin) {
 				FEB_ACC.banks[bank].temp_violations[cell]++;
 				if(FEB_ACC.banks[bank].temp_violations[cell] == FEB_ERROR_THRESH){
-					FEB_SM_FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
+					FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 				}
 			}
 		}
 		totalReads+=FEB_ACC.banks[bank].tempRead;
 	}
 	if(totalReads/(float)(FEB_NUM_CELL_PER_BANK*FEB_NBANKS) < 0.2){
-		FEB_SM_FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
+		FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 	}
 }
 
@@ -242,15 +232,15 @@ void FEB_Cell_Balance_Start(){
 	FEB_Cell_Balance_Process();
 }
 int cycle=0;
+uint8_t mask=0xAA;
 void FEB_Cell_Balance_Process(){
-	if(cycle ==3 ){
-		for(int i=0;i<10;i++){
-			dcc_bits[i]^=0b1;
-		}
+
+	if(cycle == 3 ){
+		mask=~mask;
 		cycle=0;
 	}
 	cycle++;
-	uint8_t mask=0xAA;
+
 	transmitCMD(ADCV|AD_CONT);
 	HAL_Delay(1);
 	ADBMS6830B_rdcv(FEB_NUM_IC, IC_Config);
@@ -277,7 +267,7 @@ void FEB_Cell_Balance_Process(){
 
 	FEB_ADBMS_UART_Transmit(&FEB_ACC);
 	for (uint8_t icn = 0; icn < FEB_NUM_IC; icn++) {
-		ADBMS6830B_set_cfgr(icn, IC_Config, refon, cth_bits, gpio_bits, dcc_bits, dcto_bits, uv, ov);
+		ADBMS6830B_set_cfgr(icn, IC_Config, refon, cth_bits, gpio_bits, dcc_bits&mask, dcto_bits, uv, ov);
 		//IC_Config[icn].configb.tx_data[0]=~0xAA;
 		//IC_Config[icn].configb.tx_data[1]=0x01;
 		//IC_Config[icn].pwmb.tx_data[0]=0xF0;

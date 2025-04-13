@@ -63,7 +63,8 @@ extern "C" {
 #define FEB_CAN_FEB_PING_PONG_COUNTER2_FRAME_ID (0xe1u)
 #define FEB_CAN_FEB_PING_PONG_COUNTER3_FRAME_ID (0xe2u)
 #define FEB_CAN_FEB_PING_PONG_COUNTER4_FRAME_ID (0xe3u)
-
+#define FEB_CAN_ID_CHARGER_BMS (0x123)
+#define FEB_CAN_ID_CHARGER_CCS (0x123)
 /* Frame lengths in bytes. */
 #define FEB_CAN_BMS_STATE_LENGTH (2u)
 #define FEB_CAN_BMS_CELL_DATA_LENGTH (8u)
@@ -131,6 +132,7 @@ extern "C" {
 #define FEB_CAN_FEB_PING_PONG_COUNTER4_NAME "FEB_PING_PONG_counter4"
 
 /* Signal Names. */
+
 #define FEB_CAN_BMS_STATE_BMS_STATE_NAME "bms_state"
 #define FEB_CAN_BMS_STATE_PING_ALIVE_NAME "ping_alive"
 #define FEB_CAN_BMS_STATE_RELAY_STATE_NAME "relay_state"
