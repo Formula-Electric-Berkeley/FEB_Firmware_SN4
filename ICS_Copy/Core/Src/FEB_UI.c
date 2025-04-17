@@ -33,8 +33,8 @@ void FEB_UI_Init(void) {
 void FEB_UI_Update(void) {
 	lv_task_handler();
 
-	//FEB_UI_Set_Values();
-	BMS_State_Set();
+	FEB_UI_Set_Values();
+	//BMS_State_Set();
 
 //	UI_Demo_Mode();
 }
@@ -42,7 +42,7 @@ void FEB_UI_Update(void) {
 void FEB_UI_Set_Values(void) {
 
 	//set_bms_status(ICS_UI_Values.bms_state);
-	//BMS_State_Set();
+	BMS_State_Set();
 
 	//set_tsal_status(HV_STATUS_COLORS[ICS_UI_Values.ivt_voltage > 60.0]); (TODO)
 
@@ -104,8 +104,8 @@ void UI_Demo_Mode(void) {
 }
 
 void BMS_State_Set(void) {
-    //FEB_SM_ST_t bms_state = FEB_CAN_BMS_Get_State();
-	FEB_SM_ST_t bms_state = FEB_SM_ST_PRECHARGE;
+    FEB_SM_ST_t bms_state = FEB_CAN_BMS_Get_State();
+	//FEB_SM_ST_t bms_state = FEB_SM_ST_PRECHARGE; //If you want to actually see if you change the UI.
 
     char* bms_str = get_bms_state_string(bms_state);
     lv_label_set_text(ui_BMStateNumerical, bms_str);

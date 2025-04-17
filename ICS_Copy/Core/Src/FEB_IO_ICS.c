@@ -13,6 +13,7 @@ static uint8_t set_rtd_buzzer = 1;
 static uint8_t IO_state = 0xFF;
 
 static uint8_t r2d = 0;
+static uint8_t datalog_active = 0; // For Data logging Flag
 
 // **************************************** Functions ****************************************
 
@@ -79,6 +80,23 @@ void FEB_IO_ICS_Loop(void) {
 		IO_state = (uint8_t) set_n_bit(IO_state, 2, 1);
 	} else {
 		IO_state = (uint8_t) set_n_bit(IO_state, 2, 0);
+	}
+	// Button 2 - ButtonDataLog (Bit 2) FOR TEST I SAID BIT 2
+	if (!(received_data & (1<<2))) { //TODO HERE!!!! LOOK WHICH BIT ITS GONNA BE AND CHANGE IT
+		static uint8_t button2_last = 0;
+		if (!button2_last) {  // detect edge: only toggle once per press
+			datalog_active = !datalog_active;
+			if (datalog_active) {
+				lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT);
+			} else {
+				lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+			}
+		}
+		button2_last = 1;
+	} else {
+		IO_state = (uint8_t) set_n_bit(IO_state, 2, 0);
+		static uint8_t button2_last = 0;
+		button2_last = 0;
 	}
 
 	// Button 3

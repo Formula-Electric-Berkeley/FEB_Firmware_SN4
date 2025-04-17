@@ -4,8 +4,8 @@ SET(SOURCES screens/ui_Screen1.c
     ui_helpers.c
     fonts/ui_font_Font1.c
     fonts/ui_font_Font_3.c
-    fonts/ui_font_OrbitronBold40.c
     fonts/ui_font_OrbitronBold15.c
-    fonts/ui_font_OrbitronBold25.c)
+    fonts/ui_font_OrbitronBold25.c
+    fonts/ui_font_OrbitronBold40.c)
 
 add_library(ui ${SOURCES})

@@ -34,6 +34,8 @@ lv_obj_t *ui_ButtonRTD;
 lv_obj_t *ui_RadFanText;
 lv_obj_t *ui_AccFanText;
 lv_obj_t *ui_RTDText;
+lv_obj_t *ui_ButtonDataLog;
+lv_obj_t *ui_DataLogText;
 // CUSTOM VARIABLES
 
 // EVENTS

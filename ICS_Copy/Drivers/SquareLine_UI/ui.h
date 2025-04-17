@@ -41,6 +41,8 @@ extern lv_obj_t *ui_ButtonRTD;
 extern lv_obj_t *ui_RadFanText;
 extern lv_obj_t *ui_AccFanText;
 extern lv_obj_t *ui_RTDText;
+extern lv_obj_t *ui_ButtonDataLog;
+extern lv_obj_t *ui_DataLogText;
 // CUSTOM VARIABLES
 
 // EVENTS
@@ -49,9 +51,9 @@ extern lv_obj_t *ui____initial_actions0;
 // FONTS
 LV_FONT_DECLARE( ui_font_Font1);
 LV_FONT_DECLARE( ui_font_Font_3);
-LV_FONT_DECLARE( ui_font_OrbitronBold40);
 LV_FONT_DECLARE( ui_font_OrbitronBold15);
 LV_FONT_DECLARE( ui_font_OrbitronBold25);
+LV_FONT_DECLARE( ui_font_OrbitronBold40);
 
 // UI INIT
 void ui_init(void);
