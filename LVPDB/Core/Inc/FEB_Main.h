@@ -40,7 +40,7 @@
 // Fuse max are the current ratings for the fuses, and are used as current maximums
 // Fuse max can be exceeded safely in "peak current" scenarios so maybe not best metric
 #define BATTERY_FUSE_MAX	(double)(30) 		// A from +24BAT -> +24GLV
-#define LV_FUSE_MAX			(double)(5)			// mA from +24GLV -> +24V
+#define LV_FUSE_MAX			(double)(5)			// A from +24GLV -> +24V
 #define CP_FUSE_MAX			(double)(6.3)		// A
 #define AF_FUSE_MAX			(double)(20) 		// A
 #define RF_FUSE_MAX			(double)(3) 		// A

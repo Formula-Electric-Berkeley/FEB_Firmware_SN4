@@ -203,36 +203,6 @@ void FEB_Main_Setup(void) {
 
 void FEB_Main_Loop(void) {
 
-	/*  Todo fix all this enable stuff when better understood
-	if ( FEB_CAN_APPS_Message.brake_pedal >= 4 ) {
-		HAL_GPIO_WritePin(BL_SWITCH_GPIO_Port, BL_SWITCH_Pin, GPIO_PIN_SET);
-	}
-	else {
-		HAL_GPIO_WritePin(BL_SWITCH_GPIO_Port, BL_SWITCH_Pin, GPIO_PIN_RESET);
-	}
-
-	if ( FEB_Accum_Fan_Control() ) {
-		HAL_GPIO_WritePin(AF_EN_GPIO_Port, AF_EN_Pin, GPIO_PIN_SET);
-	}
-	else {
-		HAL_GPIO_WritePin(AF_EN_GPIO_Port, AF_EN_Pin, GPIO_PIN_RESET);
-	}
-
-	if ( FEB_Coolant_Pump_Control() ) {
-		HAL_GPIO_WritePin(CP_EN_GPIO_Port, CP_EN_Pin, GPIO_PIN_SET);
-	}
-	else{
-		HAL_GPIO_WritePin(CP_EN_GPIO_Port, CP_EN_Pin, GPIO_PIN_RESET);
-	}
-
-	if ( FEB_Extra_Control() ){
-		HAL_GPIO_WritePin(RF_EN_GPIO_Port, RF_EN_Pin, GPIO_PIN_SET);
-	}
-	else {
-		HAL_GPIO_WritePin(RF_EN_GPIO_Port, RF_EN_Pin, GPIO_PIN_RESET);
-	} */
-
-	// Todo add alert and pg monitoring
 }
 
 void FEB_1ms_Callback(void) {
