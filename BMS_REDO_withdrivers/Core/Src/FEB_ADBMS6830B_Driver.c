@@ -143,8 +143,8 @@ void ADBMS6830B_set_cfgr_gpio(uint8_t nIC, cell_asic *ic, bool gpio[10])
 /* Helper function to control discharge */
 void ADBMS6830B_set_cfgr_dis(uint8_t nIC, cell_asic *ic, uint16_t dcc)
 {
-	ic[nIC].configb.tx_data[4] = dcc&0xFF;
-	ic[nIC].configb.tx_data[5] = (dcc>>8)&0xFF;
+	ic[nIC].configb.tx_data[4] = (uint8_t) (dcc&0xFF);
+	ic[nIC].configb.tx_data[5] = (uint8_t) ( (dcc>>8) & 0xFF );
 }
 
 /* Helper function to control discharge time value */
@@ -435,6 +435,7 @@ void ADBMS6830B_rdcfga(uint8_t total_ic, //The number of ICs being written to
 	int16_t c_rx_pec=*(uint16_t*)(cell_data+TxSize-2);
 	for(int bank=0;bank<total_ic;bank++)
 		ic[bank].configa.rx_pec_match=c_data_pec-c_rx_pec;
+	free(cell_data);
 }
 /* Write the ADBMS6830B CFGRB */
 void ADBMS6830B_wrcfgb(uint8_t total_ic, //The number of ICs being written to
@@ -469,7 +470,7 @@ void ADBMS6830B_rdcfgb(uint8_t total_ic, //The number of ICs being written to
 	for(int bank=0;bank<total_ic;bank++){
 		memcpy(&(ic[bank].configb.rx_data),cell_data+bank*TxSize,(size_t)8);
 	}
-
+	free(cell_data);
 }
 
 /* Start ADC Conversion for GPIO and Vref2  */
@@ -514,7 +515,7 @@ void ADBMS6830B_rdpwmga(uint8_t total_ic, //The number of ICs being written to
 	for(int bank=0;bank<total_ic;bank++){
 		memcpy(&(ic[bank].pwm.rx_data),cell_data+bank*TxSize,(size_t)8);
 	}
-
+	free(cell_data);
 }
 void ADBMS6830B_wrpwmgb(uint8_t total_ic, //The number of ICs being written to
                    cell_asic ic[]  // A two dimensional array of the configuration data that will be written
@@ -545,7 +546,7 @@ void ADBMS6830B_rdpwmgb(uint8_t total_ic, //The number of ICs being written to
 	for(int bank=0;bank<total_ic;bank++){
 		memcpy(&(ic[bank].pwmb.rx_data),cell_data+bank*TxSize,(size_t)8);
 	}
-
+	free(cell_data);
 }
 /*
 The function is used to read the  parsed GPIO codes of the ADBMS6830B.

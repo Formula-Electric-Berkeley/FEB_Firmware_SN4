@@ -7,7 +7,7 @@
 #define FEB_NUM_TEMP_SENSE_PER_IC 10
 #define FEB_ERROR_THRESH 3
 #define FEB_NUM_ICPBANK 2
-#define FEB_NBANKS 1
+#define FEB_NBANKS 7
 #define FEB_NUM_IC (FEB_NUM_ICPBANK*FEB_NBANKS)
 #define FEB_NUM_CELL_PER_BANK (FEB_NUM_ICPBANK*FEB_NUM_CELLS_PER_IC)
 
@@ -48,6 +48,7 @@ typedef enum {
 
 }FEB_Relay_State;
 typedef struct {
+	uint8_t discharging;
 	float voltage_V;
 	float voltage_S;
 	uint8_t violations;

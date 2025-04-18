@@ -120,7 +120,7 @@ bool FEB_CAN_Charger_Received(){
 }
 
 void FEB_CAN_Charger_UART_Transmit(void) {
-	static char str[32];
+	static char str[64];
 
 	// Data: max voltage, max current, control operating voltage, operating current, status bits
 	sprintf(str, "charge %d %d %d %d %d %d\n",

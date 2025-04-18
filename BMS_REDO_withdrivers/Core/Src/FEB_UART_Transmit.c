@@ -43,6 +43,7 @@ void FEB_ADBMS_UART_Transmit(accumulator_t* FEB_ACC) {
 			index+=sprintf(((char*)Bank_line)+index,UART_line[line]);
 		}
 
+		if(bank+1==FEB_NBANKS)index+=sprintf(((char*)Bank_line)+index,"Total voltage: %f\n\r",FEB_ACC->total_voltage_V);
 		HAL_UART_Transmit(&huart2, (uint8_t*) Bank_line, index+1, 100);
 	}
 }
@@ -50,11 +51,12 @@ void FEB_MONITOR_UART_Transmit(accumulator_t*FEB_ACC){
 	char UART_line[32*FEB_NUM_CELLS_PER_IC*FEB_NUM_ICPBANK];
 	for (uint8_t bank = 0; bank < FEB_NBANKS; bank++) {
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC*FEB_NUM_ICPBANK; cell++) {
-			sprintf(((char*)(UART_line)),"cell %d %d %.6f %.6f\n",
+			sprintf(((char*)(UART_line)),"cell %d %d %.6f %.6f %d\n",
 					bank,
 					cell,
 					FEB_ACC->banks[bank].cells[cell].voltage_V,
-					FEB_ACC->banks[bank].temp_sensor_readings_V[cell]
+					FEB_ACC->banks[bank].temp_sensor_readings_V[cell],
+					FEB_ACC->banks[bank].cells[cell].discharging
 			);
 
 

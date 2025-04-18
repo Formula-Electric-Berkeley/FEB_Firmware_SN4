@@ -77,11 +77,4 @@ void FEB_Cell_Balance_Start();
 void FEB_Cell_Balance_Process();
 void FEB_Stop_Balance();
 
-float FEB_ADBMS_Get_Total_Voltage();
-// ******************************** UART ********************************
-void FEB_ADBMS_UART_Transmit();
-
-
-
-
 #endif /* INC_FEB_ADBMS6830B_H_ */
