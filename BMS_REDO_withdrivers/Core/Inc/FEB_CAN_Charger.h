@@ -10,5 +10,7 @@ void FEB_CAN_Charger_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t RxData[]);
 bool FEB_CAN_Charger_Received();
 void FEB_CAN_Charger_Process(void);
 void FEB_CAN_Charger_UART_Transmit(void);
+void FEB_CAN_Charger_Start_Charge(void);
+void FEB_CAN_Charger_Stop_Charge(void);
 
 #endif /* INC_FEB_CHARGE_H_ */
