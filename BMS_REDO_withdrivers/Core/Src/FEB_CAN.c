@@ -13,6 +13,7 @@ extern accumulator_t FEB_ACC;
 CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
 static CAN_RxHeaderTypeDef FEB_CAN_Rx_Header;
 FEB_CAN_DEV FEB_CAN_NETWORK[FEB_NUM_CAN_DEV]={0};
+static FEB_DEV_INDEX ping_alive;
 uint8_t FEB_CAN_Tx_Data[8];
 uint8_t FEB_CAN_Rx_Data[8];
 uint32_t FEB_CAN_Tx_Mailbox;
@@ -47,10 +48,22 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 
 		FEB_CAN_IVT_Store_Msg(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
 		FEB_CAN_DASH_Store_Msg(&FEB_CAN_Rx_Header,FEB_CAN_Rx_Data);
+		FEB_CAN_Charger_Store_Msg(&FEB_CAN_Rx_Header,FEB_CAN_Rx_Data);
 
+		FEB_CAN_Heartbeat_Store_Msg(&FEB_CAN_Rx_Header,FEB_CAN_Rx_Data);
 	}
 }
 
+void FEB_CAN_Heartbeat_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t RxData[]) {
+	switch(pHeader->StdId) {
+		uint8_t device;
+	    case 0:
+	    	device = 0;
+
+	    	FEB_CAN_NETWORK[device].FAck = 0;
+			break;
+	}
+}
 
 void FEB_SM_CAN_Transmit(void) {
 
@@ -61,9 +74,10 @@ void FEB_SM_CAN_Transmit(void) {
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
 	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
 
-	uint8_t ping_alive = 0;
-	uint8_t relay_state = 0;
-	uint8_t gpio_sense = 0;
+	uint8_t relay_state = ((FEB_PIN_RD(PN_PC_REL) & 1) << 2) | ((FEB_PIN_RD(PN_AIRP_SENSE) & 1) << 1) | ( FEB_PIN_RD(PN_SHS_IN) &0b1 );
+	uint8_t gpio_sense = ((FEB_PIN_RD(PN_PC_REL) & 1) << 2) | ((FEB_PIN_RD(PN_AIRP_SENSE) & 1) << 1) | ( FEB_PIN_RD(PN_SHS_IN) &0b1 );
+
+	FEB_CAN_NETWORK[ping_alive].last_received = 0;
 
 	// Copy data to Tx buffer
 	FEB_CAN_Tx_Data[0] = FEB_SM_Get_Current_State();
@@ -76,6 +90,16 @@ void FEB_SM_CAN_Transmit(void) {
 	// Add Tx data to mailbox
 	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
 		// FEB_SM_Set_Current_State(FEB_SM_ST_SHUTDOWN);
+	}
+
+	ping_alive = (ping_alive + 1) % FEB_NUM_CAN_DEV;
+
+	for ( int i = 0; i < FEB_NUM_CAN_DEV; i++ ) {
+		FEB_CAN_NETWORK[i].LaOn += 1;
+	}
+
+	if ( FEB_CAN_NETWORK[(ping_alive - 1) % FEB_NUM_CAN_DEV].last_received == 0 ) {
+		++FEB_CAN_NETWORK[(ping_alive - 1) % FEB_NUM_CAN_DEV].FAck;
 	}
 }
 
