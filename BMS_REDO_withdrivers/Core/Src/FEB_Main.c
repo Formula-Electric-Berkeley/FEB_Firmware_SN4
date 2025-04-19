@@ -19,7 +19,6 @@ void FEB_Main_Setup() {
 
 void FEB_Task_ADBMS() {
 	FEB_ADBMS_Voltage_Process();
-	//FEB_Siren_Activate();
 	FEB_ADBMS_Temperature_Process();
 	HAL_Delay(5);
 }
@@ -32,10 +31,19 @@ void FEB_Task_SM() {
 void FEB_Task_Charge() {
 	FEB_CAN_Charger_Process();
 }
-
+bool balancing = false;
 void FEB_Task_Balance() {
-	FEB_Cell_Balance_Process();
-	HAL_Delay(1500);
+	if(FEB_RD_PIN(PN_RST)==1){
+		balancing = true;
+	}
+	if (balancing) {
+		FEB_Cell_Balance_Process();
+		HAL_Delay(1500);
+		if(FEB_RD_PIN(PN_RST)==1){
+				balancing = false;
+			}
+	}
+
 }
 
 void FEB_Task_IVT() {

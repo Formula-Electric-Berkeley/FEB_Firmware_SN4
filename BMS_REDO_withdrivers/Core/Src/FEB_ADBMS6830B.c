@@ -222,7 +222,7 @@ int cycle=0;
 uint16_t mask=0xAAAA;
 void FEB_Cell_Balance_Process(){
 	//determineMinV()
-	if(cycle == 5 ){
+	if(cycle == 3 ){
 		mask=~mask;
 		cycle=0;
 	}

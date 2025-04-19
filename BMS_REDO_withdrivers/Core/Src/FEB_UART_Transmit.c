@@ -13,7 +13,7 @@ static uint8_t counter = 0;
 
 // **************************************** Functions ****************************************
 void FEB_ADBMS_UART_Transmit(accumulator_t* FEB_ACC) {
-	int NUMLINES=4;
+	int NUMLINES=5;
 	for (uint8_t bank = 0; bank < FEB_NBANKS; bank++) {
 		char UART_line[NUMLINES][32*FEB_NUM_CELLS_PER_IC*FEB_NUM_ICPBANK];
 		int offset[NUMLINES];
@@ -21,7 +21,7 @@ void FEB_ADBMS_UART_Transmit(accumulator_t* FEB_ACC) {
 		offset[1]=sprintf((char*)(UART_line[1]),"|Vlt C|");
 		offset[2]=sprintf((char*)(UART_line[2]),"|Vlt S|");
 		offset[3]=sprintf((char*)(UART_line[3]),"|Tmp 1|");
-		//offset[4]=sprintf((char*)(UART_line[4]),"|Tmp 2|");
+		offset[4]=sprintf((char*)(UART_line[4]),"|DsChg|");
 		//offset[4]=sprintf((char*)(UART_line[5]),"|PWM  |");
 
 		for (uint8_t cell = 0; cell < FEB_NUM_CELLS_PER_IC*FEB_NUM_ICPBANK; cell++) {
@@ -31,7 +31,7 @@ void FEB_ADBMS_UART_Transmit(accumulator_t* FEB_ACC) {
 			float SV =FEB_ACC->banks[bank].cells[cell].voltage_S;
 			offset[2]+=sprintf(((char*)(UART_line[2]) + offset[2]), SV>0?"%.6f|":"%.5f|",SV);
 			offset[3]+=sprintf(((char*)(UART_line[3]) + offset[3]), "%.5f|",FEB_ACC->banks[bank].temp_sensor_readings_V[cell]); // @suppress("Float formatting support")
-			//offset[4]+=sprintf(((char*)(UART_line[4]) + offset[4]), "%.6f|",FEB_ACC.banks[bank].temp_sensor_readings_V[cell]);
+			offset[4]+=sprintf(((char*)(UART_line[4]) + offset[4]), FEB_ACC->banks[bank].cells[cell].discharging==1?"True  |":"False |");
 			//offset[5]+=sprintf(((char*)(UART_line[4]) + offset[4]), "%X|",FEB_ACC.banks[bank].temp_sensor_readings_V[cell+16]);
 		}
 
@@ -43,7 +43,7 @@ void FEB_ADBMS_UART_Transmit(accumulator_t* FEB_ACC) {
 			index+=sprintf(((char*)Bank_line)+index,UART_line[line]);
 		}
 
-		if(bank+1==FEB_NBANKS)index+=sprintf(((char*)Bank_line)+index,"Total voltage: %f\n\r",FEB_ACC->total_voltage_V);
+		if(bank+1==FEB_NBANKS)index+=sprintf(((char*)Bank_line)+index,"Total voltage: %f \n\r",FEB_ACC->total_voltage_V);
 		HAL_UART_Transmit(&huart2, (uint8_t*) Bank_line, index+1, 100);
 	}
 }
