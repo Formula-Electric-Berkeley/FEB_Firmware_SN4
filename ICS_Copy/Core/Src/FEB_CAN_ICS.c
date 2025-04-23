@@ -37,10 +37,10 @@ uint8_t FEB_CAN_ICS_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uin
 //	}
 
 	uint16_t ids[] = {
-	    FEB_CAN_ID_BMS_STATE,
-	    FEB_CAN_ID_BMS_VOLTAGE,
-	    FEB_CAN_ID_BMS_TEMPERATURE,
-	    FEB_CAN_ID_RMS_MOTOR
+		FEB_CAN_BMS_STATE_FRAME_ID,
+		FEB_CAN_BMS_ACCUMULATOR_VOLTAGE_FRAME_ID,
+		FEB_CAN_BMS_ACCUMULATOR_TEMPERATURE_FRAME_ID,
+	    0xa5
 	};
 
 	for (uint8_t i = 0; i < 4; i++) {
@@ -69,19 +69,19 @@ uint8_t FEB_CAN_ICS_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uin
 
 void FEB_CAN_ICS_Rx_Handler(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_CAN_Rx_Data[]) {
 	switch(FEB_CAN_Rx_Header->StdId) {
-		case FEB_CAN_ID_BMS_STATE:
+		case FEB_CAN_BMS_STATE_FRAME_ID:
 			ICS_UI_Values.bms_state = FEB_CAN_Rx_Data[0];
 			break;
-		case FEB_CAN_ID_BMS_VOLTAGE:
+		case FEB_CAN_BMS_ACCUMULATOR_VOLTAGE_FRAME_ID:
 			ICS_UI_Values.pack_voltage = (FEB_CAN_Rx_Data[0] << 8) + FEB_CAN_Rx_Data[1];
 			ICS_UI_Values.min_voltage = (FEB_CAN_Rx_Data[2] << 8) + FEB_CAN_Rx_Data[3]; //2.4-4.3
 			uint8_t x1 = FEB_CAN_Rx_Data[1];
 			uint8_t x2 = FEB_CAN_Rx_Data[2];
 			break;
-		case FEB_CAN_ID_BMS_TEMPERATURE:
+		case FEB_CAN_BMS_ACCUMULATOR_TEMPERATURE_FRAME_ID:
 			ICS_UI_Values.acc_temp = (FEB_CAN_Rx_Data[0] << 8) + FEB_CAN_Rx_Data[1];
 			break;
-		case FEB_CAN_ID_RMS_MOTOR:
+		case 0xa5:
 			if (FEB_CAN_Rx_Data[3] == 255) {
 				ICS_UI_Values.motor_speed = 0;
 			} else {
@@ -100,7 +100,7 @@ void FEB_CAN_ICS_Rx_Handler(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_
 
 void FEB_CAN_ICS_Transmit_Button_State(uint8_t transmit_button_state) {
 	FEB_CAN_Tx_Header.DLC = 1;
-	FEB_CAN_Tx_Header.StdId = FEB_CAN_ID_ICS_BUTTON_STATE;
+	FEB_CAN_Tx_Header.StdId = FEB_CAN_DASH_MESSAGE_FRAME_ID;
 	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
 	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;

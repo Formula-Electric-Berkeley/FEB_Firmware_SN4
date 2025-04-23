@@ -44,7 +44,7 @@ FEB_SM_ST_t FEB_CAN_BMS_Get_State(){
 // ***** CAN FUNCTIONS ****
 
 uint8_t FEB_CAN_BMS_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uint8_t filter_bank) {
-	uint16_t ids[] = {FEB_CAN_ID_BMS_STATE};
+	uint16_t ids[] = {FEB_CAN_BMS_STATE_FRAME_ID};
 
 	for (uint8_t i = 0; i < 1; i++) {
 		CAN_FilterTypeDef filter_config;
@@ -72,7 +72,7 @@ uint8_t FEB_CAN_BMS_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignme
 
 void FEB_CAN_BMS_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t *RxData) {
     switch (pHeader -> StdId){
-        case FEB_CAN_ID_BMS_STATE:
+        case FEB_CAN_BMS_STATE_FRAME_ID:
         	BMS_MESSAGE.state = RxData[0];
         	if(is_r2d() && !(BMS_MESSAGE.state == FEB_SM_ST_DRIVE)){
         		disable_r2d();
