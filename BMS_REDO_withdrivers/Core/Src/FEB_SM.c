@@ -66,7 +66,7 @@ void FEB_SM_Init(void) {
 	// Set BMS Shutdown relay and bms indicator
 	FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_HW_RELAY_OPEN);
 	FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_HW_RELAY_OPEN);
-	FEB_PIN_SET(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_CLOSE);
+	FEB_PIN_SET(PN_BMS_SHUTDOWN);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_CLOSE);
 	FEB_PIN_SET(PN_BMS_IND);
 
 
@@ -114,7 +114,7 @@ static void fault(FEB_SM_ST_t FAULT_TYPE) {
 	if(ERROR_TYPE==0)ERROR_TYPE=0x100;
 	//FEB_Config_Update(SM_Current_State);
 
-	FEB_PIN_RST(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_RELAY_STATE_OPEN);
+	FEB_PIN_RST(PN_BMS_SHUTDOWN);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_RELAY_STATE_OPEN);
 	//FEB_PIN_SET(PN_BUZZER);
 	FEB_PIN_SET(PN_INDICATOR);
 

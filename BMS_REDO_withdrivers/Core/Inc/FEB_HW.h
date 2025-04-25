@@ -41,7 +41,7 @@ typedef struct {
 #define PN_PG P_PB6
 #define PN_ALERT P_PB7
 #define PN_BMS_IND P_PC0
-#define PN_BMS_A P_PC1
+#define PN_BMS_SHUTDOWN P_PC1
 #define PN_PC_AIR P_PC2
 #define PN_CS P_PC3
 #define PN_AIRM_SENSE P_PC4

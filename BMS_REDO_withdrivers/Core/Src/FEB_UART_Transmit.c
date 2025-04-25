@@ -289,7 +289,7 @@ void FEB_Transmit_AIR_Status(){
 		sprintf(str2,"AIRPLUS RESET\n\r");
 	}
 
-	sprintf(str3,"BMS SHUTDOWN: %d\n\r", FEB_PIN_RD(PN_BMS_A));
+	sprintf(str3,"BMS SHUTDOWN: %d\n\r", FEB_PIN_RD(PN_BMS_SHUTDOWN));
 	sprintf(str4,"IMD SHUTDOWN: %d\n\r", FEB_PIN_RD(PN_SHS_IMD));
 	sprintf(str5,"RELAY STATE: %d\n\r", FEB_PIN_RD(PN_PC_REL));
 
