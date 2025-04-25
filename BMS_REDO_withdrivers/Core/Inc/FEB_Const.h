@@ -68,5 +68,5 @@ typedef struct {
 	bank_t banks[FEB_NBANKS];
 } accumulator_t;
 
-static accumulator_t FEB_ACC = {0};
+
 #endif /* INC_FEB_CONST_H_ */

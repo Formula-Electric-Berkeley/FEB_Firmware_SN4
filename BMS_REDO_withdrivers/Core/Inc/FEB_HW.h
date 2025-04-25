@@ -37,7 +37,7 @@ typedef struct {
 #define PN_BUZZER P_PA0
 #define PN_WAKE P_PB0
 #define PN_INTR P_PB1
-#define PN_RST P_PB5
+#define PN_CHARGE_SENSE P_PB5
 #define PN_PG P_PB6
 #define PN_ALERT P_PB7
 #define PN_BMS_IND P_PC0
@@ -47,7 +47,7 @@ typedef struct {
 #define PN_AIRM_SENSE P_PC4
 #define PN_AIRP_SENSE P_PC5
 #define PN_SHS_IMD P_PC10
-#define PN_SHS_TSMS P_PC11
+#define PN_SHS_TSMS P_PC11 // TSMS drives an LED that reflects the state of SHS_IN
 #define PN_SHS_IN P_PC12
 #define PN_INDICATOR P_PC13
 #define PN_PC_REL P_PD2
@@ -64,9 +64,12 @@ uint8_t FEB_spi_read_byte(uint8_t tx_data);
 void FEB_Siren_Activate();
 
 // ******************************** Relay Control ********************************
-void FEB_PIN_RST(FEB_GPIO);
-void FEB_PIN_SET(FEB_GPIO);
-void FEB_PIN_TGL(FEB_GPIO);
-FEB_Relay_State FEB_PIN_RD(FEB_GPIO);
+//void FEB_PIN_RST(FEB_GPIO);
+//void FEB_PIN_SET(FEB_GPIO);
+//void FEB_PIN_TGL(FEB_GPIO);
+void FEB_PIN_RST(FEB_GPIO PinOut);
+void FEB_PIN_SET(FEB_GPIO PinOut);
+void FEB_PIN_TGL(FEB_GPIO PinOut);
+FEB_Relay_State FEB_PIN_RD(FEB_GPIO PinOut);
 
 #endif /* INC_FEB_HW_H_ */

@@ -100,6 +100,8 @@ void FEB_CAN_IVT_Process(void) {
 	}
 }
 
+
+
 int32_t FEB_IVT_V1_Voltage(){
 	return FEB_CAN_IVT_Message.voltage_1_mV;
 

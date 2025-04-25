@@ -3,8 +3,8 @@
 /* State variables tied to state machine. Requires synchronization (SM lock held). */
 static uint16_t cell_min_voltage_mV;		// mili-volts
 static uint16_t cell_max_voltage_mV;
-static int16_t cell_min_temperature_dC;		// deci-celsius
-static int16_t cell_max_temperature_dC;
+static float cell_min_temperature_dC;		// deci-celsius
+static float cell_max_temperature_dC;
 static int32_t pack_min_current_mA = 0;		// mili-amps
 static int32_t pack_max_current_mA = 0;
 
@@ -15,8 +15,8 @@ void FEB_Config_Update(FEB_SM_ST_t current_state) {
 		case FEB_SM_ST_BALANCE:
 			cell_min_voltage_mV = 3200; /* Higher minimum voltage */
 			cell_max_voltage_mV = 4200;
-			cell_min_temperature_dC = -200;
-			cell_max_temperature_dC = 600;
+			cell_min_temperature_dC = -200.0f;
+			cell_max_temperature_dC = 600.0f;
 			pack_min_current_mA = 0 - current_resolution_mA;
 			pack_max_current_mA = 0 + current_resolution_mA;
 			break;
@@ -24,23 +24,23 @@ void FEB_Config_Update(FEB_SM_ST_t current_state) {
 			cell_min_voltage_mV = 2500;
 			cell_max_voltage_mV = 4200;
 			cell_min_temperature_dC = 0;
-			cell_max_temperature_dC = 450;
-			pack_min_current_mA = -20000;
+			cell_max_temperature_dC = 450.0f;
+			pack_min_current_mA = -20000.0f;
 			pack_max_current_mA = 0 + current_resolution_mA;
 			break;
 		case FEB_SM_ST_PRECHARGE:
 			cell_min_voltage_mV = 2500;
 			cell_max_voltage_mV = 4200;
-			cell_min_temperature_dC = -200;
-			cell_max_temperature_dC = 600;
+			cell_min_temperature_dC = -200.0f;
+			cell_max_temperature_dC = 600.0f;
 			pack_min_current_mA = 0 - current_resolution_mA;
 			pack_max_current_mA = 100;
 			break;
 		case FEB_SM_ST_DRIVE:
 			cell_min_voltage_mV = 2500;
 			cell_max_voltage_mV = 4200;
-			cell_min_temperature_dC = -200;
-			cell_max_temperature_dC = 600;
+			cell_min_temperature_dC = -200.0f;
+			cell_max_temperature_dC = 600.0f;
 			pack_min_current_mA = 0 - current_resolution_mA;
 			pack_max_current_mA = 60000;
 			break;
@@ -81,14 +81,14 @@ uint16_t FEB_Config_Get_Cell_Max_Voltage_mV(void) {
 }
 
 
-int16_t FEB_Config_Get_Cell_Min_Temperature_dC(void) {
+float FEB_Config_Get_Cell_Min_Temperature_dC(void) {
 	//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
 	int16_t value = cell_min_temperature_dC;
 	//osMutexRelease(FEB_SM_LockHandle);
 	return value;
 }
 
-int16_t FEB_Config_Get_Cell_Max_Temperature_dC(void) {
+float FEB_Config_Get_Cell_Max_Temperature_dC(void) {
 	//while (osMutexAcquire(FEB_SM_LockHandle, UINT32_MAX) != osOK);
 	int16_t value = cell_max_temperature_dC;
 	//osMutexRelease(FEB_SM_LockHandle);

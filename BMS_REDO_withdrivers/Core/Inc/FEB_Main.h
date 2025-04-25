@@ -4,6 +4,7 @@
 // ******************************** Includes ********************************
 #include "FEB_ADBMS6830B.h"
 #include "FEB_IVT.h" //For IVT Readings
+#include "FEB_HW.h"
 
 // ******************************** Functions ********************************
 

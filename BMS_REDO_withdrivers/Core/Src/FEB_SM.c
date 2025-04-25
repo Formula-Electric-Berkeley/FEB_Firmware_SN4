@@ -9,7 +9,8 @@
 
 extern FEB_CAN_IVT_Message_t FEB_CAN_IVT_Message;
 extern FEB_CAN_DEV *FEB_CAN_NETWORK;
-
+accumulator_t FEB_ACC = {0};
+uint16_t ERROR_TYPE=0; //HEXDIGIT 1 voltage faults; HEXDIGIT 2 temp faults; HEXDIGIT 3 relay faults
 /* List of transition functions*/
 static void bootTransition(FEB_SM_ST_t);
 static void LVPowerTransition(FEB_SM_ST_t);
@@ -103,12 +104,14 @@ void FEB_SM_Process(void) {
 
 	//TODO: Add task queue
 	transitionVector[FEB_SM_Get_Current_State()](FEB_SM_ST_DEFAULT);
-	FEB_SM_CAN_Transmit();
+//	FEB_SM_CAN_Transmit();
+
 }
 
 //FAULT HELPER FUNCTION
 static void fault(FEB_SM_ST_t FAULT_TYPE) {
 	SM_Current_State = FAULT_TYPE;
+	if(ERROR_TYPE==0)ERROR_TYPE=0x100;
 	//FEB_Config_Update(SM_Current_State);
 
 	FEB_PIN_RST(PN_BMS_A);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_RELAY_STATE_OPEN);
@@ -148,11 +151,12 @@ static void bootTransition(FEB_SM_ST_t next_state){
 		updateStateProtected(FEB_SM_ST_LV);
 		break;
 	case FEB_SM_ST_DEFAULT:
-		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5)){
-			if(!HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_5) && FEB_PIN_RD(PN_PC_REL) == FEB_RELAY_STATE_OPEN && FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE){
-				updateStateProtected(FEB_SM_ST_PRECHARGE);
-			}
+//		if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5)){
+		if(FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN && FEB_PIN_RD(PN_PC_REL) == FEB_RELAY_STATE_OPEN && FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE){
+//				updateStateProtected(FEB_SM_ST_PRECHARGE);
+			bootTransition(FEB_SM_ST_LV);
 		}
+//		}
 
 		break;
 	default:
@@ -187,15 +191,15 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 
 		//I'm not sure if this is actually good. Maybe we should use the
 		// charge sense input instead
-		bool free = true;
-
-		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
-			free &= FEB_CAN_NETWORK[i].FAck;
-		}
-
-		if ( free ) {
-			LVPowerTransition(FEB_SM_ST_FREE);
-		}
+//		bool free = true; Todo: uncomment
+//
+//		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
+//			free &= FEB_CAN_NETWORK[i].FAck;
+//		}
+//
+//		if ( free ) {
+//			LVPowerTransition(FEB_SM_ST_FREE);
+//		}
 
 		break;
 
@@ -232,8 +236,8 @@ static void HealthCheckTransition(FEB_SM_ST_t next_state){
 
 		// AIR minus closed, air plus opened, precharge open make sure tsms
 		else if(FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE &&
-				FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN
-			//Precharge Sense????? FEB_PIN_RD() == FEB_RELAY_STATE_OPEN
+				FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN &&
+				FEB_PIN_RD(PN_PC_REL) == FEB_RELAY_STATE_OPEN
 		){
 			HealthCheckTransition(FEB_SM_ST_PRECHARGE);
 		}
@@ -282,7 +286,7 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 //		  TODO: Move to precharge file
 		float voltage_V = (float) FEB_CAN_IVT_Message.voltage_1_mV * 0.001;
 //		float target_voltage_V = FEB_ADBMS_Get_Total_Voltage() * FEB_CONST_PRECHARGE_PCT;
-		if (voltage_V >= 0.9 * 93) {
+		if (voltage_V >= 0.9 * FEB_ACC.total_voltage_V) {
 			PrechargeTransition(FEB_SM_ST_ENERGIZED);
 		}
 
@@ -496,9 +500,9 @@ static void BMSFaultTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_DEFAULT:
 		// perpetually fault until cleared
 		fault(FEB_SM_ST_FAULT_BMS);
-		if(FEB_PIN_RD(PN_RST) == FEB_RELAY_STATE_CLOSE){
-			updateStateProtected(FEB_SM_ST_LV);
-		}
+//		if(FEB_PIN_RD(PN_RST) == FEB_RELAY_STATE_CLOSE){
+//			updateStateProtected(FEB_SM_ST_LV);
+//		}
 		break;
 
 	default:

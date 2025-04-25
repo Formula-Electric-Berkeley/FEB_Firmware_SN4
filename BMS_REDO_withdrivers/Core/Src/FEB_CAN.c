@@ -85,7 +85,8 @@ void FEB_SM_CAN_Transmit(void) {
 	FEB_CAN_Tx_Data[1] = ((gpio_sense & 0x3F) << 2) | (relay_state & 0x03);
 
 	// Delay until mailbox available
-	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+	int timeout =0;
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {if(++timeout==1000)break;}
 
 	// Add Tx data to mailbox
 	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
@@ -98,9 +99,14 @@ void FEB_SM_CAN_Transmit(void) {
 		FEB_CAN_NETWORK[i].LaOn += 1;
 	}
 
-	if ( FEB_CAN_NETWORK[(ping_alive - 1) % FEB_NUM_CAN_DEV].last_received == 0 ) {
-		++FEB_CAN_NETWORK[(ping_alive - 1) % FEB_NUM_CAN_DEV].FAck;
+	if ( FEB_CAN_NETWORK[ping_alive==0?FEB_NUM_CAN_DEV-1:(ping_alive - 1) % FEB_NUM_CAN_DEV].last_received == 0 ) {
+		++FEB_CAN_NETWORK[ping_alive==0?FEB_NUM_CAN_DEV-1:(ping_alive - 1) % FEB_NUM_CAN_DEV].FAck;
 	}
+
+	for(int i =0;i<FEB_NUM_CAN_DEV;i++){
+		if(FEB_CAN_NETWORK[i].FAck<2)return;
+	}
+	//FEB_SM_Transition(FEB_SM_ST_FREE);
 }
 
 void FEB_CELL_CAN_Transmit(void) {

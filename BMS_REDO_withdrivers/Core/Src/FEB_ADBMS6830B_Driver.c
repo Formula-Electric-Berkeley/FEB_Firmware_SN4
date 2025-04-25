@@ -93,7 +93,7 @@ void ADBMS6830B_set_cfgr(uint8_t nIC, // Current IC
 	ADBMS6830B_set_cfgr_dcto(nIC,ic,dcto);
 	ADBMS6830B_set_cfgr_uv(nIC, ic, uv);
 	ADBMS6830B_set_cfgr_ov(nIC, ic, ov);
-	ADBMS6830B_set_cfgr_flags(nIC, ic, 255);
+	//ADBMS6830B_set_cfgr_flags(nIC, ic, 255);
 }
 
 /* Helper function to set the REFON bit */

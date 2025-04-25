@@ -115,14 +115,12 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  FEB_Task_ADBMS();
-	  //FEB_Task_SM();
+	  FEB_Task_SM();
 	  //FEB_Task_Charge();
 	  FEB_Task_Balance();
-	  //FEB_Task_IVT();
-
-
-
-//	  FEB_Task_CAN();
+	  FEB_Task_IVT();
+	  FEB_Task_CAN();
+	  FEB_Task_UART();
   }
   /* USER CODE END 3 */
 }

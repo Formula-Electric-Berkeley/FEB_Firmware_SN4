@@ -10,7 +10,7 @@
 //#include "FEB_CAN.h"
 #include "FEB_Config.h"
 #include "FEB_CAN_Charger.h"
-
+#include "FEB_UART_Transmit.h"
 
 // ************************ Task Queues ***************
 void FEB_SM_Init(void);
