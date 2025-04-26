@@ -54,7 +54,7 @@ void TPS2482_Get_Register(I2C_HandleTypeDef *hi2c, uint8_t *addresses, uint8_t r
 
 	for ( uint8_t i = 0; i < messageCount; i++ ) {
 		if ( HAL_I2C_Mem_Read(hi2c, addresses[i] << 1, reg, I2C_MEMADD_SIZE_8BIT, &res[2*i], sizeof(*results), HAL_MAX_DELAY) != HAL_OK ) {
-			// Todo failure state
+			results[i] = 0; // ERROR
 		}
 		else {
 			results[i] = ((uint16_t)(res[2 * i]) << 8) | (uint16_t)(res[2 * i + 1]);
@@ -142,7 +142,7 @@ void TPS2482_GPIO_Read(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, GPIO_PinState *
 void TPS2482_Enable(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, uint8_t *en_dis, bool *result, uint8_t messageCount) {
 	TPS2482_GPIO_Write(GPIOx, GPIO_Pin, en_dis, messageCount);
 
-	HAL_Delay(100);
+//	HAL_Delay(100);
 
 	TPS2482_GPIO_Read(GPIOx, GPIO_Pin, (GPIO_PinState *)result, messageCount);
 }

@@ -120,17 +120,38 @@ FEB_LVPDB_CAN_Data can_data;
 void FEB_Main_Setup(void) {
 	FEB_Variable_Init();
 
-	FEB_CAN_Init(FEB_CAN1_Rx_Callback);
-
 #if !TESTBENCH
+
+	bool tps2482_init_res[NUM_TPS2482];
+	bool tps2482_init_success = false;
+	int maxiter = 0; // Safety in case of infinite while
+
+	while ( !tps2482_init_success ) {
+		if ( maxiter > 100 ) {
+			break; // Todo add failure case
+		}
+
+		// Assume successful init
+		bool b = 0x01;
+
+		TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, NUM_TPS2482);
+
+		for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
+			// If any don't enable properly b will be false and thus loop continues
+			b &= tps2482_init_res[i];
+		}
+
+		tps2482_init_success = b;
+		maxiter += 1;
+	}
 
 	bool tps2482_en_res[NUM_TPS2482 - 1];
 	bool tps2482_en_success = false;
 	GPIO_PinState tps2482_pg_res[NUM_TPS2482];
 	bool tps2482_pg_success = false;
-	int maxiter = 0; // Safety in case of infinite while
+	maxiter = 0; // Safety in case of infinite while
 
-	uint8_t start_en[NUM_TPS2482 - 1] = {0, 0, 0, 1, 1, 1, 1};
+	uint8_t start_en[NUM_TPS2482 - 1] = {0, 0, 0, 1, 0, 0, 0};
 
 	while ( !tps2482_en_success || !tps2482_pg_success ) {
 		if ( maxiter > 100 ) {
@@ -165,38 +186,12 @@ void FEB_Main_Setup(void) {
 		maxiter += 1;
 	}
 
-	bool tps2482_init_res[NUM_TPS2482];
-	bool tps2482_init_success = false;
-	maxiter = 0; // Safety in case of infinite while
-
-	while ( !tps2482_init_success ) {
-		if ( maxiter > 100 ) {
-			break; // Todo add failure case
-		}
-
-		// Assume successful init
-		bool b = 0x01;
-
-		TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, NUM_TPS2482);
-
-		for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
-			// If any don't enable properly b will be false and thus loop continues
-			if ( i == 0 ) {
-				b &= tps2482_init_res[i];
-			}
-			else {
-				b &= (tps2482_init_res[i] ==  start_en[i - 1]);
-			}
-		}
-
-		tps2482_init_success = b;
-		maxiter += 1;
-	}
-
 	// Initialize brake light to be off
 	HAL_GPIO_WritePin(BL_SWITCH_GPIO_Port, BL_SWITCH_Pin, GPIO_PIN_RESET);
 
 #endif
+
+	FEB_CAN_Init(FEB_CAN1_Rx_Callback);
 
 	HAL_TIM_Base_Start_IT(&htim1);
 }
@@ -340,90 +335,41 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 		bool cp_en = (dash_data >> 5) & 0x01;
 		bool rf_en = (dash_data >> 6) & 0x01;
 		bool af_en = (dash_data >> 7) & 0x01;
+		bool as_en = af_en;
 
-		if ( cp_en ) {
-			GPIO_TypeDef **cp_pg_port = &tps2482_pg_ports[1];
-			uint16_t *cp_pg_pin = &tps2482_pg_pins[1];
-			GPIO_PinState cp_pg_res[1];
+		bool tps2482_en_res[NUM_TPS2482 - 1];
+		GPIO_PinState tps2482_en_initial[NUM_TPS2482 - 1];
+		bool tps2482_en_success = true; // Assume successful enable
+		GPIO_PinState tps2482_pg_res[NUM_TPS2482];
+		bool tps2482_pg_success = true; // Assume successful enable
 
-			TPS2482_GPIO_Read(cp_pg_port, cp_pg_pin, cp_pg_res, 1);
+		TPS2482_GPIO_Read(tps2482_pg_ports, tps2482_pg_pins, tps2482_pg_res, NUM_TPS2482);
+		TPS2482_GPIO_Read(tps2482_en_ports, tps2482_en_pins, tps2482_en_initial, NUM_TPS2482 - 1);
 
-			if ( !cp_pg_res[0] ) {
-				GPIO_TypeDef **cp_en_port = &tps2482_en_ports[0];
-				uint16_t *cp_en_pin = &tps2482_en_pins[0];
-
-				uint8_t cp_start_en[1] = {1};
-
-				uint8_t *cp_i2c_address = &tps2482_i2c_addresses[1];
-				TPS2482_Configuration *cp_configuration = &tps2482_configurations[1];
-				uint16_t *cp_id = &tps2482_ids[1];
-
-				bool cp_en_res[1];
-				bool cp_init_res[1];
-
-				TPS2482_Enable(cp_en_port, cp_en_pin, cp_start_en, cp_en_res, 1);
-				TPS2482_Init(&hi2c1, cp_i2c_address, cp_configuration, cp_id, cp_init_res, 1);
-
-				if ( !cp_en_res[0] || !cp_init_res[0] ) {
-					// error case
-				}
-			}
+		for ( uint8_t i = 0; i < NUM_TPS2482; i++ ) {
+			// If any don't enable properly b will be false and thus loop continues
+			tps2482_pg_success &= (tps2482_pg_res[i] == (bool)tps2482_en_initial[i]);
 		}
-		if ( rf_en ) {
-			GPIO_TypeDef **rf_pg_port = &tps2482_pg_ports[2];
-			uint16_t *rf_pg_pin = &tps2482_pg_pins[2];
-			GPIO_PinState rf_pg_res[1];
 
-			TPS2482_GPIO_Read(rf_pg_port, rf_pg_pin, rf_pg_res, 1);
-
-			if ( !rf_pg_res[0] ) {
-				GPIO_TypeDef **rf_en_port = &tps2482_en_ports[1];
-				uint16_t *rf_en_pin = &tps2482_en_pins[1];
-
-				uint8_t rf_start_en[1] = {1};
-
-				uint8_t *rf_i2c_address = &tps2482_i2c_addresses[2];
-				TPS2482_Configuration *rf_configuration = &tps2482_configurations[2];
-				uint16_t *rf_id = &tps2482_ids[2];
-
-				bool rf_en_res[1];
-				bool rf_init_res[1];
-
-				TPS2482_Enable(rf_en_port, rf_en_pin, rf_start_en, rf_en_res, 1);
-				TPS2482_Init(&hi2c1, rf_i2c_address, rf_configuration, rf_id, rf_init_res, 1);
-
-				if ( !rf_en_res[0] || !rf_init_res[0] ) {
-					// error case
-				}
-			}
+		if ( !tps2482_pg_success ) {
+			// Todo: Error State
 		}
-		if ( af_en ) {
-			GPIO_TypeDef **af_pg_port = &tps2482_pg_ports[3];
-			uint16_t *af_pg_pin = &tps2482_pg_pins[3];
-			GPIO_PinState af_pg_res[1];
 
-			TPS2482_GPIO_Read(af_pg_port, af_pg_pin, af_pg_res, 1);
+		// Todo: have this check that nothing has changed since last send
+		tps2482_en_initial[0] = (GPIO_PinState)cp_en;
+		tps2482_en_initial[1] = (GPIO_PinState)af_en;
+		tps2482_en_initial[2] = (GPIO_PinState)rf_en;
+		tps2482_en_initial[5] = (GPIO_PinState)as_en;
 
-			if ( !af_pg_res[0] ) {
-				GPIO_TypeDef **af_en_port = &tps2482_en_ports[2];
-				uint16_t *af_en_pin = &tps2482_en_pins[2];
+		TPS2482_Enable(tps2482_en_ports, tps2482_en_pins, tps2482_en_initial, tps2482_en_res, NUM_TPS2482 - 1);
 
-				uint8_t af_start_en[1] = {1};
+		for ( uint8_t i = 0; i < NUM_TPS2482 - 1; i++ ) {
+			// If any don't enable properly b will be false and thus loop continues
+			tps2482_en_success &= (tps2482_en_res[i] == tps2482_en_initial[i]);
+		}
 
-				uint8_t *af_i2c_address = &tps2482_i2c_addresses[3];
-				TPS2482_Configuration *af_configuration = &tps2482_configurations[3];
-				uint16_t *af_id = &tps2482_ids[3];
-
-				bool af_en_res[1];
-				bool af_init_res[1];
-
-				TPS2482_Enable(af_en_port, af_en_pin, af_start_en, af_en_res, 1);
-				TPS2482_Init(&hi2c1, af_i2c_address, af_configuration, af_id, af_init_res, 1);
-
-				if ( !af_en_res[0] || !af_init_res[0] ) {
-					// error case
-				}
-			}
+		if ( !tps2482_en_success ) {
+			// Todo: Error State
 		}
 	}
 

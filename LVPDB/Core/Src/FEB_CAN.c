@@ -53,17 +53,34 @@ uint8_t FEB_CAN_Filter(CAN_HandleTypeDef *hcan, unsigned char FIFO_assignment, u
 	CAN_FilterTypeDef filter_config;
 
     // Standard CAN - 2.0A - 11 bit
-    filter_config.FilterActivation = CAN_FILTER_ENABLE;
+//    filter_config.FilterActivation = CAN_FILTER_ENABLE;
+//	filter_config.FilterBank = filter_bank;
+//	filter_config.FilterFIFOAssignment = FIFO_assignment;
+//	filter_config.FilterIdHigh = 0;
+//	filter_config.FilterIdLow = 0;
+//	filter_config.FilterMaskIdHigh = 0;
+//	filter_config.FilterMaskIdLow = 0;
+//	filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
+//	filter_config.FilterScale = CAN_FILTERSCALE_32BIT;
+//	filter_config.SlaveStartFilterBank = 27;
+
+	filter_config.FilterActivation = CAN_FILTER_ENABLE;
 	filter_config.FilterBank = filter_bank;
 	filter_config.FilterFIFOAssignment = FIFO_assignment;
-	filter_config.FilterIdHigh = 0;
-	filter_config.FilterIdLow = 0;
+
+	filter_config.FilterMode = CAN_FILTERMODE_IDLIST;
+	filter_config.FilterScale = CAN_FILTERSCALE_16BIT;
+
+	// For standard IDs, place them in the top 11 bits of each 16-bit half-word (left shift by 5)
+	filter_config.FilterIdHigh = FEB_CAN_NORMALIZED_BRAKE_FRAME_ID << 5;
+	filter_config.FilterIdLow  = FEB_CAN_DASH_MESSAGE_FRAME_ID << 5;
+
+	// Not used in IDLIST mode but must be initialized
 	filter_config.FilterMaskIdHigh = 0;
-	filter_config.FilterMaskIdLow = 0;
-	filter_config.FilterMode = CAN_FILTERMODE_IDMASK;
-	filter_config.FilterScale = CAN_FILTERSCALE_32BIT;
+	filter_config.FilterMaskIdLow  = 0;
+
 	filter_config.SlaveStartFilterBank = 27;
-    filter_bank++;
+    filter_bank += 2;
 
 	if (HAL_CAN_ConfigFilter(hcan, &filter_config) != HAL_OK) {
         // Code Error - Shutdown
