@@ -3,7 +3,7 @@
 
 // **************************************** Includes ****************************************
 
-#include "FEB_CAN_Library_SN4/gen/feb_can.h"
+#include <FEB_CAN_Library_SN4/feb_can.h>
 #include "FEB_UART_TRANSMIT.h"
 #include "FEB_IO_ICS.h"
 #include "FEB_CAN_APPS.h"

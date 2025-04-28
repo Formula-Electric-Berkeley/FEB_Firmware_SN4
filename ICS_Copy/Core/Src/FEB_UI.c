@@ -139,18 +139,19 @@ void BMS_State_Set(void) {
 char* get_bms_state_string(FEB_SM_ST_t state) {
 	switch (state) {
 		case FEB_SM_ST_BOOT: return "Boot";
-		case FEB_SM_ST_LV_POWER: return "LV Power";
-		case FEB_SM_ST_ESC_COMPLETED: return "ESC Completed";
+		case FEB_SM_ST_LV: return "LV Power";
+		case FEB_SM_ST_HEALTH_CHECK: return "Health Check";
 		case FEB_SM_ST_PRECHARGE: return "Precharge";
 		case FEB_SM_ST_ENERGIZED: return "Energized";
 		case FEB_SM_ST_DRIVE: return "Drive";
-		case FEB_SM_ST_BATTERY_FREE: return "Battery Free";
+		case FEB_SM_ST_FREE: return "Battery Free";
 		case FEB_SM_ST_CHARGING: return "Charging";
 		case FEB_SM_ST_BALANCE: return "Balance";
 		case FEB_SM_ST_FAULT_BMS: return "Fault - BMS";
 		case FEB_SM_ST_FAULT_BSPD: return "Fault - BSPD";
 		case FEB_SM_ST_FAULT_IMD: return "Fault - IMD";
 		case FEB_SM_ST_FAULT_CHARGING: return "Fault - Charging";
+		case FEB_SM_ST_DEFAULT: return "Default";
 		default: return "Unknown";
 	}
 }

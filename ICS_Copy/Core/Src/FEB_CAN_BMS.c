@@ -88,6 +88,3 @@ bool FEB_CAN_BMS_is_stale(){
 	}
 	return false;
 }
-
-
-

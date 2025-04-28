@@ -14,7 +14,8 @@ static uint8_t IO_state = 0xFF;
 static uint8_t r2d = 0;
 
 static uint32_t datalog_press_start_time = 0;
-static uint8_t datalog_active = 0; // For Data logging Flag
+static uint8_t button2_last_state = 0;
+static uint8_t datalog_active = 0;
 //static uint8_t button2_last = 0;
 
 // **************************************** Functions ****************************************
@@ -29,7 +30,7 @@ void FEB_IO_ICS_Init(void) {
 
 void FEB_IO_ICS_Loop(void) {
 	// receive IO expander data from I2C
-	uint8_t received_data;
+	uint8_t received_data = 0x00;
 	HAL_I2C_Master_Receive(&hi2c1, IOEXP_ADDR << 1, &received_data, 1, HAL_MAX_DELAY);
 
 	IO_state = 0;
@@ -46,18 +47,22 @@ void FEB_IO_ICS_Loop(void) {
 
 	if(r2d == 0 && bms_state == FEB_SM_ST_ENERGIZED){
 		//lv_obj_set_style_bg_color(ui_TextArea3, lv_color_hex(0xFFFF00), LV_PART_MAIN | LV_STATE_DEFAULT );
-
 	}
 
 	// Button 1 - Ready-to-Drive (RTD) button
-	if (!(received_data & (1<<1))) {
+	if ((received_data & (1<<1))) {
 		if (((HAL_GetTick() - rtd_press_start_time) >= BTN_HOLD_TIME) &&
 		     brake_pressure >= 4 &&
 		     (bms_state == FEB_SM_ST_ENERGIZED ||
 		      bms_state == FEB_SM_ST_DRIVE)) {
 
 			//Flio ready to drive if pressed again to turn it off
-			r2d = (r2d == 1) ? 0 : 1;
+			if (r2d == 1) {
+				r2d = 0;
+			} else {
+				r2d = 1;
+			}
+
 			IO_state = (uint8_t) set_n_bit(IO_state, 1, 1);
 			if(r2d == 1){
 				set_rtd_buzzer = 0;
@@ -68,7 +73,7 @@ void FEB_IO_ICS_Loop(void) {
 			//Restart the start time so we don't constantly toggle r2d
 			rtd_press_start_time = HAL_GetTick();
 
-			if ( r2d ) {
+			if (r2d) {
 				lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
 			}
 			else {
@@ -83,97 +88,83 @@ void FEB_IO_ICS_Loop(void) {
 		rtd_press_start_time = HAL_GetTick();
 	}
 
-	// Button 2
-//	if (!(received_data & (1<<2))) {
-//		IO_state = (uint8_t) set_n_bit(IO_state, 2, 1);
+//	//BUTTON 2 - Datalogger (Latest)
+//	if ((received_data & (1 << 2))) { // If button 2 is currently pressed
+//	    if (button2_last_state == 0) {
+//	        // Only toggle if previously was not pressed
+//	        datalog_active ^= 1; // Toggle ON/OFF
+//
+//	        // Update UI immediately
+//	        if (datalog_active) {
+//	            lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT); // Green
+//	        } else {
+//	            lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT); // Red
+//	        }
+//	    }
+//	    button2_last_state = 1;
+//	    IO_state = (uint8_t) set_n_bit(IO_state, 2, 1);
 //	} else {
-//		IO_state = (uint8_t) set_n_bit(IO_state, 2, 0);
+//	    button2_last_state = 0;
+//	    IO_state = (uint8_t) set_n_bit(IO_state, 2, 0);
 //	}
-	// Button 2 - ButtonDataLog (Bit 2) FOR TEST I SAID BIT 2
-//	if (!(received_data & (1<<2))) { //TODO HERE!!!! LOOK WHICH BIT ITS GONNA BE AND CHANGE IT
+
+
+//	if ((received_data & (1<<2))) {
+//		if (((HAL_GetTick() - datalog_press_start_time) >= BTN_HOLD_TIME)) {
 //
-//		if ( !datalog_active ) {  // detect edge: only toggle once per press
-////			datalog_active = !datalog_active;
-////			if (datalog_active) {
+//			//Flio ready to drive if pressed again to turn it off
+//			datalog_active ^= 1;
 //			IO_state = (uint8_t) set_n_bit(IO_state, 2, 1);
-//			datalog_active = 1;
-//			lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT);
-////			} else {
 //
-////			}
+//			//Restart the start time so we don't constantly toggle r2d
+//			datalog_press_start_time = HAL_GetTick();
+//
+//			if ( datalog_active ) {
+//				lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
+//			}
+//			else {
+//				lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+//			}
+//
 //		} else {
-//			IO_state = (uint8_t) set_n_bit(IO_state, 2, 0);
-//			datalog_active = 0;
-//			lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-//	//		static uint8_t button2_last = 0;
-//
+//			IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
 //		}
-////		button2_last = 1;
+//	} else {
+//		IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
+//		datalog_press_start_time = HAL_GetTick();
 //	}
-
-	if (!(received_data & (1<<2))) {
-		if (((HAL_GetTick() - datalog_press_start_time) >= BTN_HOLD_TIME)) {
-
-			//Flio ready to drive if pressed again to turn it off
-			datalog_active ^= 1;
-			IO_state = (uint8_t) set_n_bit(IO_state, 2, 1);
-
-			//Restart the start time so we don't constantly toggle r2d
-			datalog_press_start_time = HAL_GetTick();
-
-			if ( datalog_active ) {
-				lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
-			}
-			else {
-				lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
-			}
-
-		} else {
-			IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
-		}
-	} else {
-		IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
-		datalog_press_start_time = HAL_GetTick();
-	}
 
 	// Button 3
-	if (!(received_data & (1<<3))) {
+	if ((received_data & (1<<3))) {
 		IO_state = (uint8_t) set_n_bit(IO_state, 3, 1);
 	} else {
 		IO_state = (uint8_t) set_n_bit(IO_state, 3, 0);
 	}
 
-	// Button 4
-	if (!(received_data & (1<<4))) {
-		IO_state = (uint8_t) set_n_bit(IO_state, 4, 1);
-	} else {
-		IO_state = (uint8_t) set_n_bit(IO_state, 4, 0);
-	}
-
-	// Switch 1 - Coolant Pump
-	if (!(received_data & (1<<7))) {
-		IO_state = (uint8_t) set_n_bit(IO_state, 7, 1);
+	// Switch 1 - (Coolant Pump)
+	if ((received_data & (1<<5))) {
+		IO_state = (uint8_t) set_n_bit(IO_state, 5, 1);
 		lv_obj_set_style_bg_color(ui_ButtonCoolPump, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
 	} else {
-		IO_state = (uint8_t) set_n_bit(IO_state, 7, 0);
+		IO_state = (uint8_t) set_n_bit(IO_state, 5, 0);
 		lv_obj_set_style_bg_color(ui_ButtonCoolPump, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
 	}
 
 	// Switch 2 - Radiator Fans
-	if (!(received_data & (1<<5))) {
-		IO_state = (uint8_t) set_n_bit(IO_state, 5, 1);
-		lv_obj_set_style_bg_color(ui_ButtonRADFan, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
+	if ((received_data & (1<<6))) {
+		IO_state = (uint8_t) set_n_bit(IO_state, 6, 1);
+		lv_obj_set_style_bg_color(ui_ButtonRADFan, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT ); //ui_ButtonCoolPump
 	} else {
-		IO_state = (uint8_t) set_n_bit(IO_state, 5, 0);
+		IO_state = (uint8_t) set_n_bit(IO_state, 6, 0);
 		lv_obj_set_style_bg_color(ui_ButtonRADFan, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
 	}
 
 	// Switch 3 - Accumulator Fans
-	if (!(received_data & (1<<6))) {
-		IO_state = (uint8_t) set_n_bit(IO_state, 6, 1);
+	if ((received_data & (1<<7))) {
+		IO_state = (uint8_t) set_n_bit(IO_state, 7, 1);
 		lv_obj_set_style_bg_color(ui_ButtonAccFan, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
 	} else {
-		IO_state = (uint8_t) set_n_bit(IO_state, 6, 0);
+		IO_state = (uint8_t) set_n_bit(IO_state, 7, 0);
 		lv_obj_set_style_bg_color(ui_ButtonAccFan, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
 	}
 
@@ -214,7 +205,7 @@ void FEB_IO_ICS_Loop(void) {
 
 
 	uint8_t transmit_rtd = (0b1111111 << 1) + set_rtd_buzzer;
-	//HAL_I2C_Master_Transmit(&hi2c1, IOEXP_ADDR << 1, &transmit_rtd, sizeof(transmit_rtd), HAL_MAX_DELAY);
+	HAL_I2C_Master_Transmit(&hi2c1, IOEXP_ADDR << 1, &transmit_rtd, 1, HAL_MAX_DELAY); //sizeof(transmit_rtd)
 
 	//display button state on UI
 	char button_state_str[9];
@@ -236,26 +227,6 @@ void uint8_to_binary_string(uint8_t value, char *binary_string) {
     }
     binary_string[8] = '\0';
 }
-
-////Might need it later
-//const char* get_bms_state_string(FEB_SM_ST_t state) {
-//	switch (state) {
-//		case FEB_SM_ST_BOOT: return "Boot";
-//		case FEB_SM_ST_LV_POWER: return "LV Power";
-//		case FEB_SM_ST_ESC_COMPLETED: return "ESC Completed";
-//		case FEB_SM_ST_PRECHARGE: return "Precharge";
-//		case FEB_SM_ST_ENERGIZED: return "Energized";
-//		case FEB_SM_ST_DRIVE: return "Drive";
-//		case FEB_SM_ST_BATTERY_FREE: return "Battery Free";
-//		case FEB_SM_ST_CHARGING: return "Charging";
-//		case FEB_SM_ST_BALANCE: return "Balance";
-//		case FEB_SM_ST_FAULT_BMS: return "Fault - BMS";
-//		case FEB_SM_ST_FAULT_BSPD: return "Fault - BSPD";
-//		case FEB_SM_ST_FAULT_IMD: return "Fault - IMD";
-//		case FEB_SM_ST_FAULT_CHARGING: return "Fault - Charging";
-//		default: return "Unknown";
-//	}
-//}
 
 void disable_r2d(){
 	r2d = 0;
