@@ -188,7 +188,7 @@ void FEB_SM_UART_Transmit(void) {
 	FEB_Relay_State air_plus_sense = FEB_PIN_RD(PN_AIRP_SENSE);//FEB_Hw_AIR_Plus_Sense();
 	FEB_Relay_State air_minus_sense = FEB_PIN_RD(PN_AIRM_SENSE);//FEB_Hw_AIR_Minus_Sense();
 	FEB_Relay_State precharge_relay = FEB_PIN_RD(PN_PC_REL);//FEB_Hw_Get_Precharge_Relay();
-//	FEB_Relay_State bms_shutdown_sense = FEB_PIN_RD(PN_SHS_TSMS);//FEB_Hw_BMS_Shutdown_Sense();
+	FEB_Relay_State bms_shutdown_enable = FEB_PIN_RD(PN_BMS_SHUTDOWN);//FEB_Hw_BMS_Shutdown_Sense();
 	FEB_Relay_State imd_shutdown_sense = FEB_PIN_RD(PN_SHS_IMD);//FEB_Hw_IMD_Shutdown_Sense();
 	//bool r2d = FEB_CAN_ICS_Ready_To_Drive();
 	//uint8_t ics = FEB_CAN_ICS_Data();
@@ -196,9 +196,9 @@ void FEB_SM_UART_Transmit(void) {
 
 	uint32_t ivt_voltage_mV = FEB_CAN_IVT_Message.voltage_1_mV;
 
-	static char str[256];
-	sprintf(str, "state %sShutdown Input: %d\tAir Plus: %d\tAIR Plus Sense: %d\tAIR Minus Sense: %d\tPrecharge Relay: %d\tIMD Shutdown Sense: %d\n\rTractive System Voltage: %ld\n\r———————————————————————————————————————\n\r",
-			state_str, bms_shutdown_relay, air_plus_relay, air_plus_sense,
+	static char str[512];
+	sprintf(str, "%sShutdown Input: %d\tBMS Shutdown: %d\tAir Plus: %d\tAIR Plus Sense: %d\tAIR Minus Sense: %d\tPrecharge Relay: %d\tIMD Shutdown Sense: %d\n\rTractive System Voltage: %ld\n\r———————————————————————————————————————\n\r",
+			state_str, bms_shutdown_relay, bms_shutdown_enable, air_plus_relay, air_plus_sense,
 			air_minus_sense, precharge_relay, imd_shutdown_sense, ivt_voltage_mV);
 
 	//while (osMutexAcquire(FEB_UART_LockHandle, UINT32_MAX) != osOK);
@@ -209,7 +209,7 @@ void FEB_SM_UART_Transmit(void) {
 void FEB_IVT_V1_Transmit(){
 	int32_t voltage_value = FEB_IVT_V1_Voltage();
 	static char str[128];
-	sprintf(str,"IVT V1 Voltage: %l \n\r", voltage_value);
+	sprintf(str,"IVT V1 Voltage: %ld \n\r", voltage_value);
 	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 500);
 
 }

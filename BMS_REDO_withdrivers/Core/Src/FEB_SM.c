@@ -64,10 +64,11 @@ void FEB_SM_Init(void) {
 
 	// Make sure air plus, and precharge are open.
 	// Set BMS Shutdown relay and bms indicator
+	FEB_PIN_RST(PN_BMS_IND);
 	FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_HW_RELAY_OPEN);
 	FEB_PIN_RST(PN_PC_REL);//FEB_Hw_Set_Precharge_Relay(FEB_HW_RELAY_OPEN);
 	FEB_PIN_SET(PN_BMS_SHUTDOWN);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_HW_RELAY_CLOSE);
-	FEB_PIN_SET(PN_BMS_IND);
+//	FEB_PIN_SET(PN_BMS_IND);
 
 
 	//FEB_CAN_Charger_Init();
@@ -277,6 +278,10 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 
 	case FEB_SM_ST_DEFAULT:
 
+		if ( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN ) {
+			PrechargeTransition(FEB_SM_ST_FAULT_BMS);
+		}
+
 		//Keep air plus open for redundancy
 		FEB_PIN_RST(PN_PC_AIR);
 
@@ -332,6 +337,10 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_DEFAULT:
+		if ( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN ) {
+			PrechargeTransition(FEB_SM_ST_FAULT_BMS);
+		}
+
 		if(FEB_CAN_DASH_Get_R2R()){
 			EnergizedTransition(FEB_SM_ST_DRIVE);
 		}
@@ -499,6 +508,7 @@ static void BMSFaultTransition(FEB_SM_ST_t next_state){
 	switch(next_state){
 	case FEB_SM_ST_DEFAULT:
 		// perpetually fault until cleared
+		FEB_PIN_SET(PN_BMS_IND);
 		fault(FEB_SM_ST_FAULT_BMS);
 //		if(FEB_PIN_RD(PN_RST) == FEB_RELAY_STATE_CLOSE){
 //			updateStateProtected(FEB_SM_ST_LV);
@@ -521,6 +531,7 @@ static void IMDFaultTransition(FEB_SM_ST_t next_state){
 }
 static void ChargingFaultTransition(FEB_SM_ST_t next_state){
 	if (next_state==FEB_SM_ST_DEFAULT)return;
+	FEB_PIN_SET(PN_BMS_IND);
 	fault(SM_Current_State);
 }
 
