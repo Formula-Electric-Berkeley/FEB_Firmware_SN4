@@ -41,52 +41,111 @@ void FEB_IO_ICS_Loop(void) {
 //	if(r2d == 1  && (!(bms_state == FEB_SM_ST_DRIVE || bms_state == FEB_SM_ST_DRIVE_REGEN) || FEB_CAN_BMS_is_stale())){
 //		r2d = 0; //Reset r2d if we're no longer in drive or drive regen.
 //	}
-	if (r2d == 1 && (bms_state != FEB_SM_ST_DRIVE || FEB_CAN_BMS_is_stale())) {
-		r2d = 0;
-	}
+//	if (r2d == 1 && (bms_state != FEB_SM_ST_DRIVE || FEB_CAN_BMS_is_stale())) {
+//		r2d = 0;
+//	}
 
 	if(r2d == 0 && bms_state == FEB_SM_ST_ENERGIZED){
 		//lv_obj_set_style_bg_color(ui_TextArea3, lv_color_hex(0xFFFF00), LV_PART_MAIN | LV_STATE_DEFAULT );
 	}
 
 	// Button 1 - Ready-to-Drive (RTD) button
-	if ((received_data & (1<<1))) {
-		if (((HAL_GetTick() - rtd_press_start_time) >= BTN_HOLD_TIME) &&
-		     brake_pressure >= 4 &&
-		     (bms_state == FEB_SM_ST_ENERGIZED ||
-		      bms_state == FEB_SM_ST_DRIVE)) {
+	if ((received_data & (1 << 1))) {
+	    if ((HAL_GetTick() - rtd_press_start_time) >= BTN_HOLD_TIME &&
+	        brake_pressure >= 4 &&
+	        (bms_state == FEB_SM_ST_ENERGIZED || bms_state == FEB_SM_ST_DRIVE)) {
 
-			//Flio ready to drive if pressed again to turn it off
-			if (r2d == 1) {
-				r2d = 0;
-			} else {
-				r2d = 1;
-			}
+	        uint8_t previous_r2d = r2d;
 
-			IO_state = (uint8_t) set_n_bit(IO_state, 1, 1);
-			if(r2d == 1){
-				set_rtd_buzzer = 0;
-			} else{
-				set_rtd_buzzer = 1;
-			}
+	        // Attempt to enter or exit drive
+	        if (bms_state == FEB_SM_ST_ENERGIZED) {
+	            r2d = 1; // Try entering Drive
+	        } else if (bms_state == FEB_SM_ST_DRIVE) {
+	            r2d = 0; // Try exiting Drive
+	        }
 
-			//Restart the start time so we don't constantly toggle r2d
-			rtd_press_start_time = HAL_GetTick();
+	        // Send R2D over CAN
+	        IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
+	        FEB_CAN_ICS_Transmit_Button_State(IO_state);
 
-			if (r2d) {
-				lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
-			}
-			else {
-				lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
-			}
+	        // Delay for BMS to get the message
+	        HAL_Delay(100);
 
-		} else {
-			IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
-		}
+	        // Re-read BMS state
+	        bms_state = FEB_CAN_BMS_Get_State();
+
+	        if ((previous_r2d == 0 && bms_state == FEB_SM_ST_DRIVE) ||
+	            (previous_r2d == 1 && bms_state == FEB_SM_ST_ENERGIZED)) {
+
+	            // SUCCESS: BMS accepted the change, buzz and update UI
+	            set_rtd_buzzer = 0;
+	            rtd_buzzer_start_time = HAL_GetTick();
+
+	            if (r2d == 1) {
+	                lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT); // Green
+	            } else {
+	                lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT); // Red
+	            }
+
+	        } else {
+	            // FAILURE: BMS rejected it, revert r2d and update UI
+	            r2d = previous_r2d;
+	            IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
+	            FEB_CAN_ICS_Transmit_Button_State(IO_state); // Re-send correct state
+
+	            if (r2d == 1) {
+	                lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT); // Green
+	            } else {
+	                lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT); // Red
+	            }
+	        }
+
+	        rtd_press_start_time = HAL_GetTick(); // reset timer
+	    } else {
+	        IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
+	    }
 	} else {
-		IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
-		rtd_press_start_time = HAL_GetTick();
+	    rtd_press_start_time = HAL_GetTick();
+	    IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
 	}
+
+//	if ((received_data & (1<<1))) {
+//		if (((HAL_GetTick() - rtd_press_start_time) >= BTN_HOLD_TIME) &&
+//		     brake_pressure >= 4 &&
+//		     (bms_state == FEB_SM_ST_ENERGIZED ||
+//		      bms_state == FEB_SM_ST_DRIVE)) {
+//
+//			//Flio ready to drive if pressed again to turn it off
+//			if (r2d == 1) {
+//				r2d = 0;
+//			} else {
+//				r2d = 1;
+//			}
+//
+//			IO_state = (uint8_t) set_n_bit(IO_state, 1, 1);
+//			if(r2d == 1){
+//				set_rtd_buzzer = 0;
+//			} else{
+//				set_rtd_buzzer = 1;
+//			}
+//
+//			//Restart the start time so we don't constantly toggle r2d
+//			rtd_press_start_time = HAL_GetTick();
+//
+//			if (r2d) {
+//				lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
+//			}
+//			else {
+//				lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+//			}
+//
+//		} else {
+//			IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
+//		}
+//	} else {
+//		IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
+//		rtd_press_start_time = HAL_GetTick();
+//	}
 
 //	//BUTTON 2 - Datalogger (Latest)
 //	if ((received_data & (1 << 2))) { // If button 2 is currently pressed

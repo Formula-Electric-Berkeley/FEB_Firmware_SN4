@@ -16,6 +16,7 @@
 * 		AS - Autonomous Steering
 * 		AB - Autonomous Braking
 */
+/*
 uint8_t tps2482_i2c_addresses[NUM_TPS2482];
 uint16_t tps2482_ids[NUM_TPS2482];
 
@@ -89,3 +90,4 @@ static void FEB_Variable_Init(void) {
 	memset(tps2482_current_filter, 0, NUM_TPS2482 * sizeof(int32_t));
 	memset(tps2482_current_filter_init, false, NUM_TPS2482 * sizeof(bool));
 }
+**/
