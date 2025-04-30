@@ -29,9 +29,11 @@
 
 #define TPS2482_I2C_ADDR(a1,a0) (uint8_t)(0x40 | ((a1 << 2) | a0))
 
+
 // The following are the conversion factors from register outputs to floats:
-#define TPS2482_CONV_VSHUNT 	(double)(0.0025) 	// mV/LSB
-#define TPS2482_CONV_VBUS	 	(double)(0.00125) 	// V/LSB
+#define TPS2482_CONV_VSHUNT 	(float)(0.0025f) 	// mV/LSB
+#define TPS2482_CONV_VBUS	 	(float)(0.00125f) 	// V/LSB
+
 
 // The following are "magic equations" contained in current monitoring calculations:
 // eq. 20, a = I_max (A), returns A/LSB
@@ -139,7 +141,7 @@ typedef struct {
  * @retval whether the configuration worked
  */
 void TPS2482_Init(I2C_HandleTypeDef *hi2c, uint8_t *addresses, TPS2482_Configuration *configurations, \
-																uint16_t *ids, bool *result, uint8_t messageCount);
+					uint16_t *ids, bool *result, uint8_t messageCount);
 
 /*
  * @brief Functions to read from a certain register
@@ -176,9 +178,9 @@ void TPS2482_Write_CAL(I2C_HandleTypeDef *hi2c, uint8_t *addresses, uint16_t *tr
 void TPS2482_Write_Mask(I2C_HandleTypeDef *hi2c, uint8_t *addresses, uint16_t *transmit, uint8_t messageCount);
 void TPS2482_Write_Alert_Limit(I2C_HandleTypeDef *hi2c, uint8_t *addresses, uint16_t *transmit, uint8_t messageCount);
 
-void TPS2482_GPIO_Write(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, uint8_t *state, uint8_t messageCount);
+void TPS2482_GPIO_Write(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, uint8_t messageCount);
 void TPS2482_GPIO_Read(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, GPIO_PinState *result, uint8_t messageCount);
 
-void TPS2482_Enable(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, uint8_t *en_dis, bool *result, uint8_t messageCount);
+void TPS2482_Enable(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, bool *result, uint8_t messageCount);
 
 #endif /* INC_FEB_TPS2482_H_ */

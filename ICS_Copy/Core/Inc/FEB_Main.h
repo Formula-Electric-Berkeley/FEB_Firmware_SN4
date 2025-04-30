@@ -11,6 +11,8 @@
 #include "FEB_Radio.h"
 #include "TPS_Main.h"
 #include "stm32f4xx_hal.h"
+#include "TPS_Main.h"
+#include "FEB_CAN_Heartbeat.h"
 
 // **************************************** Functions ****************************************
 
