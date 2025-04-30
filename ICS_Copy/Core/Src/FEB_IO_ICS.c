@@ -235,22 +235,22 @@ void FEB_IO_ICS_Loop(void) {
 
 	HAL_UART_Transmit(&huart3, buffer, 1, 100);
 
-	if (set_rtd_buzzer == 0 && (bms_state ==  FEB_SM_ST_DRIVE) && inv_enabled == 1) {
-		if (rtd_buzzer_start_time == 0) {
-			rtd_buzzer_start_time = HAL_GetTick();
-		}
-		IO_state = set_n_bit(IO_state, 0, 0);
-		//lv_obj_set_style_bg_color(ui_TextArea3, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
-	} else {
-		IO_state = set_n_bit(IO_state, 0, 1);
-	}
+//	if (set_rtd_buzzer == 0 && (bms_state ==  FEB_SM_ST_DRIVE) && inv_enabled == 1) { Commented for the new logic
+//		if (rtd_buzzer_start_time == 0) {
+//			rtd_buzzer_start_time = HAL_GetTick();
+//		}
+//		IO_state = set_n_bit(IO_state, 0, 0);
+//		//lv_obj_set_style_bg_color(ui_TextArea3, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
+//	} else {
+//		IO_state = set_n_bit(IO_state, 0, 1);
+//	}
 
 
 	//I'm pretty sure this should go here
 	if ((HAL_GetTick() - rtd_buzzer_start_time) >= RTD_BUZZER_TIME && rtd_buzzer_start_time > 0) {
 		rtd_buzzer_start_time = 0;
 		set_rtd_buzzer = 1;
-		IO_state = set_n_bit(IO_state,0,0);
+		//IO_state = set_n_bit(IO_state,0,0);
 	}
 
 	//r2d should trigger the color not the buzzer state.
