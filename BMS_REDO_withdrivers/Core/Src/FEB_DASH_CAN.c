@@ -3,7 +3,7 @@
 FEB_CAN_DASH_Message_t FEB_CAN_DASH_Message;
 
 uint8_t FEB_CAN_DASH_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uint8_t filter_bank) {
-	uint16_t ids[] = {FEB_CAN_DASH_MESSAGE_FRAME_ID};
+	uint16_t ids[] = {FEB_CAN_DASH_IO_FRAME_ID};
 
 	for (uint8_t i = 0; i < 1; i++) {
 		CAN_FilterTypeDef filter_config;
@@ -34,7 +34,7 @@ uint8_t FEB_CAN_DASH_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignm
 
 void FEB_CAN_DASH_Store_Msg(CAN_RxHeaderTypeDef* rx_header, uint8_t rx_data[]) {
 	switch(rx_header->StdId) {
-		case FEB_CAN_DASH_MESSAGE_FRAME_ID:
+		case FEB_CAN_DASH_IO_FRAME_ID:
 				FEB_CAN_DASH_Message.r2r = ((rx_data[0] | 0b11111101) == 0b11111111);
 				break;
 	}

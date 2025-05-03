@@ -5,8 +5,13 @@
 #include "stm32f4xx_hal.h"
 #include "string.h"
 #include "stdio.h"
+
 #define charger
 #ifdef charger
+
+#define FEB_CAN_ID_CHARGER_BMS 0x1806e5f4
+#define FEB_CAN_ID_CHARGER_CCS 0x18ff50e5
+
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart2;
 //extern osMutexId_t FEB_UART_LockHandle;
