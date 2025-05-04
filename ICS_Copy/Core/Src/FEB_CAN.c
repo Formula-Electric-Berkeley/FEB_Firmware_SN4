@@ -85,18 +85,18 @@ uint8_t FEB_CAN_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uint8_t
 	return filter_bank;
 }
 
-void FEB_CAN_Transmit(CAN_HandleTypeDef* hcan) {
-	// Initialize Transmission Header
-    // Write Code Here
-
-	// Configure FEB_CAN_Tx_Data
-    // Write Code Here
-
-	// Delay until mailbox available
-	while (HAL_CAN_GetTxMailboxesFreeLevel(hcan) == 0) {}
-
-	// Add Tx data to mailbox
-	if (HAL_CAN_AddTxMessage(hcan, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
-		// Code Error - Shutdown
-	}
-}
+//void FEB_CAN_Transmit(CAN_HandleTypeDef* hcan) {
+//	// Initialize Transmission Header
+//    // Write Code Here
+//
+//	// Configure FEB_CAN_Tx_Data
+//    // Write Code Here
+//
+//	// Delay until mailbox available
+//	while (HAL_CAN_GetTxMailboxesFreeLevel(hcan) == 0) {}
+//
+//	// Add Tx data to mailbox
+//	if (HAL_CAN_AddTxMessage(hcan, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
+//		// Code Error - Shutdown
+//	}
+//}

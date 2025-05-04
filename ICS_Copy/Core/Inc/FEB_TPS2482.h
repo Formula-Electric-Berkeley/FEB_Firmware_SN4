@@ -1,17 +1,10 @@
-/*
- * TPS_Main.h
- *
- *  Created on: Apr 29, 2025
- *      Author: root
- */
-
-#ifndef INC_TPS_MAIN_H_
-#define INC_TPS_MAIN_H_
+#ifndef INC_FEB_TPS2482_H_
+#define INC_FEB_TPS2482_H_
 
 // **************************************** Includes ****************************************
 
 #include "FEB_CAN_ID.h"
-#include "TPS2482.h"
+
 
 #include "stm32f4xx_hal.h"
 #include "stdio.h"
@@ -36,4 +29,4 @@ void FEB_TPS2482_sendReadings();
 float FEB_TPS2482_GetShunt(I2C_HandleTypeDef * hi2c, uint8_t DEV_ADDR);
 void FEB_TPS2482_CAN_Transmit(float reading);
 
-#endif /* INC_TPS_MAIN_H_ */
+#endif /* INC_FEB_TPS2482_H_ */

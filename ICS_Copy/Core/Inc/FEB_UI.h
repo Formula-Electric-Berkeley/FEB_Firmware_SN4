@@ -4,9 +4,11 @@
 // **************************************** Includes ****************************************
 
 #include "FEB_CAN_ICS.h"
+#include "FEB_CAN_BMS.h"
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "lvgl.h"
 #include "screen_driver.h"
@@ -32,5 +34,11 @@ void FEB_UI_Set_Values(void);
 void BMS_State_Set(void);
 
 char* get_bms_state_string(FEB_SM_ST_t);
+
+void SOC_Set_Value(float ivt_voltage, float min_cell_voltage);
+
+void TEMP_Set_Value(float acc_temp);
+
+void SPEED_Set_Value(float motor_speed_rpm);
 
 #endif /* INC_FEB_UI_H_ */

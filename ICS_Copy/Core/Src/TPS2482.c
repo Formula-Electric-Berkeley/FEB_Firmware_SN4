@@ -1,24 +1,16 @@
 #include <TPS2482.h>
 
-void TPS2482_Init(I2C_HandleTypeDef *hi2c, uint8_t *addresses, TPS2482_Configuration *configurations, uint16_t *ids, bool *result, uint8_t messageCount) {
+void TPS2482_Init(I2C_HandleTypeDef *hi2c, uint8_t *addresses, TPS2482_Configuration *configurations, uint16_t *ids, bool *res, uint8_t messageCount) {
 	uint16_t configs[messageCount];
 	uint16_t cals[messageCount];
 	uint16_t masks[messageCount];
 	uint16_t alert_limits[messageCount];
-	uint16_t *configs_res = calloc(messageCount, sizeof(uint16_t));
-	uint16_t *cals_res = calloc(messageCount, sizeof(uint16_t));
-	uint16_t *masks_res = calloc(messageCount, sizeof(uint16_t));
-	uint16_t *alert_limits_res = calloc(messageCount, sizeof(uint16_t));
+	uint16_t configs_res[messageCount];
+	uint16_t cals_res[messageCount];
+	uint16_t masks_res[messageCount];
+	uint16_t alert_limits_res[messageCount];
 
-	if ( !configs_res || !cals_res || !masks_res || !alert_limits_res ) {
-		free(configs_res);
-		free(cals_res);
-		free(masks_res);
-		free(alert_limits_res);
-		return;
-	}
-
-	memset(result, true, messageCount * sizeof(*result));
+	memset(res, true, messageCount * sizeof(bool));
 
 	// Extract 16-bit values from configurations
 	for ( uint8_t i = 0; i < messageCount; i++ ) {
@@ -46,17 +38,15 @@ void TPS2482_Init(I2C_HandleTypeDef *hi2c, uint8_t *addresses, TPS2482_Configura
 	// Validate configurations read back (config reseting wont trigger error)
 	for ( uint8_t i = 0; i < messageCount; i++ ) {
 		if ( !TPS2482_CONFIG_RST_MASK(configs[i]) ) {
-			result[i] &= configs[i] == configs_res[i];
+			res[i] &= configs[i] == configs_res[i];
 		}
-		result[i] &= cals[i] == cals_res[i];
-		result[i] &= masks[i] == masks_res[i];
-		result[i] &= alert_limits[i] == alert_limits_res[i];
-	}
+		res[i] &= cals[i] == cals_res[i];
 
-	free(configs_res);
-	free(cals_res);
-	free(masks_res);
-	free(alert_limits_res);
+		uint16_t masks_flagless_mask = TPS2482_MASK_SOL | TPS2482_MASK_SUL | TPS2482_MASK_BOL | \
+										TPS2482_MASK_BUL | TPS2482_MASK_CNVR | TPS2482_MASK_POL;
+		res[i] &= masks[i] == (masks_res[i] & masks_flagless_mask);
+		res[i] &= alert_limits[i] == alert_limits_res[i];
+	}
 }
 
 void TPS2482_Get_Register(I2C_HandleTypeDef *hi2c, uint8_t *addresses, uint8_t reg, uint16_t *results, uint8_t messageCount) {
@@ -67,7 +57,7 @@ void TPS2482_Get_Register(I2C_HandleTypeDef *hi2c, uint8_t *addresses, uint8_t r
 			// Todo failure state
 		}
 		else {
-			results[i] = ((uint16_t)(res[2*i+1]) << 8) | (uint16_t)(res[2*i]);
+			results[i] = ((uint16_t)(res[2 * i]) << 8) | (uint16_t)(res[2 * i + 1]);
 		}
 	}
 }
@@ -109,8 +99,13 @@ void TPS2482_Get_ID(I2C_HandleTypeDef *hi2c, uint8_t *addresses, uint16_t *resul
 }
 
 void TPS2482_Write_Register(I2C_HandleTypeDef *hi2c, uint8_t *addresses, uint8_t reg, uint16_t *transmit, uint8_t messageCount) {
+	uint8_t trans[2 * messageCount];
+
 	for ( uint8_t i = 0; i < messageCount; i++ ) {
-		if ( HAL_I2C_Mem_Write(hi2c, addresses[i] << 1, reg, I2C_MEMADD_SIZE_8BIT, (uint8_t *)&transmit[i], sizeof(*transmit), HAL_MAX_DELAY) != HAL_OK ) {
+		trans[2 * i] = (uint8_t)((transmit[i] >> 8) & 0xFF);
+		trans[2 * i + 1] = (uint8_t)(transmit[i] & 0xFF);
+
+		if ( HAL_I2C_Mem_Write(hi2c, addresses[i] << 1, reg, I2C_MEMADD_SIZE_8BIT, &trans[2 * i], sizeof(uint16_t), HAL_MAX_DELAY) != HAL_OK ) {
 			// Todo failure state
 		}
 	}
@@ -132,9 +127,9 @@ void TPS2482_Write_Alert_Limit(I2C_HandleTypeDef *hi2c, uint8_t *addresses, uint
 	TPS2482_Write_Register(hi2c, addresses, TPS2482_ALERT_LIM, transmit, messageCount);
 }
 
-void TPS2482_GPIO_Write(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, uint8_t messageCount) {
+void TPS2482_GPIO_Write(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, uint8_t *state, uint8_t messageCount) {
 	for ( uint8_t i = 0; i < messageCount; i++ ) {
-		HAL_GPIO_WritePin(GPIOx[i], GPIO_Pin[i], GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOx[i], GPIO_Pin[i], state[i]);
 	}
 }
 
@@ -144,8 +139,8 @@ void TPS2482_GPIO_Read(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, GPIO_PinState *
 	}
 }
 
-void TPS2482_Enable(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, bool *result, uint8_t messageCount) {
-	TPS2482_GPIO_Write(GPIOx, GPIO_Pin, messageCount);
+void TPS2482_Enable(GPIO_TypeDef **GPIOx, uint16_t *GPIO_Pin, uint8_t *en_dis, bool *result, uint8_t messageCount) {
+	TPS2482_GPIO_Write(GPIOx, GPIO_Pin, en_dis, messageCount);
 
 	HAL_Delay(100);
 

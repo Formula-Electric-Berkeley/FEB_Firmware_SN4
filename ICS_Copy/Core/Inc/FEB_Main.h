@@ -3,15 +3,15 @@
 
 // **************************************** Includes ****************************************
 
+#include <FEB_TPS2482.h>
+#include <FEB_TPS2482.h>
 #include "FEB_UI.h"
 #include "FEB_UART_Transmit.h"
 #include "FEB_CAN_ICS.h"
 #include "FEB_CAN.h"
 #include "FEB_IO_ICS.h"
 #include "FEB_Radio.h"
-#include "TPS_Main.h"
 #include "stm32f4xx_hal.h"
-#include "TPS_Main.h"
 #include "FEB_CAN_Heartbeat.h"
 
 // **************************************** Functions ****************************************

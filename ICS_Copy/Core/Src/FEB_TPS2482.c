@@ -1,6 +1,6 @@
 // **************************************** Includes & External ****************************************
 
-#include "TPS_Main.h"
+#include "FEB_TPS2482.h"
 
 extern I2C_HandleTypeDef hi2c1;
 
@@ -194,4 +194,3 @@ void FEB_TPS2482_CAN_Transmit(float reading){
 		//Shutdown error
 	}
 }
-

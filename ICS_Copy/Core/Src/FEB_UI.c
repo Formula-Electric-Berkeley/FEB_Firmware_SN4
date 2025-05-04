@@ -8,8 +8,8 @@ Screen_Info_t screen_info;
 
 extern ICS_UI_Values_t ICS_UI_Values;
 
-const char* BMS_STATE_LABELS[] = {"PRECHARGE", "CHARGE", "BALANCE", "DRIVE", "SHUTDOWN", "NULL"};
-const int BMS_STATE_COLORS[] = {0xFAFF00, 0x33FF00, 0x00F0FF, 0xFA00FF, 0xFF0000, 0xC2C2C2};
+//const char* BMS_STATE_LABELS[] = {"PRECHARGE", "CHARGE", "BALANCE", "DRIVE", "SHUTDOWN", "NULL"};
+//const int BMS_STATE_COLORS[] = {0xFAFF00, 0x33FF00, 0x00F0FF, 0xFA00FF, 0xFF0000, 0xC2C2C2};
 
 const char* HV_STATUS_LABELS[] = {"HV OFF", "HV ON"};
 const int HV_STATUS_COLORS[] = {0xFF0000, 0xFF8A00};
@@ -53,11 +53,11 @@ void FEB_UI_Set_Values(void) {
 
 	uint16_t pv = ICS_UI_Values.pack_voltage;
 
-	if (ICS_UI_Values.pack_voltage < 350) {
-		//lv_bar_set_value(ui_Bar2, 0, LV_ANIM_OFF);
-	} else {
-		//lv_bar_set_value(ui_Bar2, ((ICS_UI_Values.pack_voltage - 350) / 238) * 100, LV_ANIM_OFF);
-	}
+//	if (ICS_UI_Values.pack_voltage < 350) {
+//		//lv_bar_set_value(ui_Bar2, 0, LV_ANIM_OFF);
+//	} else {
+//		//lv_bar_set_value(ui_Bar2, ((ICS_UI_Values.pack_voltage - 350) / 238) * 100, LV_ANIM_OFF);
+//	}
 
 	ICS_UI_Values.min_voltage /= 100;
 
@@ -66,43 +66,23 @@ void FEB_UI_Set_Values(void) {
 
 //	if ((int) ICS_UI_Values.acc_temp % 60 < 30) ICS_UI_Values.acc_temp = 30.0;
 
-	if (ICS_UI_Values.acc_temp == 0) {
-		//lv_bar_set_value(ui_Bar3, 0, LV_ANIM_OFF);
-		//set_temp_value(0); (TODO)
-	} else {
-		uint8_t temp_value = (int) (((((int) ICS_UI_Values.acc_temp) % 65) - 25) / 35.0 * 100.0);
-		//lv_bar_set_value(ui_Bar3, temp_value, LV_ANIM_OFF);
-		//set_temp_value(((int) ICS_UI_Values.acc_temp) % 65); (TODO)
-	}
+//	if (ICS_UI_Values.acc_temp == 0) {
+//		//lv_bar_set_value(ui_Bar3, 0, LV_ANIM_OFF);
+//		//set_temp_value(0); (TODO)
+//	} else {
+//		uint8_t temp_value = (int) (((((int) ICS_UI_Values.acc_temp) % 65) - 25) / 35.0 * 100.0);
+//		//lv_bar_set_value(ui_Bar3, temp_value, LV_ANIM_OFF);
+//		//set_temp_value(((int) ICS_UI_Values.acc_temp) % 65); (TODO)
+//	}
 
+	SOC_Set_Value(ICS_UI_Values.ivt_voltage, ICS_UI_Values.min_voltage);
+	TEMP_Set_Value(ICS_UI_Values.acc_temp);
 //	ICS_UI_Values.motor_speed /= 100;
-
 	//set_speed_value((((ICS_UI_Values.motor_speed / 3.545) * 1.6358) / 60) * 2.237); (TODO)
+	SPEED_Set_Value(ICS_UI_Values.motor_speed);
 }
 
-void UI_Demo_Mode(void) {
-//	set_soc_value(iter); (Commented)
-//	set_temp_value(iter + 7);(Commented)
-//	set_speed_value(iter + 13); (Commented)
-
-	//lv_bar_set_value(ui_Bar1, iter, LV_ANIM_OFF);
-	//lv_bar_set_value(ui_Bar3, iter + 7, LV_ANIM_OFF);
-
-//	set_tsal_status(iter % 2); (Commented)
-//	set_bms_status(iter % 6); (Commented)
-//	set_regen_status(iter % 10 > 5); (Commented)
-
-	if (iter % 10 < 5) {
-		//lv_obj_set_style_bg_color(ui_TextArea1, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
-		//lv_obj_set_style_bg_color(ui_TextArea3, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
-	} else {
-		//lv_obj_set_style_bg_color(ui_TextArea1, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
-		//lv_obj_set_style_bg_color(ui_TextArea3, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
-	}
-
-	iter++;
-}
-
+// **************************************** Helper Functions ****************************************
 void BMS_State_Set(void) {
     FEB_SM_ST_t bms_state = FEB_CAN_BMS_Get_State();
 	//FEB_SM_ST_t bms_state = FEB_SM_ST_PRECHARGE; //If you want to actually see if you change the UI.
@@ -155,3 +135,89 @@ char* get_bms_state_string(FEB_SM_ST_t state) {
 		default: return "Unknown";
 	}
 }
+
+// Gradient: Yellow (low) to Red (high)
+static lv_color_t get_gradient_color(uint8_t value) {
+    uint8_t r = 255;
+    uint8_t g = 255 - (value * 255 / 100);  // fade green out
+    return lv_color_make(r, g, 0);
+}
+
+void SOC_Set_Value(float ivt_voltage, float min_cell_voltage) {
+    // Calculate SoC using your original logic
+    // Option 1: Based on ivt_voltage
+    uint8_t soc_value = abs((100 - (((int)((ivt_voltage / 600.0) * 100)) % 600)) % 100);
+
+    // Option 2: Based on min cell voltage (commented out)
+    // uint8_t soc_value = (uint8_t)(((min_cell_voltage - 25) / 20.0) * 100.0);
+
+    if (soc_value > 100) soc_value = 100;
+
+    // Update UI
+    char soc_label[10];
+    sprintf(soc_label, "%d%%", soc_value);
+    lv_label_set_text(ui_SoCNumerical, soc_label);
+
+    lv_bar_set_value(ui_BarSoC, soc_value, LV_ANIM_OFF);
+    lv_obj_set_style_bg_color(ui_BarSoC, get_gradient_color(soc_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+}
+
+void TEMP_Set_Value(float acc_temp) {
+    // Clamp temperature to expected range
+    if ((int)acc_temp % 60 < 30) acc_temp = 30.0;
+
+    // Scale: 12–60°C and 0–100%
+    uint8_t temp_value = 0;
+    if (acc_temp > 12.0) {
+        temp_value = (uint8_t)(((fminf(acc_temp, 60.0) - 12.0) / 48.0) * 100.0);
+    }
+
+    if (temp_value > 100) temp_value = 100;
+
+    // Update UI
+    char temp_label[10];
+    sprintf(temp_label, "%d°C", (int)acc_temp);
+    lv_label_set_text(ui_tempNumerical, temp_label);
+
+    lv_bar_set_value(ui_BarTemp, temp_value, LV_ANIM_OFF);
+    lv_obj_set_style_bg_color(ui_BarTemp, get_gradient_color(temp_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+}
+
+void SPEED_Set_Value(float motor_speed_rpm) {
+    // Convert RPM to MPH using the provided formula
+    float mph = (((motor_speed_rpm / 3.545f) * 1.6358f) / 60.0f) * 2.237f;
+
+    // Clamp to 3-digit value for display
+    if (mph < 0) mph = 0;
+    if (mph > 999) mph = 999;
+
+    // Format and update label
+    char speed_str[10];
+    sprintf(speed_str, "%d", (int)(mph + 0.5f));  // Round to nearest int
+    lv_label_set_text(ui_speedNumerical, speed_str);
+}
+
+
+
+//void UI_Demo_Mode(void) {
+////	set_soc_value(iter); (Commented)
+////	set_temp_value(iter + 7);(Commented)
+////	set_speed_value(iter + 13); (Commented)
+//
+//	//lv_bar_set_value(ui_Bar1, iter, LV_ANIM_OFF);
+//	//lv_bar_set_value(ui_Bar3, iter + 7, LV_ANIM_OFF);
+//
+////	set_tsal_status(iter % 2); (Commented)
+////	set_bms_status(iter % 6); (Commented)
+////	set_regen_status(iter % 10 > 5); (Commented)
+//
+//	if (iter % 10 < 5) {
+//		//lv_obj_set_style_bg_color(ui_TextArea1, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
+//		//lv_obj_set_style_bg_color(ui_TextArea3, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
+//	} else {
+//		//lv_obj_set_style_bg_color(ui_TextArea1, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+//		//lv_obj_set_style_bg_color(ui_TextArea3, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+//	}
+//
+//	iter++;
+//}
