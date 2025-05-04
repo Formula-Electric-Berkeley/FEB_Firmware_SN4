@@ -41,7 +41,7 @@ void FEB_Task_Balance() {
 
 void FEB_Task_IVT() {
 	FEB_CAN_IVT_Process();
-	FEB_IVT_V1_Transmit();
+//	FEB_IVT_V1_Transmit();
 
 }
 
@@ -51,10 +51,14 @@ void FEB_Task_CAN() {
 }
 
 void FEB_Task_UART() {
-	FEB_SM_UART_Transmit();
-//	FEB_Transmit_AIR_Status();
-	if(++cyc<8)return;
+	if(++cyc<15) {
+		return;
+	} else {
 		cyc=0;
-//	FEB_MONITOR_UART_Transmit();
-	FEB_ADBMS_UART_Transmit();
+		FEB_SM_UART_Transmit();
+	//	FEB_Transmit_AIR_Status();
+	//	FEB_MONITOR_UART_Transmit();
+		FEB_IVT_V1_Transmit();
+		FEB_ADBMS_UART_Transmit();
+	}
 }

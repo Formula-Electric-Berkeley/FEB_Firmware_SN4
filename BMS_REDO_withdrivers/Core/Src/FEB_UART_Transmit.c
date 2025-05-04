@@ -208,8 +208,9 @@ void FEB_SM_UART_Transmit(void) {
 
 void FEB_IVT_V1_Transmit(){
 	int32_t voltage_value = FEB_IVT_V1_Voltage();
-	static char str[128];
-	sprintf(str,"IVT V1 Voltage: %ld \n\r", voltage_value);
+	int32_t current_value = FEB_IVT_V1_Current();
+	static char str[256];
+	sprintf(str,"IVT V1 Voltage: %ld \t IVT V1 Current: %ld \n\r", voltage_value, current_value);
 	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 500);
 
 }
