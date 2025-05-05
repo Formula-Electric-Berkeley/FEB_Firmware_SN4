@@ -64,6 +64,7 @@ void FEB_CAN_IVT_Store_Msg(CAN_RxHeaderTypeDef* rx_header, uint8_t rx_data[]) {
 	    case FEB_CAN_ID_IVT_CURRENT:
 	    	IVT_CAN_flag.current = true;
 	    	FEB_CAN_IVT_Message.current_mA = (rx_data[2] << 24) + (rx_data[3] << 16) + (rx_data[4] << 8) + rx_data[5];
+	    	FEB_CAN_IVT_Message.current_mA *= -1; // correct IVT for reversed direction
 			break;
 	    case FEB_CAN_ID_IVT_VOLTAGE_1:
 	    	IVT_CAN_flag.voltage_1 = true;
