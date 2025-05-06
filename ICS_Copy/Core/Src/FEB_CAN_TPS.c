@@ -22,7 +22,7 @@ void FEB_CAN_Transmit(CAN_HandleTypeDef* hcan) {
     other_current = FLOAT_TO_INT16_T(SIGN_MAGNITUDE(other_current) * TPS2482_CURRENT_LSB_EQ((double)(5)));
 
 	FEB_CAN_Tx_Header.DLC = 4;
-	FEB_CAN_Tx_Header.StdId = FEB_CAN_PCU_HEARTBEAT_MESSAGE_FRAME_ID;
+	FEB_CAN_Tx_Header.StdId = FEB_CAN_PCU_TPS_FRAME_ID;
 	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
 	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;

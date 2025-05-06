@@ -100,7 +100,7 @@ void FEB_CAN_ICS_Rx_Handler(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_
 
 void FEB_CAN_ICS_Transmit_Button_State(uint8_t transmit_button_state) {
 	FEB_CAN_Tx_Header.DLC = 1;
-	FEB_CAN_Tx_Header.StdId = FEB_CAN_DASH_MESSAGE_FRAME_ID;
+	FEB_CAN_Tx_Header.StdId = FEB_CAN_DASH_IO_FRAME_ID;
 	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
 	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;

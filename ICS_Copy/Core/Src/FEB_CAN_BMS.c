@@ -74,9 +74,11 @@ void FEB_CAN_BMS_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t *RxData) {
     switch (pHeader -> StdId){
         case FEB_CAN_BMS_STATE_FRAME_ID:
         	BMS_MESSAGE.state = RxData[0];
-        	if(is_r2d() && !(BMS_MESSAGE.state == FEB_SM_ST_DRIVE)){
-        		disable_r2d();
-        	}
+//        	if(is_r2d() && !(BMS_MESSAGE.state == FEB_SM_ST_DRIVE)){
+//        		disable_r2d();
+//        	} else if (BMS_MESSAGE.state == FEB_SM_ST_DRIVE){
+//        		enable_r2d();
+//        	}
         	BMS_MESSAGE.last_message_time = HAL_GetTick();
         	break;
     }

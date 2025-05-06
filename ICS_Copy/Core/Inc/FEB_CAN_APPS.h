@@ -1,7 +1,7 @@
 #ifndef INC_FEB_CAN_APPS_H_
 #define INC_FEB_CAN_APPS_H_
 
-#include <FEB_CAN_Library_SN4/feb_can.h>
+#include <FEB_CAN_Library_SN4/gen/feb_can.h>
 #include <stdint.h>
 #include <string.h>
 

@@ -10,7 +10,7 @@ extern uint32_t FEB_CAN_Tx_Mailbox;
 uint8_t FEB_CAN_APPS_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uint8_t filter_bank) {
     // For multiple filters, create array of filter IDs and loop over IDs.
 
-	uint16_t ids[] = {FEB_CAN_NORMALIZED_BRAKE_FRAME_ID,FEB_CAN_RMS_COMMAND_MSG_FRAME_ID};
+	uint16_t ids[] = {FEB_CAN_BRAKE_FRAME_ID,FEB_CAN_RMS_COMMAND_FRAME_ID};
 
 	for(uint8_t i = 0; i < 2; i ++){
 
@@ -63,7 +63,7 @@ uint8_t FEB_CAN_APPS_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, ui
 void FEB_CAN_APPS_Str_Msg(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_CAN_Rx_Data[]) {
 
 	switch(FEB_CAN_Rx_Header->StdId) {
-	    case FEB_CAN_NORMALIZED_BRAKE_FRAME_ID:
+	    case FEB_CAN_BRAKE_FRAME_ID:
 	    	//concatonate float from the array into temp   https://forum.arduino.cc/t/how-to-extract-float-data-from-longer-array/696454
 //		    uint32_t data_brakepedal = FEB_CAN_Rx_Data[0];        // MSB
 //		    data_brakepedal = (data_brakepedal << 8) | FEB_CAN_Rx_Data[1];
@@ -82,7 +82,7 @@ void FEB_CAN_APPS_Str_Msg(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_CA
 //			data_current = (data_current << 8) | FEB_CAN_Rx_Data[3]; // LSB
 //			memcpy(&(FEB_CAN_APPS_Message.current), &(data_current), 4);
 //	    	break;
-	    case FEB_CAN_RMS_COMMAND_MSG_FRAME_ID:
+	    case FEB_CAN_RMS_COMMAND_FRAME_ID:
 	    	FEB_CAN_APPS_Message.enabled = FEB_CAN_Rx_Data[5];
 	    	break;
 	}

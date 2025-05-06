@@ -45,7 +45,7 @@ uint8_t FEB_CAN_HEARTBEAT_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_as
 
 void FEB_CAN_HEARTBEAT_Transmit(CAN_HandleTypeDef *hcan, uint64_t *bms_errors) {
 
-    FEB_CAN_Tx_Header.StdId = FEB_CAN_PCU_HEARTBEAT_MESSAGE_FRAME_ID;
+    FEB_CAN_Tx_Header.StdId = FEB_CAN_PCU_HEARTBEATE_FRAME_ID;
     FEB_CAN_Tx_Header.ExtId = 0;
     FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA; // Data frame.
     FEB_CAN_Tx_Header.IDE = CAN_ID_STD;    // Standard ID.
