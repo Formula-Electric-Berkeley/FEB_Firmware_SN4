@@ -9,7 +9,6 @@
 
 extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart2;
-extern CAN_HandleTypeDef hcan1;
 
 
 uint8_t GPS_Data[8];

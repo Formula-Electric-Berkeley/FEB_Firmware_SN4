@@ -19,8 +19,8 @@ extern CAN_HandleTypeDef hcan1;
 #define ADC_RESOLUTION 4095
 #define LIN_POT_LENGTH 75000 // micrometers
 
-uint32_t ADC1_Readings[7];
-uint32_t ADC2_Readings[4]; // 1st and 2nd are linear potentiometer, 3rd and 4th are coolant pressure
+uint16_t ADC1_Readings[7];
+uint16_t ADC2_Readings[4]; // 1st and 2nd are linear potentiometer, 3rd and 4th are coolant pressure
 
 uint8_t Strain_Gauge_Data[8];
 uint8_t Thermocouple_Data[8];
@@ -31,19 +31,19 @@ char buf[164];
 
 // ******************************************** Functions **********************************************
 
-uint16_t StrainGaugeConversion(uint32_t adc_value) {
+uint16_t StrainGaugeConversion(uint16_t adc_value) {
 	return  adc_value & 0xFFFF;
 }
 
-uint16_t ThermocoupleConversion(uint32_t adc_value) {
+uint16_t ThermocoupleConversion(uint16_t adc_value) {
 	return adc_value & 0xFFFF;
 }
 
-uint16_t LinearPotentiometerConversion(uint32_t adc_value) {
+uint16_t LinearPotentiometerConversion(uint16_t adc_value) {
 	return (uint16_t) adc_value / ADC_RESOLUTION * LIN_POT_LENGTH;
 }
 
-uint16_t CoolantPressureConversion(uint32_t adc_value) {
+uint16_t CoolantPressureConversion(uint16_t adc_value) {
 	float voltage = (float) adc_value * 3.3 / ADC_RESOLUTION;
 	return (uint16_t) 1000 * ((voltage - 0.5) * 30) / (4.5 - 0.5);
 }
@@ -162,10 +162,31 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 }
 
+void ADC_Init(void) {
+//	HAL_ADC_Start_DMA(&hadc1, ADC1_Readings, 7);
+//	HAL_ADC_Start_DMA(&hadc2, ADC2_Readings, 4);
+}
+
 void ADC_Main(void) {
 
-	HAL_ADC_Start_DMA(&hadc1, ADC1_Readings, 7);
-	HAL_ADC_Start_DMA(&hadc2, ADC2_Readings, 4);
+
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_Start(&hadc2);
+
+	HAL_ADC_PollForConversion(&hadc1, 10);
+	HAL_ADC_PollForConversion(&hadc2, 10);
+
+	for (int i = 0; i < 7; i++) {
+		ADC1_Readings[i] = HAL_ADC_GetValue(&hadc1);
+	}
+
+	for (int i = 0; i < 4; i++) {
+		ADC2_Readings[i] = HAL_ADC_GetValue(&hadc2);
+	}
+
+	HAL_ADC_Stop(&hadc1);
+	HAL_ADC_Stop(&hadc2);
+
 
 	if (IS_FRONT_NODE) {
 
