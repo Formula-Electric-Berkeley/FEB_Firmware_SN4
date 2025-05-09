@@ -7,11 +7,14 @@
 
  #ifndef INC_FEB_CAN_HEARTBEAT_H_
  #define INC_FEB_CAN_HEARTBEAT_H_
-
+ 
  #include "FEB_CAN_BMS.h"
  #include <string.h>
-#include <FEB_CAN_Library_SN4/gen/feb_can.h>
-
- void FEB_CAN_HEARTBEAT_Transmit(CAN_HandleTypeDef *hcan, uint64_t *bms_errors);
-
+ #include "FEB_CAN_Library_SN4/gen/feb_can.h"
+ 
+// uint8_t heartbeat[8];
+ void FEB_CAN_HEARTBEAT_Transmit();
+ void FEB_CAN_HEARTBEAT_Init();
+ 
  #endif /* INC_FEB_CAN_HEARTBEAT_H_ */
+ 
