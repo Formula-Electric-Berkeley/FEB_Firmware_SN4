@@ -43,6 +43,16 @@ typedef enum {
 } FEB_SM_ST_t;
 
 typedef enum {
+	FEB_HB_NULL,
+	FEB_HB_DASH,
+	FEB_HB_PCU, 
+	FEB_HB_LVPDB, 
+	FEB_HB_DCU, 
+	FEB_HB_FSN, 
+	FEB_HB_RSN
+} FEB_HB_t;
+
+typedef enum {
 	FEB_RELAY_STATE_OPEN,
 	FEB_RELAY_STATE_CLOSE
 
