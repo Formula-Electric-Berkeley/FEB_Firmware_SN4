@@ -25,8 +25,9 @@ static void BMSFaultTransition(FEB_SM_ST_t);
 static void BSPDFaultTransition(FEB_SM_ST_t);
 static void IMDFaultTransition(FEB_SM_ST_t);
 static void ChargingFaultTransition(FEB_SM_ST_t);
+static void ChargingPrechargeTransition(FEB_SM_ST_t next_state);
 
-static void (*transitionVector[13])(FEB_SM_ST_t)={
+static void (*transitionVector[14])(FEB_SM_ST_t)={
 		bootTransition,
 		LVPowerTransition,
 		HealthCheckTransition,
@@ -39,7 +40,8 @@ static void (*transitionVector[13])(FEB_SM_ST_t)={
 		BMSFaultTransition,
 		BSPDFaultTransition,
 		IMDFaultTransition,
-		ChargingFaultTransition
+		ChargingFaultTransition,
+		ChargingPrechargeTransition
 };
 
 // Shared variable, requires synchronization
@@ -183,24 +185,26 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_DEFAULT:
-		//Make sure shutdown loop is completed before going to idle
-		if (FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE){
-			LVPowerTransition(FEB_SM_ST_HEALTH_CHECK);
-
-			//Add an else case to output that shutdown loop was not completed.
-		}
-
 		//I'm not sure if this is actually good. Maybe we should use the
 		// charge sense input instead
+
 		bool free = true;
 
 		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
 			free &= FEB_CAN_NETWORK[i].FAck;
 		}
 
-		if ( free ) {
+//		if ( free ) {
 			LVPowerTransition(FEB_SM_ST_FREE);
-		}
+//		}
+
+		//Make sure shutdown loop is completed before going to idle
+//		if (FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE){
+//			LVPowerTransition(FEB_SM_ST_HEALTH_CHECK);
+
+			//Add an else case to output that shutdown loop was not completed.
+//		}
+
 
 		break;
 
@@ -414,9 +418,48 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 		updateStateProtected(next_state);
 		break;
 
+	case FEB_SM_ST_CHARGER_PRECHARGE:
+		FEB_PIN_RST(PN_PC_AIR);
+		FEB_PIN_SET(PN_PC_REL);
+		updateStateProtected(next_state);
+		break;
+	case FEB_SM_ST_BALANCE:
+		updateStateProtected(next_state);
+		break;
+	case FEB_SM_ST_DEFAULT:
+		if ( FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE && FEB_CAN_Charger_Received() && !FEB_CAN_Charging_Status() ) {
+			FreeTransition(FEB_SM_ST_CHARGER_PRECHARGE);
+		}
+
+//		bool free = true;
+//
+//		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
+//			free &= FEB_CAN_NETWORK[i].FAck;
+//		}
+//
+//		if ( !free ) {
+//			FreeTransition(FEB_SM_ST_LV);
+//		}
+	default:
+		return;
+	}
+
+}
+
+static void ChargingPrechargeTransition(FEB_SM_ST_t next_state) {
+	switch(next_state) {
+
+	case FEB_SM_ST_FAULT_BMS:
+	case FEB_SM_ST_FAULT_IMD:
+		fault(FEB_SM_ST_FAULT_CHARGING);
+		break;
+	case FEB_SM_ST_FREE:
+	case FEB_SM_ST_LV:
+		break;
 	case FEB_SM_ST_CHARGING:
-		HAL_Delay(10);//osDelay(100);
 		FEB_PIN_SET(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_CLOSE);
+		HAL_Delay(500);//osDelay(100);
+		FEB_PIN_RST(PN_PC_REL);
 		FEB_CAN_Charger_Init();
 		FEB_CAN_Charger_Start_Charge();
 
@@ -426,23 +469,16 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 		updateStateProtected(next_state);
 		break;
 	case FEB_SM_ST_DEFAULT:
-		if ( FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE && FEB_CAN_Charger_Received() ) {
-			FreeTransition(FEB_SM_ST_CHARGING);
+		float voltage_V = (float) FEB_CAN_IVT_Message.voltage_1_mV * 0.001;
+		//		float target_voltage_V = FEB_ADBMS_Get_Total_Voltage() * FEB_CONST_PRECHARGE_PCT;
+		if (voltage_V >= 0.9 * FEB_ACC.total_voltage_V) {
+			ChargingPrechargeTransition(FEB_SM_ST_CHARGING);
 		}
 
-		bool free = true;
 
-		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
-			free &= FEB_CAN_NETWORK[i].FAck;
-		}
-
-		if ( !free ) {
-			FreeTransition(FEB_SM_ST_LV);
-		}
 	default:
 		return;
 	}
-
 }
 
 static void ChargingTransition(FEB_SM_ST_t next_state){
@@ -450,6 +486,7 @@ static void ChargingTransition(FEB_SM_ST_t next_state){
 
 	case FEB_SM_ST_FAULT_BMS:
 	case FEB_SM_ST_FAULT_IMD:
+	case FEB_SM_ST_FAULT_CHARGING:
 		FEB_CAN_Charger_Stop_Charge();
 		fault(FEB_SM_ST_FAULT_CHARGING);
 		break;
@@ -463,9 +500,16 @@ static void ChargingTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_DEFAULT:
-		if(FEB_PIN_RD(PN_AIRM_SENSE)==FEB_RELAY_STATE_OPEN//FEB_Hw_AIR_Minus_Sense()==FEB_RELAY_STATE_OPEN
-			)
+		uint8_t status = FEB_CAN_Charging_Status();
+
+		if ( status == 1 || FEB_PIN_RD(PN_AIRM_SENSE)==FEB_RELAY_STATE_OPEN ) {
 			ChargingTransition(FEB_SM_ST_FREE);
+		}
+
+		if ( status == -1 ) {
+			ChargingTransition(FEB_SM_ST_FAULT_CHARGING);
+		}
+
 	default:
 		break;
 	}

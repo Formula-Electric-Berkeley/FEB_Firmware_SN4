@@ -174,6 +174,9 @@ void FEB_SM_UART_Transmit(void) {
 		case FEB_SM_ST_FAULT_CHARGING:
 			state_str = "State: fault charging\n\r";
 			break;
+		case FEB_SM_ST_CHARGER_PRECHARGE:
+			state_str = "State: charger precharge\n\r";
+			break;
 		case FEB_SM_ST_DEFAULT:
 			state_str = "State: default\n\r";
 			break;

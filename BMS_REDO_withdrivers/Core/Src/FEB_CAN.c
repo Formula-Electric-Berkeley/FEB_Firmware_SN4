@@ -42,6 +42,7 @@ void FEB_CAN_Filter_Config(void) {
 	uint8_t filter_bank = 0;
 	filter_bank = FEB_CAN_IVT_Filter_Config(&hcan1, CAN_RX_FIFO0, filter_bank);
 	filter_bank = FEB_CAN_DASH_Filter_Config(&hcan1,CAN_RX_FIFO0, filter_bank);
+	filter_bank = FEB_CAN_Charger_Filter_Config(&hcan1,CAN_RX_FIFO0, filter_bank);
 //	filter_bank = FEB_CAN_Filter(&hcan1, CAN_RX_FIFO0, filter_bank);
 
 	// Assign Filter
@@ -153,14 +154,24 @@ void FEB_ACC_VOLT_CAN_Transmit(void) {
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
 	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
 
-	uint16_t pack_volt_mV = 0;
-	uint16_t min_cell_volt_mV = 0;
-	uint16_t max_cell_volt_mV = 0;
+	float pack_volt_mV = FEB_ACC.total_voltage_V;
+	float min_cell_volt_mV = FEB_ACC.banks[0].cells[0].voltage_V;
+	float max_cell_volt_mV = FEB_ACC.banks[0].cells[0].voltage_V;
+
+	for ( size_t i = 0; i < FEB_NBANKS; ++i) {
+		for ( size_t j = 0; j < FEB_NUM_CELL_PER_BANK; ++j) {
+			min_cell_volt_mV = fmin(min_cell_volt_mV, FEB_ACC.banks[i].cells[j].voltage_V);
+			max_cell_volt_mV = fmax(max_cell_volt_mV, FEB_ACC.banks[i].cells[j].voltage_V);
+		}
+	}
 
 	// Copy data to Tx buffer
-	FEB_CAN_Tx_Data[0] = pack_volt_mV;
-	FEB_CAN_Tx_Data[2] = min_cell_volt_mV;
-	FEB_CAN_Tx_Data[4] = max_cell_volt_mV;
+	FEB_CAN_Tx_Data[0] = (((int16_t) pack_volt_mV * 1000) & 0xFF);
+	FEB_CAN_Tx_Data[1] = ((((int16_t) pack_volt_mV * 1000) >> 8) & 0xFF);
+	FEB_CAN_Tx_Data[2] = (((int16_t) min_cell_volt_mV * 1000) & 0xFF);
+	FEB_CAN_Tx_Data[3] = ((((int16_t) min_cell_volt_mV * 1000) >> 8) & 0xFF);
+	FEB_CAN_Tx_Data[4] = (((int16_t) max_cell_volt_mV * 1000) & 0xFF);
+	FEB_CAN_Tx_Data[5] = ((((int16_t) max_cell_volt_mV * 1000) >> 8) & 0xFF);
 
 	// Delay until mailbox available
 	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
@@ -180,14 +191,25 @@ void FEB_ACC_TEMP_CAN_Transmit(void) {
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
 	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
 
-	uint16_t pack_temp_C = 0;
-	uint16_t min_cell_temp_C = 0;
-	uint16_t max_cell_temp_C = 0;
+	double pack_temp_C = 0;
+	float min_cell_temp_C = FEB_ACC.banks[0].temp_sensor_readings_V[0];
+	float max_cell_temp_C = FEB_ACC.banks[0].temp_sensor_readings_V[0];
+
+	for ( size_t i = 0; i < FEB_NBANKS; ++i) {
+		for ( size_t j = 0; j < FEB_NUM_CELL_PER_BANK; ++j) {
+			min_cell_temp_C = fmin(min_cell_temp_C, FEB_ACC.banks[i].temp_sensor_readings_V[j]);
+			max_cell_temp_C = fmax(max_cell_temp_C, FEB_ACC.banks[i].temp_sensor_readings_V[j]);
+			pack_temp_C += FEB_ACC.banks[i].temp_sensor_readings_V[j] / (1.0 * FEB_NBANKS * FEB_NUM_CELL_PER_BANK);
+		}
+	}
 
 	// Copy data to Tx buffer
-	FEB_CAN_Tx_Data[0] = pack_temp_C;
-	FEB_CAN_Tx_Data[2] = min_cell_temp_C;
-	FEB_CAN_Tx_Data[4] = max_cell_temp_C;
+	FEB_CAN_Tx_Data[0] = (((int16_t) pack_temp_C * 100) & 0xFF);
+	FEB_CAN_Tx_Data[1] = ((((int16_t) pack_temp_C * 100) >> 8) & 0xFF);
+	FEB_CAN_Tx_Data[2] = (((int16_t) min_cell_temp_C * 100) & 0xFF);
+	FEB_CAN_Tx_Data[3] = ((((int16_t) min_cell_temp_C * 100) >> 8) & 0xFF);
+	FEB_CAN_Tx_Data[4] = (((int16_t) max_cell_temp_C * 100) & 0xFF);
+	FEB_CAN_Tx_Data[5] = ((((int16_t) max_cell_temp_C * 100) >> 8) & 0xFF);
 
 	// Delay until mailbox available
 	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}

@@ -9,6 +9,7 @@
 #include "FEB_SM.h"
 #include "stm32f446xx.h"
 #include "stm32f4xx_hal.h"
+#include <math.h>
 
 //***************************************** Structs *****************************************
 typedef enum {
@@ -44,6 +45,8 @@ void FEB_CAN_Filter_Config(void);
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan);
 void FEB_CAN_Heartbeat_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t RxData[]);
 void FEB_SM_CAN_Transmit(void);
+void FEB_ACC_VOLT_CAN_Transmit(void);
+void FEB_ACC_TEMP_CAN_Transmit(void);
 void FEB_CAN_PING(void);
 void FEB_CAN_PONG(CAN_RxHeaderTypeDef*, uint8_t[]);
 uint8_t FEB_CAN_GET_PONGED(void);

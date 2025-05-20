@@ -10,7 +10,7 @@
 #ifdef charger
 
 #define FEB_CAN_ID_CHARGER_BMS 0x1806e5f4
-#define FEB_CAN_ID_CHARGER_CCS 0x18ff50e5
+#define FEB_CAN_ID_CHARGER_CCS 0x18FF50E5
 
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart2;
@@ -18,6 +18,8 @@ extern UART_HandleTypeDef huart2;
 extern uint8_t FEB_CAN_Tx_Data[8];
 extern CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
 extern uint32_t FEB_CAN_Tx_Mailbox;
+
+extern accumulator_t FEB_ACC;
 
 typedef struct {
 	uint16_t max_voltage_dV;		// Deci-volts
@@ -102,7 +104,7 @@ static void charger_CAN_transmit(void) {
 
 void FEB_CAN_Charger_Init(void) {
 	BMS_message.max_voltage_dV = FEB_NBANKS * FEB_NUM_CELL_PER_BANK * (FEB_Config_Get_Cell_Max_Voltage_mV() * 1e-2);
-	BMS_message.max_current_dA = 50;
+	BMS_message.max_current_dA = 20;
 	CCS_message.received = false;
 }
 
@@ -121,17 +123,45 @@ void FEB_CAN_Charger_Stop_Charge(void) {
 	BMS_message.control = 1;
 }
 
-bool FEB_CAN_Charger_Received(){
+bool FEB_CAN_Charger_Received(void){
 	return CCS_message.received;
 }
 
+int8_t FEB_CAN_Charging_Status(void) {
+	if ( FEB_ACC.total_voltage_V >= FEB_CONFIG_PACK_SOFT_MAX_VOLTAGE_V ) {
+		if ( FEB_ACC.total_voltage_V >= FEB_CONFIG_PACK_HARD_MAX_VOLTAGE_V ) {
+			return -1;
+		}
+		return 1;
+	}
+
+	for ( size_t i = 0; i < FEB_NBANKS; ++i) {
+		for ( size_t j = 0; j < FEB_NUM_CELL_PER_BANK; ++j) {
+			if ( FEB_ACC.banks[i].cells[j].voltage_V >= FEB_CONFIG_CELL_SOFT_MAX_VOLTAGE_mV ) {
+				if ( FEB_ACC.banks[i].cells[j].voltage_V >= FEB_CONFIG_CELL_HARD_MAX_VOLTAGE_mV ) {
+					return -1;
+				}
+				return 1;
+			}
+			if ( FEB_ACC.banks[i].temp_sensor_readings_V[j] >= FEB_CONFIG_CELL_SOFT_MAX_TEMP_dC ) {
+				if ( FEB_ACC.banks[i].temp_sensor_readings_V[j] >= FEB_CONFIG_CELL_HARD_MAX_TEMP_dC ) {
+					return -1;
+				}
+				return 1;
+			}
+		}
+	}
+
+	return 0;
+}
+
 void FEB_CAN_Charger_UART_Transmit(void) {
-	static char str[64];
+	static char str[128];
 
 	// Data: max voltage, max current, control operating voltage, operating current, status bits
-	sprintf(str, "charge %d %d %d %d %d %d\n",
+	sprintf(str, "Charger: Max_V: %d Max_A: %d Control: %d OP_V: %d OP_A: %d Status: %d Recieved: %d\n",
 		BMS_message.max_voltage_dV, BMS_message.max_current_dA, BMS_message.control,
-		CCS_message.op_voltage_dV, CCS_message.op_current_dA, CCS_message.status);
+		CCS_message.op_voltage_dV, CCS_message.op_current_dA, CCS_message.status, CCS_message.received);
 
 	//while (osMutexAcquire(FEB_UART_LockHandle, UINT32_MAX) != osOK);
 	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
