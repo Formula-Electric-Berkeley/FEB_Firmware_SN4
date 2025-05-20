@@ -42,6 +42,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &FEB_CAN_Rx_Header, FEB_CAN_Rx_Data) != HAL_OK) {
 		// Store Message
         // Function(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
+
+		FEB_CAN_BMS_Store_Msg(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
 	}
 
 	// Standard ID Case
