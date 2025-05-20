@@ -16,7 +16,7 @@
 #define FEB_CONFIG_CELL_MIN_VOLTAGE_100uV (FEB_CONFIG_CELL_MIN_VOLTAGE_mV * 10)
 #define FEB_CONFIG_CELL_MAX_VOLTAGE_100uV (FEB_CONFIG_CELL_MAX_VOLTAGE_mV * 10)
 #define FEB_CONST_PRECHARGE_PCT 0.9
-#define FEB_NUM_CAN_DEV 6
+#define FEB_NUM_CAN_DEV 7
 // ******************************** Voltage Reading Configuration ***************************
 #define CONTVR CONTINUOUS
 #define DCPVR DCP_ON

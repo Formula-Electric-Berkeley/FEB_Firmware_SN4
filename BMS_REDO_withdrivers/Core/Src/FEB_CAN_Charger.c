@@ -108,6 +108,7 @@ void FEB_CAN_Charger_Init(void) {
 
 void FEB_CAN_Charger_Process(void) {
 	if (FEB_SM_Get_Current_State() == FEB_SM_ST_CHARGING) {
+
 		charger_CAN_transmit();
 	}
 }

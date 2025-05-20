@@ -192,15 +192,15 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 
 		//I'm not sure if this is actually good. Maybe we should use the
 		// charge sense input instead
-//		bool free = true; Todo: uncomment
-//
-//		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
-//			free &= FEB_CAN_NETWORK[i].FAck;
-//		}
-//
-//		if ( free ) {
-//			LVPowerTransition(FEB_SM_ST_FREE);
-//		}
+		bool free = true;
+
+		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
+			free &= FEB_CAN_NETWORK[i].FAck;
+		}
+
+		if ( free ) {
+			LVPowerTransition(FEB_SM_ST_FREE);
+		}
 
 		break;
 
