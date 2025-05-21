@@ -18,7 +18,7 @@ typedef struct BMS_MESSAGE_TYPE {
 	FEB_HB_t ping_ack; // ping message
      uint32_t last_message_time;
      float ivt_voltage;
-	 float acc_temp;
+	 float max_acc_temp;
 } BMS_MESSAGE_TYPE;
 BMS_MESSAGE_TYPE bms_message;
 

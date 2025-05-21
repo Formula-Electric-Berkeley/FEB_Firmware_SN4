@@ -79,7 +79,7 @@ void FEB_CAN_ICS_Rx_Handler(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_
 			uint8_t x2 = FEB_CAN_Rx_Data[2];
 			break;
 		case FEB_CAN_BMS_ACCUMULATOR_TEMPERATURE_FRAME_ID:
-			ICS_UI_Values.acc_temp = (FEB_CAN_Rx_Data[1] << 8) + FEB_CAN_Rx_Data[0];
+			ICS_UI_Values.max_acc_temp = (FEB_CAN_Rx_Data[5] << 8) | FEB_CAN_Rx_Data[4];
 			break;
 		case 0xa5:
 			if (FEB_CAN_Rx_Data[3] == 255) {

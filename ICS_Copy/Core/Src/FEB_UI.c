@@ -49,9 +49,9 @@ void FEB_UI_Set_Values(void) {
 //	uint8_t soc_value = abs((100 - (((int) ((ICS_UI_Values.ivt_voltage / 600.0) * 100)) % 600)) % 100);
 //	set_soc_value(soc_value);
 
-	ICS_UI_Values.pack_voltage /= 100;
+	//ICS_UI_Values.pack_voltage /= 100;
 
-	uint16_t pv = ICS_UI_Values.pack_voltage;
+	//uint16_t pv = ICS_UI_Values.pack_voltage;
 
 //	if (ICS_UI_Values.pack_voltage < 350) {
 //		//lv_bar_set_value(ui_Bar2, 0, LV_ANIM_OFF);
@@ -59,7 +59,7 @@ void FEB_UI_Set_Values(void) {
 //		//lv_bar_set_value(ui_Bar2, ((ICS_UI_Values.pack_voltage - 350) / 238) * 100, LV_ANIM_OFF);
 //	}
 
-	ICS_UI_Values.min_voltage /= 100;
+	//ICS_UI_Values.min_voltage /= 100;
 
 	//set_soc_value(ICS_UI_Values.min_voltage); (TODO)
 	//lv_bar_set_value(ui_Bar1, ((ICS_UI_Values.min_voltage - 25) / 20) * 100, LV_ANIM_OFF);
@@ -76,11 +76,11 @@ void FEB_UI_Set_Values(void) {
 //	}
 
 	SOC_Set_Value(ICS_UI_Values.pack_voltage, ICS_UI_Values.min_voltage);
-	TEMP_Set_Value(ICS_UI_Values.acc_temp);
+	TEMP_Set_Value(ICS_UI_Values.max_acc_temp);
 //	ICS_UI_Values.motor_speed /= 100;
 	//set_speed_value((((ICS_UI_Values.motor_speed / 3.545) * 1.6358) / 60) * 2.237); (TODO)
 	SPEED_Set_Value(ICS_UI_Values.motor_speed);
-}
+		}
 
 // **************************************** Helper Functions ****************************************
 void BMS_State_Set(void) {
@@ -125,6 +125,7 @@ char* get_bms_state_string(FEB_SM_ST_t state) {
 		case FEB_SM_ST_ENERGIZED: return "Energized";
 		case FEB_SM_ST_DRIVE: return "Drive";
 		case FEB_SM_ST_FREE: return "Battery Free";
+		case FEB_SM_ST_CHARGER_PRECHARGE: return "Precharge";
 		case FEB_SM_ST_CHARGING: return "Charging";
 		case FEB_SM_ST_BALANCE: return "Balance";
 		case FEB_SM_ST_FAULT_BMS: return "Fault - BMS";
@@ -136,22 +137,36 @@ char* get_bms_state_string(FEB_SM_ST_t state) {
 	}
 }
 
-// Gradient: Yellow (low) to Red (high)
-static lv_color_t get_gradient_color(uint8_t value) {
+// Temp Gradient: Yellow (low) to Red (high)
+static lv_color_t get_temp_gradient_color(uint8_t value) {
     uint8_t r = 255;
     uint8_t g = 255 - (value * 255 / 100);  // fade green out
+    return lv_color_make(r, g, 0);
+}
+
+// SoC Gradient: Red (low) to Green (high)
+static lv_color_t get_soc_gradient_color(uint8_t value) {
+    uint8_t r = 255 - (value * 255 / 100);
+    uint8_t g = value * 255 / 100;
     return lv_color_make(r, g, 0);
 }
 
 void SOC_Set_Value(float ivt_voltage, float min_cell_voltage) {
     // Calculate SoC using your original logic
     // Option 1: Based on ivt_voltage
-    uint8_t soc_value = abs((100 - (((int)((ivt_voltage / 600.0) * 100)) % 600)) % 100);
+    //uint8_t soc_value = abs((100 - (((int)((ivt_voltage / 600.0) * 100)) % 600)) % 100);
 
     // Option 2: Based on min cell voltage (commented out)
     // uint8_t soc_value = (uint8_t)(((min_cell_voltage - 25) / 20.0) * 100.0);
 
-    if (soc_value > 100) soc_value = 100;
+	// Option 3: Linear (TERRIBLE) (avg_cell_voltage-cell_min) / (cell_max - cell_min)
+	float avg_cell_voltage = ivt_voltage / 140;
+	float soc_f = (avg_cell_voltage - 250) / (420 - 250) * 100;
+
+	if (soc_f > 100.0) soc_f = 100.0;
+	if (soc_f < 0.0) soc_f = 0.0;
+
+    uint8_t soc_value = (uint8_t) (soc_f + 0.5f);
 
     // Update UI
     char soc_label[10];
@@ -159,28 +174,29 @@ void SOC_Set_Value(float ivt_voltage, float min_cell_voltage) {
     lv_label_set_text(ui_SoCNumerical, soc_label);
 
     lv_bar_set_value(ui_BarSoC, soc_value, LV_ANIM_OFF);
-    lv_obj_set_style_bg_color(ui_BarSoC, get_gradient_color(soc_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_BarSoC, get_soc_gradient_color(soc_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
 }
 
-void TEMP_Set_Value(float acc_temp) {
+void TEMP_Set_Value(float max_acc_temp) {
     // Clamp temperature to expected range
-    if ((int)acc_temp % 60 < 30) acc_temp = 30.0;
+	int max_temp = (int) (max_acc_temp / 100);
+    // if (max_temp % 60 < 30) max_temp = 30.0;
 
     // Scale: 12–60°C and 0–100%
     uint8_t temp_value = 0;
-    if (acc_temp > 12.0) {
-        temp_value = (uint8_t)(((fminf(acc_temp, 60.0) - 12.0) / 48.0) * 100.0);
+    if (max_temp > 12.0) {
+        temp_value = (uint8_t)(((fminf(max_temp, 60.0) - 12.0) / 48.0) * 100.0);
     }
 
     if (temp_value > 100) temp_value = 100;
 
     // Update UI
     char temp_label[10];
-    sprintf(temp_label, "%d°C", (int)acc_temp);
+    sprintf(temp_label, "%d°C", (int)max_temp);
     lv_label_set_text(ui_tempNumerical, temp_label);
 
     lv_bar_set_value(ui_BarTemp, temp_value, LV_ANIM_OFF);
-    lv_obj_set_style_bg_color(ui_BarTemp, get_gradient_color(temp_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_BarTemp, get_temp_gradient_color(temp_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
 }
 
 void SPEED_Set_Value(float motor_speed_rpm) {

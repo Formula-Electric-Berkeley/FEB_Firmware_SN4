@@ -16,7 +16,7 @@ void FEB_Radio_Transmit(void) {
 	char data[30] = "";
 
 	char temp_str[12];
-	sprintf(temp_str, "T:%f", ICS_UI_Values.acc_temp);
+	sprintf(temp_str, "T:%f", ICS_UI_Values.max_acc_temp);
 	strcat(data, temp_str);
 	strcat(data, "\n");
 
