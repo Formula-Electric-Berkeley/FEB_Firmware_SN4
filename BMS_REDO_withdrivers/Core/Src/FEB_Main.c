@@ -8,9 +8,13 @@
 void FEB_Main_Setup() {
 	//SM setup
 	FEB_ADBMS_Init();
-	//FEB_Cell_Balance_Start();
+
+	// Uncomment to Balance
+	// FEB_Cell_Balance_Start();
+
 	FEB_CAN_Init();
 	FEB_SM_Init(); //this occurs last to transition out of boot
+	FEB_CAN_Charger_Init();
 	HAL_Delay(5);
 
 

@@ -35,13 +35,13 @@ static void (*transitionVector[14])(FEB_SM_ST_t)={
 		EnergizedTransition,
 		DriveTransition,
 		FreeTransition,
+		ChargingPrechargeTransition,
 		ChargingTransition,
 		BalanceTransition,
 		BMSFaultTransition,
 		BSPDFaultTransition,
 		IMDFaultTransition,
-		ChargingFaultTransition,
-		ChargingPrechargeTransition
+		ChargingFaultTransition
 };
 
 // Shared variable, requires synchronization
@@ -188,26 +188,23 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		//I'm not sure if this is actually good. Maybe we should use the
 		// charge sense input instead
 
-		bool free = true;
+		bool free = false;
 
-		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
-			free &= FEB_CAN_NETWORK[i].FAck;
+//		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
+//			free &= FEB_CAN_NETWORK[i].FAck;
+//		}
+
+		if (free) {
+			LVPowerTransition(FEB_SM_ST_FREE);
+			break;
 		}
 
-//		if ( free ) {
-			LVPowerTransition(FEB_SM_ST_FREE);
-//		}
-
-		//Make sure shutdown loop is completed before going to idle
-//		if (FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE){
-//			LVPowerTransition(FEB_SM_ST_HEALTH_CHECK);
-
-			//Add an else case to output that shutdown loop was not completed.
-//		}
-
-
+		//Make sure shutdown loop is completed before going to health check
+		if (FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE){
+				LVPowerTransition(FEB_SM_ST_HEALTH_CHECK);
+				break;
+		}
 		break;
-
 	default:
 		return;
 	}
@@ -460,7 +457,7 @@ static void ChargingPrechargeTransition(FEB_SM_ST_t next_state) {
 		FEB_PIN_SET(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_CLOSE);
 		HAL_Delay(500);//osDelay(100);
 		FEB_PIN_RST(PN_PC_REL);
-		FEB_CAN_Charger_Init();
+		//FEB_CAN_Charger_Init();
 		FEB_CAN_Charger_Start_Charge();
 
 		updateStateProtected(next_state);
@@ -469,11 +466,23 @@ static void ChargingPrechargeTransition(FEB_SM_ST_t next_state) {
 		updateStateProtected(next_state);
 		break;
 	case FEB_SM_ST_DEFAULT:
+		if ( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN ) {
+			ChargingPrechargeTransition(FEB_SM_ST_FAULT_BMS);
+		}
+
+		//Keep air plus open for redundancy
+		FEB_PIN_RST(PN_PC_AIR);
+
+		//Hold precharge relay closed for redundancy
+		FEB_PIN_SET(PN_PC_REL);
+
+	//		  TODO: Move to precharge file
 		float voltage_V = (float) FEB_CAN_IVT_Message.voltage_1_mV * 0.001;
-		//		float target_voltage_V = FEB_ADBMS_Get_Total_Voltage() * FEB_CONST_PRECHARGE_PCT;
+	//		float target_voltage_V = FEB_ADBMS_Get_Total_Voltage() * FEB_CONST_PRECHARGE_PCT;
 		if (voltage_V >= 0.9 * FEB_ACC.total_voltage_V) {
 			ChargingPrechargeTransition(FEB_SM_ST_CHARGING);
 		}
+		break;
 
 
 	default:

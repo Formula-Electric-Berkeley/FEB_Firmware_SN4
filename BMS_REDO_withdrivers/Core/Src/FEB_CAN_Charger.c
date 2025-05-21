@@ -25,6 +25,7 @@ typedef struct {
 	uint16_t max_voltage_dV;		// Deci-volts
 	uint16_t max_current_dA;		// Deci-amps
 	uint8_t control;				// 0 (start charge), 1 (stop charge)
+	bool done_charging;
 } BMS_message_t;
 typedef struct {
 	uint16_t op_voltage_dV;			// Operating voltage
@@ -104,8 +105,9 @@ static void charger_CAN_transmit(void) {
 
 void FEB_CAN_Charger_Init(void) {
 	BMS_message.max_voltage_dV = FEB_NBANKS * FEB_NUM_CELL_PER_BANK * (FEB_Config_Get_Cell_Max_Voltage_mV() * 1e-2);
-	BMS_message.max_current_dA = 20;
+	BMS_message.max_current_dA = 50;
 	CCS_message.received = false;
+	BMS_message.done_charging = false;
 }
 
 void FEB_CAN_Charger_Process(void) {
@@ -121,6 +123,8 @@ void FEB_CAN_Charger_Start_Charge(void) {
 
 void FEB_CAN_Charger_Stop_Charge(void) {
 	BMS_message.control = 1;
+	BMS_message.done_charging = true;
+
 }
 
 bool FEB_CAN_Charger_Received(void){
@@ -128,6 +132,9 @@ bool FEB_CAN_Charger_Received(void){
 }
 
 int8_t FEB_CAN_Charging_Status(void) {
+	if (BMS_message.done_charging == true) {
+		return 1;
+	}
 	if ( FEB_ACC.total_voltage_V >= FEB_CONFIG_PACK_SOFT_MAX_VOLTAGE_V ) {
 		if ( FEB_ACC.total_voltage_V >= FEB_CONFIG_PACK_HARD_MAX_VOLTAGE_V ) {
 			return -1;
@@ -137,14 +144,14 @@ int8_t FEB_CAN_Charging_Status(void) {
 
 	for ( size_t i = 0; i < FEB_NBANKS; ++i) {
 		for ( size_t j = 0; j < FEB_NUM_CELL_PER_BANK; ++j) {
-			if ( FEB_ACC.banks[i].cells[j].voltage_V >= FEB_CONFIG_CELL_SOFT_MAX_VOLTAGE_mV ) {
-				if ( FEB_ACC.banks[i].cells[j].voltage_V >= FEB_CONFIG_CELL_HARD_MAX_VOLTAGE_mV ) {
+			if ( FEB_ACC.banks[i].cells[j].voltage_V * 1000 >= FEB_CONFIG_CELL_SOFT_MAX_VOLTAGE_mV ) {
+				if ( FEB_ACC.banks[i].cells[j].voltage_V * 1000 >= FEB_CONFIG_CELL_HARD_MAX_VOLTAGE_mV ) {
 					return -1;
 				}
 				return 1;
 			}
-			if ( FEB_ACC.banks[i].temp_sensor_readings_V[j] >= FEB_CONFIG_CELL_SOFT_MAX_TEMP_dC ) {
-				if ( FEB_ACC.banks[i].temp_sensor_readings_V[j] >= FEB_CONFIG_CELL_HARD_MAX_TEMP_dC ) {
+			if ( FEB_ACC.banks[i].temp_sensor_readings_V[j] * 10  >= FEB_CONFIG_CELL_SOFT_MAX_TEMP_dC ) {
+				if ( FEB_ACC.banks[i].temp_sensor_readings_V[j] * 10 >= FEB_CONFIG_CELL_HARD_MAX_TEMP_dC ) {
 					return -1;
 				}
 				return 1;
