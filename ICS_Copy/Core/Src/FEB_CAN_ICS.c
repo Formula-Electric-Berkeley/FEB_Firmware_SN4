@@ -73,13 +73,13 @@ void FEB_CAN_ICS_Rx_Handler(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_
 			ICS_UI_Values.bms_state = FEB_CAN_Rx_Data[0];
 			break;
 		case FEB_CAN_BMS_ACCUMULATOR_VOLTAGE_FRAME_ID:
-			ICS_UI_Values.pack_voltage = (FEB_CAN_Rx_Data[0] << 8) + FEB_CAN_Rx_Data[1];
-			ICS_UI_Values.min_voltage = (FEB_CAN_Rx_Data[2] << 8) + FEB_CAN_Rx_Data[3]; //2.4-4.3
+			ICS_UI_Values.pack_voltage = (FEB_CAN_Rx_Data[1] << 8) | FEB_CAN_Rx_Data[0];
+			ICS_UI_Values.min_voltage = (FEB_CAN_Rx_Data[3] << 8) | FEB_CAN_Rx_Data[2]; //2.4-4.3
 			uint8_t x1 = FEB_CAN_Rx_Data[1];
 			uint8_t x2 = FEB_CAN_Rx_Data[2];
 			break;
 		case FEB_CAN_BMS_ACCUMULATOR_TEMPERATURE_FRAME_ID:
-			ICS_UI_Values.acc_temp = (FEB_CAN_Rx_Data[0] << 8) + FEB_CAN_Rx_Data[1];
+			ICS_UI_Values.acc_temp = (FEB_CAN_Rx_Data[1] << 8) + FEB_CAN_Rx_Data[0];
 			break;
 		case 0xa5:
 			if (FEB_CAN_Rx_Data[3] == 255) {

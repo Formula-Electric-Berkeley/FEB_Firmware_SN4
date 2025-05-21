@@ -75,7 +75,7 @@ void FEB_UI_Set_Values(void) {
 //		//set_temp_value(((int) ICS_UI_Values.acc_temp) % 65); (TODO)
 //	}
 
-	SOC_Set_Value(ICS_UI_Values.ivt_voltage, ICS_UI_Values.min_voltage);
+	SOC_Set_Value(ICS_UI_Values.pack_voltage, ICS_UI_Values.min_voltage);
 	TEMP_Set_Value(ICS_UI_Values.acc_temp);
 //	ICS_UI_Values.motor_speed /= 100;
 	//set_speed_value((((ICS_UI_Values.motor_speed / 3.545) * 1.6358) / 60) * 2.237); (TODO)
