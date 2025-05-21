@@ -192,12 +192,12 @@ void FEB_ACC_TEMP_CAN_Transmit(void) {
 	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
 
 	double pack_temp_C = 0;
-	float min_cell_temp_C = FEB_ACC.banks[0].temp_sensor_readings_V[0];
+	float min_cell_temp_C = fmax(FEB_ACC.banks[0].temp_sensor_readings_V[0], 0);
 	float max_cell_temp_C = FEB_ACC.banks[0].temp_sensor_readings_V[0];
 
 	for ( size_t i = 0; i < FEB_NBANKS; ++i) {
 		for ( size_t j = 0; j < FEB_NUM_CELL_PER_BANK; ++j) {
-			min_cell_temp_C = fmin(min_cell_temp_C, FEB_ACC.banks[i].temp_sensor_readings_V[j]);
+			min_cell_temp_C = fmin(min_cell_temp_C, fmax(FEB_ACC.banks[i].temp_sensor_readings_V[j], 0));
 			max_cell_temp_C = fmax(max_cell_temp_C, FEB_ACC.banks[i].temp_sensor_readings_V[j]);
 			pack_temp_C += FEB_ACC.banks[i].temp_sensor_readings_V[j] / (1.0 * FEB_NBANKS * FEB_NUM_CELL_PER_BANK);
 		}
