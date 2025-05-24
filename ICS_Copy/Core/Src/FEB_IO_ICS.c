@@ -46,12 +46,21 @@ void FEB_IO_ICS_Loop(void) {
 	prev_state = bms_state;
 	bms_state = FEB_CAN_BMS_Get_State();
 
+	// TSSI
+	if (FEB_CAN_BMS_GET_FAULTS()) {
+		HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_RESET);
+	} else {
+		HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_RESET);
+	}
+
+	// Buzzer Logic
 	if (prev_state == FEB_SM_ST_ENERGIZED && bms_state == FEB_SM_ST_DRIVE) {
 		entered_drive = 1;
 	} else if (prev_state == FEB_SM_ST_DRIVE && bms_state == FEB_SM_ST_ENERGIZED){
 		exited_drive = 1;
 	}
 
+	// R2D Button UI
 	if(bms_state == FEB_SM_ST_DRIVE){
 		if (inv_enabled) {
 			lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );

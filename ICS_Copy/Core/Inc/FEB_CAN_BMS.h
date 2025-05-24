@@ -35,6 +35,7 @@ typedef enum {
 uint8_t FEB_CAN_BMS_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uint8_t filter_bank);
 void FEB_CAN_BMS_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t *RxData);
 FEB_SM_ST_t FEB_CAN_BMS_Get_State(); // Check if still in drivable state
+bool FEB_CAN_BMS_GET_FAULTS(); // Check for bms/imd faults
 bool FEB_CAN_BMS_is_stale(); //Check if message is stale
 
 

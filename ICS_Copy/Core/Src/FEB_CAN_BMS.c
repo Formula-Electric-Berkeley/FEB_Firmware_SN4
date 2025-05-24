@@ -16,9 +16,11 @@ typedef enum {
 typedef struct BMS_MESSAGE_TYPE {
 	FEB_SM_ST_t state;
 	FEB_HB_t ping_ack; // ping message
-     uint32_t last_message_time;
-     float ivt_voltage;
-	 float max_acc_temp;
+    uint32_t last_message_time;
+    float ivt_voltage;
+	float max_acc_temp;
+	bool bms_fault;
+	bool imd_fault;
 } BMS_MESSAGE_TYPE;
 BMS_MESSAGE_TYPE bms_message;
 
@@ -47,6 +49,10 @@ BMS_MESSAGE_TYPE bms_message;
 
 FEB_SM_ST_t FEB_CAN_BMS_Get_State(){
 	return bms_message.state;
+}
+
+bool FEB_CAN_BMS_GET_FAULTS(){
+	return (bms_message.bms_fault || bms_message.imd_fault);
 }
 
 
@@ -95,6 +101,9 @@ void FEB_CAN_BMS_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t *RxData) {
 //        	}
         	bms_message.last_message_time = HAL_GetTick();
         	break;
+		case FEB_CAN_ACCUMULATOR_FAULTS_FRAME_ID:
+		        	bms_message.bms_fault = (RxData[0] & 0x01) == 0x01;
+		        	bms_message.imd_fault = (RxData[0] & 0x02) == 0x02;
     }
 }
 
