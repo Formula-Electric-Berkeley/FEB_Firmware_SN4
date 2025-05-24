@@ -47,6 +47,7 @@ void FEB_CAN_Heartbeat_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t RxData[])
 void FEB_SM_CAN_Transmit(void);
 void FEB_ACC_VOLT_CAN_Transmit(void);
 void FEB_ACC_TEMP_CAN_Transmit(void);
+void FEB_ACC_FAULTS_CAN_Transmit(void);
 void FEB_CAN_PING(void);
 void FEB_CAN_PONG(CAN_RxHeaderTypeDef*, uint8_t[]);
 uint8_t FEB_CAN_GET_PONGED(void);

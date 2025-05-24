@@ -220,6 +220,45 @@ void FEB_ACC_TEMP_CAN_Transmit(void) {
 	}
 }
 
+void FEB_ACC_FAULTS_CAN_Transmit(void) {
+
+	// Initialize transmission header
+	FEB_CAN_Tx_Header.DLC = 6;
+	FEB_CAN_Tx_Header.StdId = FEB_CAN_ACCUMULATOR_FAULTS_FRAME_ID;
+	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
+	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
+	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
+
+	FEB_Relay_State bms_fault_sense = FEB_PIN_RD(PN_INDICATOR); // closed is fault
+	FEB_Relay_State imd_fault_sense = FEB_PIN_RD(PN_SHS_IMD); //  open is fault
+
+	uint8_t fault = 0x00;
+
+	if (bms_fault_sense == FEB_RELAY_STATE_CLOSE) {
+		fault = fault | 0x01;
+	} else {
+		fault = fault & 0xFE;
+	}
+
+	if (imd_fault_sense == FEB_RELAY_STATE_OPEN) {
+			fault = fault | 0x02;
+	} else {
+			fault = fault & 0xFD;
+	}
+
+
+	// Copy data to Tx buffer
+	FEB_CAN_Tx_Data[0] = fault;
+
+	// Delay until mailbox available
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+
+	// Add Tx data to mailbox
+	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
+		// FEB_SM_Set_Current_State(FEB_SM_ST_SHUTDOWN);
+	}
+}
+
 //void FEB_CAN_PING(void) {
 //	//Reset known members
 //	FEB_CAN_PONGED=0;

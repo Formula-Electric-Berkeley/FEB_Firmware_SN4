@@ -55,6 +55,7 @@ void FEB_Task_CAN() {
 	FEB_SM_CAN_Transmit();
 	FEB_ACC_VOLT_CAN_Transmit();
 	FEB_ACC_TEMP_CAN_Transmit();
+	FEB_ACC_FAULTS_CAN_Transmit;
 }
 
 static int cyc2=0;
