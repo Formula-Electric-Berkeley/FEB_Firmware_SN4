@@ -36,6 +36,8 @@ void FEB_CAN_Init(void) {
 		FEB_CAN_NETWORK[i].LaOn=0;
 		FEB_CAN_NETWORK[i].last_received=0;
 	}
+
+	ping_alive = 0;
 }
 
 void FEB_CAN_Filter_Config(void) {
@@ -63,11 +65,42 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 void FEB_CAN_Heartbeat_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t RxData[]) {
 	switch(pHeader->StdId) {
 		uint8_t device;
-	    case 0:
+		case 0:
 	    	device = 0;
-
-	    	FEB_CAN_NETWORK[device].FAck = 0;
+			FEB_CAN_NETWORK[device].last_received = RxData;
+			FEB_CAN_NETWORK[device].FAck = 0;
+			FEB_CAN_NETWORK[device].LaOn = 0;
 			break;
+		case FEB_CAN_DASH_HEARTBEAT_FRAME_ID:
+			device = FEB_HB_DASH;
+			FEB_CAN_NETWORK[device].last_received = RxData;
+			FEB_CAN_NETWORK[device].FAck = 0;
+			FEB_CAN_NETWORK[device].LaOn = 0;
+		case FEB_CAN_PCU_HEARTBEAT_FRAME_ID: 
+			device = FEB_HB_PCU;
+			FEB_CAN_NETWORK[device].last_received = RxData;
+			FEB_CAN_NETWORK[device].FAck = 0;
+			FEB_CAN_NETWORK[device].LaOn = 0;
+		case FEB_CAN_LVPDB_HEARTBEAT_FRAME_ID:
+			device = FEB_HB_LVPDB;
+			FEB_CAN_NETWORK[device].last_received = RxData;
+			FEB_CAN_NETWORK[device].FAck = 0;
+			FEB_CAN_NETWORK[device].LaOn = 0;
+		case FEB_CAN_DCU_HEARTBEAT_FRAME_ID:
+			device = FEB_HB_DCU;
+			FEB_CAN_NETWORK[device].last_received = RxData;
+			FEB_CAN_NETWORK[device].FAck = 0;
+			FEB_CAN_NETWORK[device].LaOn = 0;
+		case FEB_CAN_FRONT_SENSOR_HEARTBEAT_MESSAGE_FRAME_ID:
+			device = FEB_HB_FSN;
+			FEB_CAN_NETWORK[device].last_received = RxData;
+			FEB_CAN_NETWORK[device].FAck = 0;
+			FEB_CAN_NETWORK[device].LaOn = 0;
+		case FEB_CAN_REAR_SENSOR_HEARTBEAT_MESSAGE_FRAME_ID:
+			device = FEB_HB_RSN;
+			FEB_CAN_NETWORK[device].last_received = RxData;
+			FEB_CAN_NETWORK[device].FAck = 0;
+			FEB_CAN_NETWORK[device].LaOn = 0;
 	}
 }
 
@@ -109,9 +142,9 @@ void FEB_SM_CAN_Transmit(void) {
 		++FEB_CAN_NETWORK[ping_alive==0?FEB_NUM_CAN_DEV-1:(ping_alive - 1) % FEB_NUM_CAN_DEV].FAck;
 	}
 
-	for(int i =0;i<FEB_NUM_CAN_DEV;i++){
-		if(FEB_CAN_NETWORK[i].FAck<2)return;
-	}
+	// for(int i =0;i<FEB_NUM_CAN_DEV;i++){
+	// 	if(FEB_CAN_NETWORK[i].FAck<2)return;
+	// }
 	//FEB_SM_Transition(FEB_SM_ST_FREE);
 }
 

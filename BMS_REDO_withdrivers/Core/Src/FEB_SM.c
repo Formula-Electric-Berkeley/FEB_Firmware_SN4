@@ -188,11 +188,12 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		//I'm not sure if this is actually good. Maybe we should use the
 		// charge sense input instead
 
-		bool free = false;
+		// bool free = false;
+		// for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
+		// 	free &= FEB_CAN_NETWORK[FEB_HB_PCU].FAck < 3;
+		// }
 
-//		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
-//			free &= FEB_CAN_NETWORK[i].FAck;
-//		}
+		bool free = !(FEB_CAN_NETWORK[FEB_HB_PCU].FAck < 3);
 
 		if (free) {
 			LVPowerTransition(FEB_SM_ST_FREE);
@@ -241,7 +242,7 @@ static void HealthCheckTransition(FEB_SM_ST_t next_state){
 				FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN &&
 				FEB_PIN_RD(PN_PC_REL) == FEB_RELAY_STATE_OPEN
 		){
-			HealthCheckTransition(FEB_SM_ST_PRECHARGE);
+			// HealthCheckTransition(FEB_SM_ST_PRECHARGE);
 		}
 		break;
 
@@ -261,6 +262,9 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_LV:
+		FEB_PIN_RST(PN_PC_AIR);
+		FEB_PIN_RST(PN_PC_REL);
+		updateStateProtected(next_state);
 		break;
 
 	//TODO: Make sure this transition is needed
@@ -279,8 +283,9 @@ static void PrechargeTransition(FEB_SM_ST_t next_state){
 
 	case FEB_SM_ST_DEFAULT:
 
-		if ( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN ) {
-			PrechargeTransition(FEB_SM_ST_FAULT_BMS);
+		if (FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN  \
+				|| FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_OPEN ) {
+			PrechargeTransition(FEB_SM_ST_LV);
 		}
 
 		//Keep air plus open for redundancy
@@ -329,6 +334,10 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_LV:
+		FEB_PIN_RST(PN_PC_AIR);
+		FEB_PIN_RST(PN_PC_REL);
+		updateStateProtected(next_state);
+		break;
 
 	//How the fuck does that work
 	case FEB_SM_ST_HEALTH_CHECK:
@@ -338,8 +347,9 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_DEFAULT:
-		if ( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN ) {
-			PrechargeTransition(FEB_SM_ST_FAULT_BMS);
+		if ( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN  \
+				|| FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_OPEN ) {
+			PrechargeTransition(FEB_SM_ST_LV);
 		}
 
 		if(FEB_CAN_DASH_Get_R2R()){
@@ -369,7 +379,9 @@ static void DriveTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_LV:
-		//This transition should only happen by a fault
+		FEB_PIN_RST(PN_PC_AIR);
+		FEB_PIN_RST(PN_PC_REL);
+		updateStateProtected(next_state);
 		break;
 
 	case FEB_SM_ST_HEALTH_CHECK:
@@ -384,9 +396,9 @@ static void DriveTransition(FEB_SM_ST_t next_state){
 
 	case FEB_SM_ST_DEFAULT:
 		//If shutdown fails, or air minus is no longer connected
-		if( FEB_PIN_RD(PN_SHS_IN)== FEB_RELAY_STATE_OPEN \
+		if( FEB_PIN_RD(PN_SHS_IN) == FEB_RELAY_STATE_OPEN \
 				|| FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_OPEN ){
-			fault(FEB_SM_ST_FAULT_BMS);
+			DriveTransition(FEB_SM_ST_LV);
 
 
 		// if driver no longer requests r2r, set back to energized
@@ -411,7 +423,8 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 
 	case FEB_SM_ST_FREE:
 	case FEB_SM_ST_LV:
-		FEB_PIN_RST(PN_PC_AIR);//FEB_Hw_Set_AIR_Plus_Relay(FEB_RELAY_STATE_OPEN);
+		FEB_PIN_RST(PN_PC_AIR);
+		FEB_PIN_RST(PN_PC_REL);
 		updateStateProtected(next_state);
 		break;
 
@@ -427,16 +440,6 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 		if ( FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE && FEB_CAN_Charger_Received() && !FEB_CAN_Charging_Status() ) {
 			FreeTransition(FEB_SM_ST_CHARGER_PRECHARGE);
 		}
-
-//		bool free = true;
-//
-//		for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
-//			free &= FEB_CAN_NETWORK[i].FAck;
-//		}
-//
-//		if ( !free ) {
-//			FreeTransition(FEB_SM_ST_LV);
-//		}
 	default:
 		return;
 	}
@@ -451,6 +454,9 @@ static void ChargingPrechargeTransition(FEB_SM_ST_t next_state) {
 		fault(FEB_SM_ST_FAULT_CHARGING);
 		break;
 	case FEB_SM_ST_FREE:
+		FEB_PIN_RST(PN_PC_AIR);
+		FEB_PIN_SET(PN_PC_REL);
+		FEB_CAN_Charger_Start_Charge();
 	case FEB_SM_ST_LV:
 		break;
 	case FEB_SM_ST_CHARGING:
@@ -467,7 +473,7 @@ static void ChargingPrechargeTransition(FEB_SM_ST_t next_state) {
 		break;
 	case FEB_SM_ST_DEFAULT:
 		if ( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN ) {
-			ChargingPrechargeTransition(FEB_SM_ST_FAULT_BMS);
+			ChargingPrechargeTransition(FEB_SM_ST_FREE);
 		}
 
 		//Keep air plus open for redundancy
@@ -509,13 +515,13 @@ static void ChargingTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_DEFAULT:
-		uint8_t status = FEB_CAN_Charging_Status();
+		uint8_t charge_status = FEB_CAN_Charging_Status();
 
-		if ( status == 1 || FEB_PIN_RD(PN_AIRM_SENSE)==FEB_RELAY_STATE_OPEN ) {
+		if (charge_status == 1 || FEB_PIN_RD(PN_AIRM_SENSE)==FEB_RELAY_STATE_OPEN ) {
 			ChargingTransition(FEB_SM_ST_FREE);
 		}
 
-		if ( status == -1 ) {
+		if (charge_status == -1) {
 			ChargingTransition(FEB_SM_ST_FAULT_CHARGING);
 		}
 
