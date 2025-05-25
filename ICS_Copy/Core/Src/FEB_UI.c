@@ -15,6 +15,37 @@ const char* HV_STATUS_LABELS[] = {"HV OFF", "HV ON"};
 const int HV_STATUS_COLORS[] = {0xFF0000, 0xFF8A00};
 uint8_t iter;
 
+#define NUM_SOC_POINTS 21
+
+typedef struct {
+    uint8_t soc;
+    float voltage;
+} SOC_Voltage_Lookup;
+
+SOC_Voltage_Lookup soc_voltage_table[NUM_SOC_POINTS] = {
+    {100, 4.10},
+    {95, 4.00},
+    {90, 3.97},
+    {85, 3.95},
+    {80, 3.92},
+    {75, 3.85},
+    {70, 3.81},
+    {65, 3.77},
+    {60, 3.73},
+    {55, 3.70},
+    {50, 3.64},
+    {45, 3.60},
+    {40, 3.55},
+    {35, 3.50},
+    {30, 3.45},
+    {25, 3.40},
+    {20, 3.34},
+    {15, 3.25},
+    {10, 3.1},
+    {5,  2.95},
+    {0,  2.80}
+};
+
 // **************************************** Functions ****************************************
 
 void FEB_UI_Init(void) {
@@ -160,13 +191,17 @@ void SOC_Set_Value(float ivt_voltage, float min_cell_voltage) {
     // uint8_t soc_value = (uint8_t)(((min_cell_voltage - 25) / 20.0) * 100.0);
 
 	// Option 3: Linear (TERRIBLE) (avg_cell_voltage-cell_min) / (cell_max - cell_min)
-	float avg_cell_voltage = ivt_voltage / 140;
-	float soc_f = (avg_cell_voltage - 250) / (420 - 250) * 100;
+	// float avg_cell_voltage = ivt_voltage / 140;
+	// float soc_f = (avg_cell_voltage - 250) / (420 - 250) * 100;
 
-	if (soc_f > 100.0) soc_f = 100.0;
-	if (soc_f < 0.0) soc_f = 0.0;
+	// if (soc_f > 100.0) soc_f = 100.0;
+	// if (soc_f < 0.0) soc_f = 0.0;
 
-    uint8_t soc_value = (uint8_t) (soc_f + 0.5f);
+    // uint8_t soc_value = (uint8_t) (soc_f + 0.5f);
+
+    // Option 3: Lookup Table
+    float avg_cell_voltage = ivt_voltage / 140;
+    uint8_t soc_value = lookup_soc_from_voltage(avg_cell_voltage);
 
     // Update UI
     char soc_label[10];
@@ -175,6 +210,26 @@ void SOC_Set_Value(float ivt_voltage, float min_cell_voltage) {
 
     lv_bar_set_value(ui_BarSoC, soc_value, LV_ANIM_OFF);
     lv_obj_set_style_bg_color(ui_BarSoC, get_soc_gradient_color(soc_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+}
+
+uint8_t lookup_soc_from_voltage(float voltage) {
+    for (int i = 0; i < NUM_SOC_POINTS - 1; i++) {
+        if (voltage <= soc_voltage_table[i].voltage && voltage > soc_voltage_table[i+1].voltage) {
+            float v1 = soc_voltage_table[i].voltage;
+            float v2 = soc_voltage_table[i+1].voltage;
+            uint8_t soc1 = soc_voltage_table[i].soc;
+            uint8_t soc2 = soc_voltage_table[i+1].soc;
+
+            float soc = soc1 + (voltage - v1) * (soc2 - soc1) / (v2 - v1);
+            return (uint8_t)(soc + 0.5f);
+        }
+    }
+
+    if (voltage > soc_voltage_table[0].voltage) {
+        return soc_voltage_table[0].soc;
+    } else {
+        return soc_voltage_table[NUM_SOC_POINTS-1].soc;
+    }
 }
 
 void TEMP_Set_Value(float max_acc_temp) {

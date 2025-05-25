@@ -37,6 +37,8 @@ char* get_bms_state_string(FEB_SM_ST_t);
 
 void SOC_Set_Value(float ivt_voltage, float min_cell_voltage);
 
+uint8_t lookup_soc_from_voltage(float voltage);
+
 void TEMP_Set_Value(float acc_temp);
 
 void SPEED_Set_Value(float motor_speed_rpm);
