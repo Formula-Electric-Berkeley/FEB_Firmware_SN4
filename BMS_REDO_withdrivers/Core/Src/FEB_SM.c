@@ -193,9 +193,9 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		// 	free &= FEB_CAN_NETWORK[FEB_HB_PCU].FAck < 3;
 		// }
 
-		bool free = !(FEB_CAN_NETWORK[FEB_HB_PCU].FAck < 3);
+		bool accum_free = (FEB_CAN_NETWORK[FEB_HB_PCU].FAck >= 3);
 
-		if (free) {
+		if (accum_free) {
 			LVPowerTransition(FEB_SM_ST_FREE);
 			break;
 		}

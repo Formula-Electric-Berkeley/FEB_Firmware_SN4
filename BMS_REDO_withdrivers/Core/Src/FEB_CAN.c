@@ -120,8 +120,8 @@ void FEB_SM_CAN_Transmit(void) {
 
 	// Copy data to Tx buffer
 	FEB_CAN_Tx_Data[0] = FEB_SM_Get_Current_State();
-	FEB_CAN_Tx_Data[0] |= (ping_alive & 0x0F) << 8;
-	FEB_CAN_Tx_Data[1] = ((gpio_sense & 0x3F) << 2) | (relay_state & 0x03);
+	FEB_CAN_Tx_Data[0] |= (ping_alive & 0x0F) << 5;
+	FEB_CAN_Tx_Data[1] = ((gpio_sense & 0x3F) << 3) | (relay_state & 0x03);
 
 	// Delay until mailbox available
 	int timeout =0;
