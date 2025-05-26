@@ -89,7 +89,7 @@ void FEB_CAN_BMS_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t *RxData) {
     switch (pHeader -> StdId){
         case FEB_CAN_BMS_STATE_FRAME_ID:
         	bms_message.state = RxData[0] & 0x1F;
-			bms_message.ping_ack = RxData[0] & 0xE0;
+			bms_message.ping_ack = (RxData[0] & 0xE0) >> 5;
 
 			if ( bms_message.state == FEB_SM_ST_HEALTH_CHECK || bms_message.ping_ack == FEB_HB_DASH ) {
 				FEB_CAN_HEARTBEAT_Transmit();
