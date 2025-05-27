@@ -14,7 +14,7 @@ void FEB_Init(void) {
 void FEB_Main_Loop(void) {
 	// Fan speed set by CAN receive interrupt
 
-	FEB_CAN_Transmit(&hcan, (uint8_t *)frequency);
+//	FEB_CAN_Transmit(&hcan, (uint8_t *)frequency);
 
-	HAL_Delay(100);
+	HAL_Delay(1000);
 }

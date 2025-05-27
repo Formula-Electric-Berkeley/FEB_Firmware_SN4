@@ -2,7 +2,7 @@
 "./Core/Src/FEB_CAN.o"
 "./Core/Src/FEB_CAN_BMS.o"
 "./Core/Src/FEB_Fan.o"
-"./Core/Src/FEB_Main.o"
+"./Core/Src/FEB_main.o"
 "./Core/Src/main.o"
 "./Core/Src/stm32f0xx_hal_msp.o"
 "./Core/Src/stm32f0xx_it.o"

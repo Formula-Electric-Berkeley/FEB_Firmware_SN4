@@ -1,2 +1,2 @@
-../Core/Src/FEB_Main.c:9:6:FEB_Init	1
-../Core/Src/FEB_Main.c:14:6:FEB_Main_Loop	1
+../Core/Src/FEB_main.c:9:6:FEB_Init	1
+../Core/Src/FEB_main.c:14:6:FEB_Main_Loop	1

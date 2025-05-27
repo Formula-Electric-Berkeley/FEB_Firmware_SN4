@@ -44,13 +44,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 void FEB_CAN_Transmit(CAN_HandleTypeDef *hcan, uint8_t *can_data) {
 
 	// Initialize Transmission Header
-	FEB_CAN_Tx_Header.StdId = FEB_CAN_FEB_DART_TACH_MEASUREMENTS_1234_FRAME_ID;
-	FEB_CAN_Tx_Header.IDE = FEB_CAN_FEB_DART_TACH_MEASUREMENTS_1234_IS_EXTENDED;
+	FEB_CAN_Tx_Header.StdId = FEB_CAN_DART_TACH_MEASUREMENTS_1234_FRAME_ID;
+	FEB_CAN_Tx_Header.IDE = FEB_CAN_DART_TACH_MEASUREMENTS_1234_IS_EXTENDED;
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
-	FEB_CAN_Tx_Header.DLC = FEB_CAN_FEB_DART_TACH_MEASUREMENTS_1234_LENGTH;
+	FEB_CAN_Tx_Header.DLC = FEB_CAN_DART_TACH_MEASUREMENTS_1234_LENGTH;
 
 	// Configure FEB_CAN_Tx_Data
-    memcpy(FEB_CAN_Tx_Data, can_data, FEB_CAN_FEB_DART_TACH_MEASUREMENTS_1234_LENGTH);
+    memcpy(FEB_CAN_Tx_Data, can_data, FEB_CAN_DART_TACH_MEASUREMENTS_1234_LENGTH);
 
     // Delay until mailbox available
 	while (HAL_CAN_GetTxMailboxesFreeLevel(hcan) == 0) {}
@@ -61,13 +61,13 @@ void FEB_CAN_Transmit(CAN_HandleTypeDef *hcan, uint8_t *can_data) {
 	}
 
 	// Initialize Transmission Header
-	FEB_CAN_Tx_Header.StdId = FEB_CAN_FEB_DART_TACH_MEASUREMENTS_5_FRAME_ID;
-	FEB_CAN_Tx_Header.IDE = FEB_CAN_FEB_DART_TACH_MEASUREMENTS_5_IS_EXTENDED;
+	FEB_CAN_Tx_Header.StdId = FEB_CAN_DART_TACH_MEASUREMENTS_5_FRAME_ID;
+	FEB_CAN_Tx_Header.IDE = FEB_CAN_DART_TACH_MEASUREMENTS_5_IS_EXTENDED;
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
-	FEB_CAN_Tx_Header.DLC = FEB_CAN_FEB_DART_TACH_MEASUREMENTS_5_LENGTH;
+	FEB_CAN_Tx_Header.DLC = FEB_CAN_DART_TACH_MEASUREMENTS_5_LENGTH;
 
 	// Configure FEB_CAN_Tx_Data
-    memcpy(FEB_CAN_Tx_Data, can_data + FEB_CAN_FEB_DART_TACH_MEASUREMENTS_1234_LENGTH, FEB_CAN_FEB_DART_TACH_MEASUREMENTS_5_LENGTH);
+    memcpy(FEB_CAN_Tx_Data, can_data + FEB_CAN_DART_TACH_MEASUREMENTS_1234_LENGTH, FEB_CAN_DART_TACH_MEASUREMENTS_5_LENGTH);
 
     // Delay until mailbox available
 	while (HAL_CAN_GetTxMailboxesFreeLevel(hcan) == 0) {}

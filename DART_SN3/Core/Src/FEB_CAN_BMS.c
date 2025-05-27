@@ -14,7 +14,7 @@ uint8_t FEB_CAN_BMS_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uin
 	filter_config.FilterActivation = CAN_FILTER_ENABLE;
 	filter_config.FilterBank = filter_bank;
 	filter_config.FilterFIFOAssignment = FIFO_assignment;
-	filter_config.FilterIdHigh = FEB_CAN_ID_BMS_DART1_REQUESTED_FAN_SPEEDS << 5;
+	filter_config.FilterIdHigh = FEB_CAN_BMS_ACCUMULATOR_TEMPERATURE_FRAME_ID << 5;
 	filter_config.FilterIdLow = 0;
 	filter_config.FilterMaskIdHigh = 0xFFE0;
 	filter_config.FilterMaskIdLow = 0;
@@ -32,7 +32,7 @@ uint8_t FEB_CAN_BMS_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uin
 
 void FEB_CAN_BMS_Process_Message(CAN_RxHeaderTypeDef *rx_header, uint8_t FEB_CAN_Rx_Data[]) {
 	switch(rx_header->ExtId) {
-		case FEB_CAN_ID_BMS_DART1_REQUESTED_FAN_SPEEDS:
+		case FEB_CAN_BMS_ACCUMULATOR_TEMPERATURE_FRAME_ID:
 			FEB_Fan_CAN_Msg_Process(FEB_CAN_Rx_Data);
 			break;
 	}

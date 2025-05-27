@@ -5,6 +5,7 @@
 
 #include <stm32f0xx_hal.h>
 #include <stdbool.h>
+#include <math.h>
 
 // ********************************** Defines **********************************
 
@@ -19,6 +20,9 @@
 #define PWM_SIZE			(uint32_t)	40
 #define PWM_COUNTER			(uint32_t)	(TIMCLOCK * PWM_SIZE / (1000.0f * 1000.0f))
 #define PWM_START_PERCENT 	(float)		1
+
+#define TEMP_START_FAN		25
+#define TEMP_END_FAN		45
 
 #define ADC_FILTER_EXPONENT 2
 

@@ -30,7 +30,7 @@ Core/Src/stm32f0xx_hal_msp.o: ../Core/Src/stm32f0xx_hal_msp.c \
  ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart.h \
  ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart_ex.h \
  ../Core/Inc/FEB_Main.h ../Core/Inc/FEB_Fan.h ../Core/Inc/FEB_CAN.h \
- ../Core/Inc/FEB_CAN_BMS.h ../Core/Inc/FEB_CAN_ID.h \
+ ../Core/Inc/FEB_CAN_BMS.h ../Core/Inc/FEB_CAN_Library_SN4/gen/feb_can.h \
  ../Core/Inc/FEB_CAN_Library_SN4/gen/feb_can.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal.h:
@@ -67,5 +67,5 @@ Core/Src/stm32f0xx_hal_msp.o: ../Core/Src/stm32f0xx_hal_msp.c \
 ../Core/Inc/FEB_Fan.h:
 ../Core/Inc/FEB_CAN.h:
 ../Core/Inc/FEB_CAN_BMS.h:
-../Core/Inc/FEB_CAN_ID.h:
+../Core/Inc/FEB_CAN_Library_SN4/gen/feb_can.h:
 ../Core/Inc/FEB_CAN_Library_SN4/gen/feb_can.h:

@@ -68,10 +68,10 @@ void Error_Handler(void);
 #define TACH5_GPIO_Port GPIOA
 #define TACH1_Pin GPIO_PIN_4
 #define TACH1_GPIO_Port GPIOA
-#define TACH2_Pin GPIO_PIN_0
-#define TACH2_GPIO_Port GPIOB
-#define TACH3_Pin GPIO_PIN_1
-#define TACH3_GPIO_Port GPIOB
+#define TACH2_Pin GPIO_PIN_6
+#define TACH2_GPIO_Port GPIOA
+#define TACH3_Pin GPIO_PIN_7
+#define TACH3_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

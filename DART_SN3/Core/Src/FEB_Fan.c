@@ -5,6 +5,8 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim14;
+extern TIM_HandleTypeDef htim16;
+extern TIM_HandleTypeDef htim17;
 
 extern UART_HandleTypeDef huart2;
 
@@ -19,11 +21,11 @@ static uint32_t IC_first_rising_edge[NUM_FANS] = {0, 0, 0, 0, 0};
 static uint32_t IC_second_rising_edge[NUM_FANS] = {0, 0, 0, 0, 0};
 static bool first_capture[NUM_FANS] = {false, false, false, false, false};
 
-static TIM_HandleTypeDef *timer[NUM_FANS] = {&htim14, &htim3, &htim3, &htim2, &htim2};
-static uint32_t tim_active_channels[NUM_FANS] = {HAL_TIM_ACTIVE_CHANNEL_1, HAL_TIM_ACTIVE_CHANNEL_3, \
-													HAL_TIM_ACTIVE_CHANNEL_4, HAL_TIM_ACTIVE_CHANNEL_1, \
+static TIM_HandleTypeDef *timer[NUM_FANS] = {&htim14, &htim16, &htim17, &htim2, &htim2};
+static uint32_t tim_active_channels[NUM_FANS] = {HAL_TIM_ACTIVE_CHANNEL_1, HAL_TIM_ACTIVE_CHANNEL_1, \
+													HAL_TIM_ACTIVE_CHANNEL_1, HAL_TIM_ACTIVE_CHANNEL_1, \
 													HAL_TIM_ACTIVE_CHANNEL_2};
-static uint32_t tim_channels[NUM_FANS] = {TIM_CHANNEL_1, TIM_CHANNEL_3, TIM_CHANNEL_4, \
+static uint32_t tim_channels[NUM_FANS] = {TIM_CHANNEL_1, TIM_CHANNEL_1, TIM_CHANNEL_1, \
 											TIM_CHANNEL_1, TIM_CHANNEL_2};
 
 // ********************************** Static Function Prototypes **********************************
@@ -42,11 +44,22 @@ void FEB_Fan_Init(void) {
 // ********************************** CAN **********************************
 
 void FEB_Fan_CAN_Msg_Process(uint8_t *FEB_CAN_Rx_Data) {
-	__HAL_TIM_SET_COMPARE(timer[0], tim_channels[0], FEB_CAN_Rx_Data[0]);
-	__HAL_TIM_SET_COMPARE(timer[1], tim_channels[1], FEB_CAN_Rx_Data[1]);
-	__HAL_TIM_SET_COMPARE(timer[2], tim_channels[2], FEB_CAN_Rx_Data[2]);
-	__HAL_TIM_SET_COMPARE(timer[3], tim_channels[3], FEB_CAN_Rx_Data[3]);
-	__HAL_TIM_SET_COMPARE(timer[4], tim_channels[4], FEB_CAN_Rx_Data[4]);
+	float fanPercent = 0;
+
+	int16_t temp = (uint16_t)(FEB_CAN_Rx_Data[4]) << 8;
+	temp = temp || FEB_CAN_Rx_Data[5];
+
+	if ( temp - TEMP_START_FAN > 0 ) {
+		fanPercent = ((temp - TEMP_START_FAN) / ((float)TEMP_END_FAN - TEMP_START_FAN) > 1) ? 1 : (temp - TEMP_START_FAN) / ((float)TEMP_END_FAN - TEMP_START_FAN);
+	}
+
+	FEB_Fan_All_Speed_Set(PWM_COUNTER * fanPercent);
+
+//	__HAL_TIM_SET_COMPARE(timer[0], tim_channels[0], FEB_CAN_Rx_Data[0]);
+//	__HAL_TIM_SET_COMPARE(timer[1], tim_channels[1], FEB_CAN_Rx_Data[1]);
+//	__HAL_TIM_SET_COMPARE(timer[2], tim_channels[2], FEB_CAN_Rx_Data[2]);
+//	__HAL_TIM_SET_COMPARE(timer[3], tim_channels[3], FEB_CAN_Rx_Data[3]);
+//	__HAL_TIM_SET_COMPARE(timer[4], tim_channels[4], FEB_CAN_Rx_Data[4]);
 }
 
 // ********************************** PWM **********************************
