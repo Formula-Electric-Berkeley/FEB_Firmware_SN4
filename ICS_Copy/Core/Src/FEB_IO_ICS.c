@@ -76,7 +76,7 @@ void FEB_IO_ICS_Loop(void) {
 	// Button 1 - Ready-to-Drive (RTD) button
 	if (!(received_data & (1 << 1))) {
 	    if ((HAL_GetTick() - rtd_press_start_time) >= BTN_HOLD_TIME &&
-	        brake_pressure >= 4 &&
+	        brake_pressure >= 20 &&
 	        (bms_state == FEB_SM_ST_ENERGIZED || bms_state == FEB_SM_ST_DRIVE)) {
 
 	        // Attempt to enter or exit drive
