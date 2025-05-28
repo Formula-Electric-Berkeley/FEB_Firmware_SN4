@@ -1,0 +1,581 @@
+VERSION ""
+
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: 
+
+
+BO_ 0 bms_state: 2 Vector__XXX
+ SG_ gpio_sense : 11|5@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ relay_state : 8|3@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ping_lv_nodes : 5|3@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ bms_state : 0|5@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 1 bms_cell_data: 8 Vector__XXX
+ SG_ bms_send_time : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ bms_temperature : 32|16@1- (1,0) [0|0] "" Vector__XXX
+ SG_ bms_voltage : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ bms_bank : 12|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ bms_cell : 8|4@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ bms_flags : 0|4@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 2 bms_accumulator_voltage: 8 Vector__XXX
+ SG_ send_time : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ max_cell_voltage : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ min_cell_voltage : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ total_pack_voltage : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 3 bms_accumulator_temperature: 8 Vector__XXX
+ SG_ send_time : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ max_cell_temperature : 32|16@1- (1,0) [0|0] "" Vector__XXX
+ SG_ min_cell_temperature : 16|16@1- (1,0) [0|0] "" Vector__XXX
+ SG_ average_pack_temperature : 0|16@1- (1,0) [0|0] "" Vector__XXX
+
+BO_ 9 brake: 1 Vector__XXX
+ SG_ brake_percent : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 10 bspd_state: 1 Vector__XXX
+ SG_ bspd_state : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 16 dash_io: 1 Vector__XXX
+ SG_ s3_accumulator_fan : 7|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ s2_radiator_fan : 6|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ s1_coolant_pump : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b4 : 4|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b3 : 3|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b2_data_logging : 2|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ b1_ready_to_drive : 1|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ buzzer_state : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 22 lvpdb_flags_bus_voltage_lv_curre: 8 Vector__XXX
+ SG_ lv_current : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ bus_voltage : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ flags : 0|32@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 23 lvpdb_coolant_fans_shutdown: 8 Vector__XXX
+ SG_ shutdown_voltage : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ radiator_fans_current : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ accumulator_fans_current : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ coolant_pump_current : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 24 lvpdb_autonomous: 8 Vector__XXX
+ SG_ auto_breaking_voltage : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ auto_steering_voltage : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ lidar_current : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 45 DART_TACH_measurements_1234: 8 Vector__XXX
+ SG_ fan4_speed : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ fan3_speed : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ fan2_speed : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ fan1_speed : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 46 DART_TACH_measurements_5: 2 Vector__XXX
+ SG_ fan5_speed : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 52 bbb_tps: 4 Vector__XXX
+ SG_ current : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ voltage : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 53 pcu_tps: 4 Vector__XXX
+ SG_ current : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ voltage : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 54 dash_tps: 4 Vector__XXX
+ SG_ current : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ voltage : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 55 dcu_tps: 4 Vector__XXX
+ SG_ current : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ voltage : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 192 rms_command: 8 Vector__XXX
+ SG_ command_torque_limited : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ speed_mode_enabled : 42|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ inverter_dicharge : 41|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ inverter_enable : 40|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ direction_value : 32|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ speed_signal : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ torque_signal_small : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 193 rms_param: 8 Vector__XXX
+ SG_ data : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ read_write_command : 16|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ address : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 208 pcu_heartbeat: 8 Vector__XXX
+ SG_ error63 : 63|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error62 : 62|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error61 : 61|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error60 : 60|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error59 : 59|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error58 : 58|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error57 : 57|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error56 : 56|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error55 : 55|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error54 : 54|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error53 : 53|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error52 : 52|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error51 : 51|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error50 : 50|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error49 : 49|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error48 : 48|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error47 : 47|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error46 : 46|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error45 : 45|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error44 : 44|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error43 : 43|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error42 : 42|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error41 : 41|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error40 : 40|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error39 : 39|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error38 : 38|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error37 : 37|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error36 : 36|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error35 : 35|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error34 : 34|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error33 : 33|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error32 : 32|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error31 : 31|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error30 : 30|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error29 : 29|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error28 : 28|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error27 : 27|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error26 : 26|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error25 : 25|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error24 : 24|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error23 : 23|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error22 : 22|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error21 : 21|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error20 : 20|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error19 : 19|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error18 : 18|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error17 : 17|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error16 : 16|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error15 : 15|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error14 : 14|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error13 : 13|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error12 : 12|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error11 : 11|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error10 : 10|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error9 : 9|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error8 : 8|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error7 : 7|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error6 : 6|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error5 : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error4 : 4|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error3 : 3|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error2 : 2|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error1 : 1|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error0 : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 209 dash_heartbeat: 8 Vector__XXX
+ SG_ error63 : 63|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error62 : 62|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error61 : 61|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error60 : 60|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error59 : 59|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error58 : 58|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error57 : 57|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error56 : 56|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error55 : 55|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error54 : 54|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error53 : 53|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error52 : 52|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error51 : 51|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error50 : 50|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error49 : 49|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error48 : 48|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error47 : 47|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error46 : 46|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error45 : 45|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error44 : 44|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error43 : 43|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error42 : 42|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error41 : 41|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error40 : 40|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error39 : 39|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error38 : 38|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error37 : 37|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error36 : 36|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error35 : 35|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error34 : 34|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error33 : 33|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error32 : 32|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error31 : 31|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error30 : 30|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error29 : 29|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error28 : 28|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error27 : 27|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error26 : 26|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error25 : 25|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error24 : 24|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error23 : 23|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error22 : 22|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error21 : 21|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error20 : 20|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error19 : 19|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error18 : 18|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error17 : 17|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error16 : 16|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error15 : 15|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error14 : 14|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error13 : 13|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error12 : 12|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error11 : 11|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error10 : 10|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error9 : 9|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error8 : 8|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error7 : 7|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error6 : 6|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error5 : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error4 : 4|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error3 : 3|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error2 : 2|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error1 : 1|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error0 : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 210 lvpdb_heartbeat: 8 Vector__XXX
+ SG_ error63 : 63|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error62 : 62|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error61 : 61|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error60 : 60|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error59 : 59|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error58 : 58|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error57 : 57|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error56 : 56|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error55 : 55|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error54 : 54|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error53 : 53|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error52 : 52|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error51 : 51|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error50 : 50|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error49 : 49|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error48 : 48|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error47 : 47|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error46 : 46|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error45 : 45|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error44 : 44|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error43 : 43|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error42 : 42|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error41 : 41|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error40 : 40|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error39 : 39|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error38 : 38|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error37 : 37|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error36 : 36|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error35 : 35|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error34 : 34|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error33 : 33|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error32 : 32|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error31 : 31|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error30 : 30|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error29 : 29|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error28 : 28|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error27 : 27|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error26 : 26|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error25 : 25|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error24 : 24|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error23 : 23|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error22 : 22|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error21 : 21|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error20 : 20|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error19 : 19|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error18 : 18|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error17 : 17|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error16 : 16|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error15 : 15|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error14 : 14|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error13 : 13|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error12 : 12|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error11 : 11|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error10 : 10|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error9 : 9|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error8 : 8|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error7 : 7|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error6 : 6|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error5 : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error4 : 4|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error3 : 3|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error2 : 2|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error1 : 1|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error0 : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 211 dcu_heartbeat: 8 Vector__XXX
+ SG_ error63 : 63|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error62 : 62|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error61 : 61|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error60 : 60|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error59 : 59|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error58 : 58|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error57 : 57|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error56 : 56|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error55 : 55|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error54 : 54|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error53 : 53|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error52 : 52|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error51 : 51|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error50 : 50|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error49 : 49|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error48 : 48|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error47 : 47|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error46 : 46|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error45 : 45|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error44 : 44|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error43 : 43|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error42 : 42|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error41 : 41|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error40 : 40|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error39 : 39|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error38 : 38|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error37 : 37|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error36 : 36|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error35 : 35|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error34 : 34|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error33 : 33|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error32 : 32|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error31 : 31|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error30 : 30|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error29 : 29|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error28 : 28|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error27 : 27|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error26 : 26|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error25 : 25|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error24 : 24|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error23 : 23|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error22 : 22|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error21 : 21|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error20 : 20|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error19 : 19|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error18 : 18|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error17 : 17|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error16 : 16|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error15 : 15|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error14 : 14|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error13 : 13|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error12 : 12|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error11 : 11|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error10 : 10|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error9 : 9|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error8 : 8|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error7 : 7|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error6 : 6|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error5 : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error4 : 4|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error3 : 3|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error2 : 2|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error1 : 1|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error0 : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 212 front_sensor_heartbeat_message: 8 Vector__XXX
+ SG_ error63 : 63|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error62 : 62|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error61 : 61|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error60 : 60|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error59 : 59|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error58 : 58|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error57 : 57|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error56 : 56|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error55 : 55|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error54 : 54|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error53 : 53|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error52 : 52|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error51 : 51|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error50 : 50|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error49 : 49|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error48 : 48|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error47 : 47|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error46 : 46|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error45 : 45|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error44 : 44|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error43 : 43|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error42 : 42|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error41 : 41|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error40 : 40|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error39 : 39|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error38 : 38|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error37 : 37|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error36 : 36|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error35 : 35|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error34 : 34|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error33 : 33|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error32 : 32|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error31 : 31|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error30 : 30|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error29 : 29|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error28 : 28|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error27 : 27|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error26 : 26|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error25 : 25|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error24 : 24|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error23 : 23|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error22 : 22|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error21 : 21|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error20 : 20|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error19 : 19|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error18 : 18|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error17 : 17|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error16 : 16|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error15 : 15|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error14 : 14|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error13 : 13|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error12 : 12|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error11 : 11|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error10 : 10|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error9 : 9|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error8 : 8|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error7 : 7|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error6 : 6|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error5 : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error4 : 4|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error3 : 3|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error2 : 2|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error1 : 1|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error0 : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 213 rear_sensor_heartbeat_message: 8 Vector__XXX
+ SG_ error63 : 63|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error62 : 62|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error61 : 61|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error60 : 60|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error59 : 59|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error58 : 58|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error57 : 57|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error56 : 56|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error55 : 55|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error54 : 54|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error53 : 53|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error52 : 52|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error51 : 51|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error50 : 50|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error49 : 49|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error48 : 48|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error47 : 47|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error46 : 46|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error45 : 45|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error44 : 44|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error43 : 43|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error42 : 42|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error41 : 41|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error40 : 40|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error39 : 39|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error38 : 38|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error37 : 37|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error36 : 36|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error35 : 35|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error34 : 34|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error33 : 33|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error32 : 32|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error31 : 31|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error30 : 30|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error29 : 29|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error28 : 28|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error27 : 27|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error26 : 26|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error25 : 25|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error24 : 24|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error23 : 23|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error22 : 22|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error21 : 21|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error20 : 20|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error19 : 19|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error18 : 18|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error17 : 17|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error16 : 16|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error15 : 15|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error14 : 14|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error13 : 13|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error12 : 12|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error11 : 11|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error10 : 10|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error9 : 9|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error8 : 8|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error7 : 7|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error6 : 6|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error5 : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error4 : 4|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error3 : 3|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error2 : 2|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error1 : 1|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ error0 : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 224 FEB_PING_PONG_counter1: 8 Vector__XXX
+ SG_ counter : 0|32@1- (1,0) [0|0] "" Vector__XXX
+
+BO_ 225 FEB_PING_PONG_counter2: 8 Vector__XXX
+ SG_ counter : 0|32@1- (1,0) [0|0] "" Vector__XXX
+
+BO_ 226 FEB_PING_PONG_counter3: 8 Vector__XXX
+ SG_ counter : 0|32@1- (1,0) [0|0] "" Vector__XXX
+
+BO_ 227 FEB_PING_PONG_counter4: 8 Vector__XXX
+ SG_ counter : 0|32@1- (1,0) [0|0] "" Vector__XXX
+
+
+
+
+CM_ BO_ 0 "BMS message for BMS state.";
+CM_ BO_ 1 "BMS message for cell data.";
+CM_ BO_ 2 "BMS message for accumulator voltage.";
+CM_ BO_ 3 "BMS message for accumulator temperature.";
+CM_ BO_ 9 "PCU normalized brake message";
+CM_ BO_ 10 "BSPD message.";
+CM_ BO_ 16 "Dash button and switch message";
+CM_ BO_ 22 "LVPDB message for flags, bus voltage, and LV current.";
+CM_ BO_ 23 "LVPDB message for Coolant Pump, Accumulator Fans, Radiator Fans, Shutdown.";
+CM_ BO_ 24 "LVPDB message for autonomous systems.";
+CM_ BO_ 45 "DART message for Tachometer measurements first 4 fan speeds.";
+CM_ BO_ 46 "DART message for Tachometer measurements 5th fan speed.";
+CM_ BO_ 52 "BBB TPS Chip";
+CM_ BO_ 53 "PCU TPS Chip";
+CM_ BO_ 54 "Dash TPS Chip";
+CM_ BO_ 55 "DCU TPS Chip";
+CM_ BO_ 192 "RMS command message.";
+CM_ BO_ 193 "RMS parameter message.";
+CM_ BO_ 208 "PCU heartbeat";
+CM_ BO_ 209 "Dash Heartbeat";
+CM_ BO_ 210 "LVPDB Heartbeat";
+CM_ BO_ 211 "DCU Heartbeat";
+CM_ BO_ 212 "Front Sensor Heartbeat";
+CM_ BO_ 213 "Rear Sensor Heartbeat";
+CM_ BO_ 224 "PING PONG counter1.";
+CM_ BO_ 225 "PING PONG counter2.";
+CM_ BO_ 226 "PING PONG counter3.";
+CM_ BO_ 227 "PING PONG counter4.";
+BA_DEF_ BO_  "SystemMessageLongSymbol" STRING ;
+BA_DEF_DEF_  "SystemMessageLongSymbol" "";
+BA_ "SystemMessageLongSymbol" BO_ 22 "lvpdb_flags_bus_voltage_lv_current";
+
+
+
+
