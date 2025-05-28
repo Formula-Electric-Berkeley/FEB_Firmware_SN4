@@ -4,6 +4,7 @@
 #include <FEB_CAN.h>
 #include "FEB_CAN_APPS.h"
 #include "FEB_CAN_ICS.h"
+#include "FEB_CAN_Heartbeat.h"
 #include <TPS2482.h>
 
 #include <stm32f4xx_hal.h>

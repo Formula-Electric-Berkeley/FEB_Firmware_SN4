@@ -119,6 +119,7 @@ FEB_LVPDB_CAN_Data can_data;
 
 void FEB_Main_Setup(void) {
 	FEB_Variable_Init();
+	FEB_CAN_HEARTBEAT_Init();
 
 #if !TESTBENCH
 
@@ -319,7 +320,7 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 
 	#else
 
-	if ( rx_header->StdId == FEB_CAN_NORMALIZED_BRAKE_FRAME_ID ) {
+	if ( rx_header->StdId == FEB_CAN_BRAKE_FRAME_ID ) {
 		uint8_t brake_pressure = *((uint8_t *)data);
 
 		if ( brake_pressure > FEB_BREAK_THRESHOLD ) {
@@ -330,7 +331,7 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 		}
 	}
 
-	if ( rx_header->StdId == FEB_CAN_DASH_MESSAGE_FRAME_ID ) {
+	if ( rx_header->StdId == FEB_CAN_DASH_IO_FRAME_ID ) {
 		uint8_t dash_data = *((uint8_t *)data);
 		bool cp_en = (dash_data >> 5) & 0x01;
 		bool rf_en = (dash_data >> 6) & 0x01;
@@ -375,14 +376,27 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 
 	#endif
 
+	switch (rx_header->StdId) {
+		case FEB_CAN_BMS_STATE_FRAME_ID:
+			uint8_t rx_data[rx_header->DLC];
+
+			memcpy(rx_data, data, rx_header->DLC);
+
+			if ( ((rx_data[0] & 0x1F) == FEB_SM_ST_HEALTH_CHECK) || (((rx_data[0] & 0xE0) >> 5) == FEB_HB_LVPDB) ) {
+				FEB_CAN_HEARTBEAT_Transmit();
+			}
+
+			break;
+	}
+
 }
 
 static void FEB_Compose_CAN_Data(void) {
 	memset(&can_data, 0, sizeof(FEB_LVPDB_CAN_Data));
 
 	can_data.ids[0] = FEB_CAN_LVPDB_FLAGS_BUS_VOLTAGE_LV_CURRENT_FRAME_ID;
-	can_data.ids[1] = FEB_CAN_LVPDB_CP_AF_RF_SH_CURRENT_FRAME_ID;
-	can_data.ids[2] = FEB_CAN_LVPDB_L_AS_AB_CURRENT_FRAME_ID;
+	can_data.ids[1] = FEB_CAN_LVPDB_COOLANT_FANS_SHUTDOWN_FRAME_ID;
+	can_data.ids[2] = FEB_CAN_LVPDB_AUTONOMOUS_FRAME_ID;
 
 #if !TESTBENCH
 	can_data.bus_voltage = tps2482_bus_voltage[0];
@@ -515,8 +529,8 @@ static void FEB_Variable_Init(void) {
 	tps2482_alert_pins[7] = AB_ALERT_Pin;
 
 	can_data.ids[0] = FEB_CAN_LVPDB_FLAGS_BUS_VOLTAGE_LV_CURRENT_FRAME_ID;
-	can_data.ids[1] = FEB_CAN_LVPDB_CP_AF_RF_SH_CURRENT_FRAME_ID;
-	can_data.ids[2] = FEB_CAN_LVPDB_L_AS_AB_CURRENT_FRAME_ID;
+	can_data.ids[1] = FEB_CAN_LVPDB_COOLANT_FANS_SHUTDOWN_FRAME_ID;
+	can_data.ids[2] = FEB_CAN_LVPDB_AUTONOMOUS_FRAME_ID;
 
 	memset(tps2482_current_raw, 0, NUM_TPS2482 * sizeof(uint16_t));
 	memset(tps2482_bus_voltage_raw, 0, NUM_TPS2482 * sizeof(uint16_t));
