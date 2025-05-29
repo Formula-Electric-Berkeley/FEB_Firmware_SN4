@@ -61,7 +61,7 @@ uint8_t FEB_CAN_APPS_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, ui
 void FEB_CAN_APPS_Str_Msg(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_CAN_Rx_Data[]) {
 
 	switch(FEB_CAN_Rx_Header->StdId) {
-	    case FEB_CAN_DASH_MESSAGE_FRAME_ID:
+	    case FEB_CAN_DASH_IO_FRAME_ID:
 	    	//concatonate float from the array into temp   https://forum.arduino.cc/t/how-to-extract-float-data-from-longer-array/696454
 //		    uint32_t data_brakepedal = FEB_CAN_Rx_Data[0];        // MSB
 //		    data_brakepedal = (data_brakepedal << 8) | FEB_CAN_Rx_Data[1];
