@@ -21,6 +21,8 @@ uint8_t FEB_CAN_Rx_Data[8];
 
 uint32_t FEB_CAN_Tx_Mailbox;
 
+bool logging = false;
+
 // **************************************** Functions **************************************** //
 
 //----CAN INIT----//
@@ -40,22 +42,31 @@ void FEB_CAN_Init(void) {
 } */
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
-	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &FEB_CAN_Rx_Header, FEB_CAN_Rx_Data) != HAL_OK) {
+	if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &FEB_CAN_Rx_Header, FEB_CAN_Rx_Data) == HAL_OK) {
 		// Store Message
         // Function(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
 
-		FEB_CAN_BMS_Store_Msg(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
-	}
+		// Heartbeat
+		// FEB_CAN_BMS_Store_Msg(&FEB_CAN_Rx_Header, FEB_CAN_Rx_Data);
+	
+		if (FEB_CAN_Rx_Header.StdId == FEB_CAN_DASH_IO_FRAME_ID) {
+			logging = (FEB_CAN_Rx_Data[0] >> 1) & 0x01;
+        }
 
-	//Case 1: Std Id
-	if(FEB_CAN_Rx_Header.IDE == CAN_ID_STD){
-		FEB_circBuf_write(&sdBuffer, FEB_CAN_Rx_Header.StdId, FEB_CAN_Rx_Data);
-		FEB_circBuf_addOrReplace(&xbeeBuffer, FEB_CAN_Rx_Header.StdId, FEB_CAN_Rx_Data);
+		//Case 1: Std Id
+		if(FEB_CAN_Rx_Header.IDE == CAN_ID_STD){
+			if (logging){
+				FEB_circBuf_write(&sdBuffer, FEB_CAN_Rx_Header.StdId, FEB_CAN_Rx_Data);
+			}
+			FEB_circBuf_addOrReplace(&xbeeBuffer, FEB_CAN_Rx_Header.StdId, FEB_CAN_Rx_Data); //xbee
 
-	//Case 2: Ext Id
-	}else if(FEB_CAN_Rx_Header.IDE == CAN_ID_EXT){
-		FEB_circBuf_write(&sdBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Data);
-		FEB_circBuf_addOrReplace(&xbeeBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Data);
+		//Case 2: Ext Id
+		}else if(FEB_CAN_Rx_Header.IDE == CAN_ID_EXT){
+			if (logging){
+				FEB_circBuf_write(&sdBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Data);
+			}
+			FEB_circBuf_addOrReplace(&xbeeBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Data); //xbee
+		}
 	}
 
 //	FEB_xbee_transmit_can_data(&xbeeBuffer);

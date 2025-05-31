@@ -22,7 +22,7 @@ MESSAGE_GEN_LIST = [
     bms_msg.get_bms_cell_data,
     bms_msg.get_accumulator_voltage, 
     bms_msg.get_accumulator_temperature,
-    
+    bms_msg.get_accumulator_faults,
     #Leaving 5 IDs for space
 
     #0x9-0xA
@@ -97,7 +97,7 @@ MESSAGE_GEN_LIST = [
 # List of priority assignments for each CAN message above
 MESSAGE_GEN_ID = [
     #BMS
-    0, 1, 2, 3, 
+    0, 1, 2, 3, 4, 
 
     #PCU break and BSDPD
     9, 10,

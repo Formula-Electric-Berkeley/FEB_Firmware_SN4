@@ -218,3 +218,29 @@ def get_tps_voltage_current(frame_id: int):
     )
 
     return msg
+
+def get_accumulator_faults(frame_id: int):    
+    bms_fault = cantools.db.Signal(
+        name="bms_fault",
+        start=0,
+        length=1,
+        byte_order="little_endian",
+    )
+    
+    imd_fault = cantools.db.Signal(
+        name="imd_fault",
+        start=1,
+        length=1,
+        byte_order="little_endian",
+    )
+
+    msg = cantools.db.Message(
+        frame_id=frame_id,
+        name="accumulator_faults",
+        length=1,
+        signals=[bms_fault, imd_fault],
+        comment="Accumulator Faults",
+        strict=True
+    )
+
+    return msg
