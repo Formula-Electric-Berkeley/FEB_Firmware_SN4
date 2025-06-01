@@ -256,7 +256,7 @@ void FEB_ACC_TEMP_CAN_Transmit(void) {
 void FEB_ACC_FAULTS_CAN_Transmit(void) {
 
 	// Initialize transmission header
-	FEB_CAN_Tx_Header.DLC = 6;
+	FEB_CAN_Tx_Header.DLC = 1;
 	FEB_CAN_Tx_Header.StdId = FEB_CAN_ACCUMULATOR_FAULTS_FRAME_ID;
 	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
 	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
