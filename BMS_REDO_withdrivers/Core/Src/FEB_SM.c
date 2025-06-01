@@ -193,12 +193,12 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		// 	free &= FEB_CAN_NETWORK[FEB_HB_PCU].FAck < 3;
 		// }
 
-		bool accum_free = (FEB_CAN_NETWORK[FEB_HB_PCU].FAck >= 3);
+		// bool accum_free = (FEB_CAN_NETWORK[FEB_HB_PCU].FAck >= 3);
 
-		if (accum_free) {
-			LVPowerTransition(FEB_SM_ST_FREE);
-			break;
-		}
+		// if (accum_free) {
+		// 	LVPowerTransition(FEB_SM_ST_FREE);
+		// 	break;
+		// }
 
 		//Make sure shutdown loop is completed before going to health check
 		if (FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE){
@@ -242,7 +242,7 @@ static void HealthCheckTransition(FEB_SM_ST_t next_state){
 				FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN &&
 				FEB_PIN_RD(PN_PC_REL) == FEB_RELAY_STATE_OPEN
 		){
-			// HealthCheckTransition(FEB_SM_ST_PRECHARGE);
+			HealthCheckTransition(FEB_SM_ST_PRECHARGE);
 		}
 		break;
 

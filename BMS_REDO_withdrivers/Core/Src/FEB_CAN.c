@@ -132,7 +132,7 @@ void FEB_SM_CAN_Transmit(void) {
 		// FEB_SM_Set_Current_State(FEB_SM_ST_SHUTDOWN);
 	}
 
-	ping_alive = (ping_alive + 1) % FEB_NUM_CAN_DEV;
+	// ping_alive = (ping_alive + 1) % FEB_NUM_CAN_DEV;
 
 	for ( int i = 0; i < FEB_NUM_CAN_DEV; i++ ) {
 		FEB_CAN_NETWORK[i].LaOn += 1;
