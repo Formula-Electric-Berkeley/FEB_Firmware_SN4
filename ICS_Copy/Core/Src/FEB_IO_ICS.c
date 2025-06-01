@@ -74,7 +74,7 @@ void FEB_IO_ICS_Loop(void) {
 	}
 
 	// Button 1 - Ready-to-Drive (RTD) button
-	if (!(received_data & (1 << 1))) {
+	if (received_data & (1 << 1)) {
 	    if ((HAL_GetTick() - rtd_press_start_time) >= BTN_HOLD_TIME &&
 	        brake_pressure >= 20 &&
 	        (bms_state == FEB_SM_ST_ENERGIZED || bms_state == FEB_SM_ST_DRIVE)) {
@@ -100,7 +100,7 @@ void FEB_IO_ICS_Loop(void) {
 	}
 
 	// Button 2 - Data Logger
-	if ((received_data & (1 << 2))) {
+	if (received_data & (1 << 2)) {
 		    if ((HAL_GetTick() - datalog_press_start_time) >= BTN_HOLD_TIME) {
 		    	if (datalog_active == 0){
 		    		datalog_active = 1;
@@ -125,7 +125,7 @@ void FEB_IO_ICS_Loop(void) {
 	}
 
 	// Button 3
-	if (!(received_data & (1<<3))) {
+	if (received_data & (1<<3)) {
 		IO_state = (uint8_t) set_n_bit(IO_state, 3, 1);
 	} else {
 		IO_state = (uint8_t) set_n_bit(IO_state, 3, 0);
