@@ -50,7 +50,7 @@ void FEB_IO_ICS_Loop(void) {
 	if (FEB_CAN_BMS_GET_FAULTS()) {
 		HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_RESET);
 	} else {
-		HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_SET);
 	}
 
 	// Buzzer Logic
