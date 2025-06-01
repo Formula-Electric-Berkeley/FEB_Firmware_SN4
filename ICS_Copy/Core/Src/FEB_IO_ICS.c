@@ -22,6 +22,9 @@ static uint32_t exit_buzzer_start_time = 0;
 
 static uint32_t datalog_press_start_time = 0;
 static uint8_t datalog_active = 0;
+
+static uint32_t button3_start_time = 0;
+static uint8_t button3_active = 0;
 //static uint8_t button2_last = 0;
 
 // **************************************** Functions ****************************************
@@ -124,12 +127,25 @@ void FEB_IO_ICS_Loop(void) {
 		lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
 	}
 
-	// Button 3
-	if (received_data & (1<<3)) {
-		IO_state = (uint8_t) set_n_bit(IO_state, 3, 1);
-	} else {
-		IO_state = (uint8_t) set_n_bit(IO_state, 3, 0);
-	}
+	// Button 3 (Temp Coolant Pump)
+	if (received_data & (1 << 3)) {
+		    if ((HAL_GetTick() - button3_start_time) >= RTD_BUZZER_EXIT_TIME) {
+		    	if (button3_active == 0){
+		    		button3_active = 1;
+					lv_obj_set_style_bg_color(ui_ButtonCoolPump, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
+		    	} else {
+		    		button3_active = 0;
+					lv_obj_set_style_bg_color(ui_ButtonCoolPump, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+		    	}
+		    	IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
+		    	button3_start_time = HAL_GetTick();
+		    } else {
+		        IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
+		    }
+		} else {
+			button3_start_time = HAL_GetTick();
+		    IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
+		}
 
 	// Switch 1 - (Coolant Pump)
 	if ((received_data & (1<<5))) {
