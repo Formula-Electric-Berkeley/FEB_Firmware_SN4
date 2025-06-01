@@ -59,9 +59,9 @@ bool FEB_CAN_BMS_GET_FAULTS(){
 // ***** CAN FUNCTIONS ****
 
 uint8_t FEB_CAN_BMS_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uint8_t filter_bank) {
-	uint16_t ids[] = {FEB_CAN_BMS_STATE_FRAME_ID};
+	uint16_t ids[] = {FEB_CAN_BMS_STATE_FRAME_ID, FEB_CAN_ACCUMULATOR_FAULTS_FRAME_ID};
 
-	for (uint8_t i = 0; i < 1; i++) {
+	for (uint8_t i = 0; i < 2; i++) {
 		CAN_FilterTypeDef filter_config;
 
 	    // Standard CAN - 2.0A - 11 bit
