@@ -133,6 +133,8 @@ void validate_voltages() {
 						FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 
 					}
+				} else {
+					FEB_ACC.banks[bank].cells[cell].violations = 0;
 				}
 			} else {
 				FEB_ACC.banks[bank].cells[cell].violations=0;
@@ -198,6 +200,8 @@ void validate_temps() {
 					FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 
 				}
+			} else {
+				FEB_ACC.banks[bank].temp_violations[cell] = 0;
 			}
 		}
 		totalReads+=FEB_ACC.banks[bank].tempRead;
