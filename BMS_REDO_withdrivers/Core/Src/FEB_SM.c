@@ -10,7 +10,7 @@
 extern FEB_CAN_IVT_Message_t FEB_CAN_IVT_Message;
 extern FEB_CAN_DEV *FEB_CAN_NETWORK;
 accumulator_t FEB_ACC = {0};
-uint16_t ERROR_TYPE=0; //HEXDIGIT 1 voltage faults; HEXDIGIT 2 temp faults; HEXDIGIT 3 relay faults
+uint8_t ERROR_TYPE=0; //HEXDIGIT 1 voltage faults; HEXDIGIT 2 temp faults; HEXDIGIT 3 relay faults
 /* List of transition functions*/
 static void bootTransition(FEB_SM_ST_t);
 static void LVPowerTransition(FEB_SM_ST_t);
@@ -114,7 +114,7 @@ void FEB_SM_Process(void) {
 //FAULT HELPER FUNCTION
 static void fault(FEB_SM_ST_t FAULT_TYPE) {
 	SM_Current_State = FAULT_TYPE;
-	if(ERROR_TYPE==0)ERROR_TYPE=0x100;
+	if(ERROR_TYPE==0)ERROR_TYPE=0x40;
 	//FEB_Config_Update(SM_Current_State);
 
 	FEB_PIN_RST(PN_BMS_SHUTDOWN);//FEB_Hw_Set_BMS_Shutdown_Relay(FEB_RELAY_STATE_OPEN);

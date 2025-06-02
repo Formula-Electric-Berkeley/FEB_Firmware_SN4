@@ -8,6 +8,7 @@
 
 extern CAN_HandleTypeDef hcan1;
 extern accumulator_t FEB_ACC;
+extern uint8_t ERROR_TYPE;
 // **************************************** CAN Configuration ****************************************
 
 CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
@@ -279,6 +280,12 @@ void FEB_ACC_FAULTS_CAN_Transmit(void) {
 			fault = fault & 0xFD;
 	}
 
+	fault |= ERROR_TYPE;
+	//ERROR_TYPE
+	// 0x1X : temp range exception
+	// 0x2X : temp under read
+	// 0x3X : voltage exception
+	// 0x4X : relay trip
 
 	// Copy data to Tx buffer
 	FEB_CAN_Tx_Data[0] = fault;
