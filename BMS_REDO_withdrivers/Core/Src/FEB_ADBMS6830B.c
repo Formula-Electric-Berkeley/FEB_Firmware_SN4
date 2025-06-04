@@ -26,7 +26,7 @@ void determineMinV();
 cell_asic IC_Config[FEB_NUM_IC];
 extern accumulator_t FEB_ACC;
 extern UART_HandleTypeDef huart2;
-extern uint16_t ERROR_TYPE;
+extern uint8_t ERROR_TYPE;
 // ******************************** Config Bits ********************************
 
 static bool refon = 0;
@@ -129,7 +129,7 @@ void validate_voltages() {
 				if(voltageS > vMax && voltageS < vMin){
 					FEB_ACC.banks[bank].cells[cell].violations+=1;
 					if(FEB_ACC.banks[bank].cells[cell].violations == FEB_VOLTAGE_ERROR_THRESH) {
-						ERROR_TYPE=1;
+						ERROR_TYPE=0x30;
 						FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 
 					}
