@@ -128,7 +128,7 @@ void validate_voltages() {
 				}
 				if(voltageS > vMax && voltageS < vMin){
 					FEB_ACC.banks[bank].cells[cell].violations+=1;
-					if(FEB_ACC.banks[bank].cells[cell].violations == FEB_ERROR_THRESH) {
+					if(FEB_ACC.banks[bank].cells[cell].violations == FEB_VOLTAGE_ERROR_THRESH) {
 						ERROR_TYPE=1;
 						FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 
@@ -195,7 +195,7 @@ void validate_temps() {
 			else continue;
 			if (temp > tMax || temp < (float) tMin) {
 				FEB_ACC.banks[bank].temp_violations[cell]++;
-				if(FEB_ACC.banks[bank].temp_violations[cell] == FEB_ERROR_THRESH){
+				if(FEB_ACC.banks[bank].temp_violations[cell] == FEB_TEMP_ERROR_THRESH){
 					ERROR_TYPE=0x10;
 					FEB_SM_Transition(FEB_SM_ST_FAULT_BMS);
 

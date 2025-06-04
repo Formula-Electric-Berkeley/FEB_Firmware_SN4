@@ -7,29 +7,10 @@
 #include "FEB_CAN_IDs.h"
 #include "FEB_Config.h"
 #include "FEB_SM.h"
+#include "FEB_CAN_Heartbeat.h"
 #include "stm32f446xx.h"
 #include "stm32f4xx_hal.h"
 #include <math.h>
-
-//***************************************** Structs *****************************************
-typedef enum {
-	DEV_IND_IVM,
-	DEV_IND_DASH,
-	DEV_IND_PCU,
-	DEV_IND_DCU,
-	DEV_IND_FSN,
-	DEV_IND_RSN,
-	DEV_IND_LVPDB,
-	DEV_IND_DART1,
-	DEV_IND_DART2,
-	DEV_IND_ALL,
-} FEB_DEV_INDEX;
-
-typedef struct {
-	uint64_t last_received;
-	uint8_t FAck; //Failed Acknowledgments
-	uint8_t LaOn; // number of CAN SM Reports since last struct update
-} FEB_CAN_DEV;
 
 // **************************************** Constants ***************************************
 #define FEB_CAN_PINGPONG_MODE 		1
@@ -43,7 +24,6 @@ typedef struct {
 void FEB_CAN_Init(void);
 void FEB_CAN_Filter_Config(void);
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan);
-void FEB_CAN_Heartbeat_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t RxData[]);
 void FEB_SM_CAN_Transmit(void);
 void FEB_ACC_VOLT_CAN_Transmit(void);
 void FEB_ACC_TEMP_CAN_Transmit(void);

@@ -12,7 +12,7 @@ extern accumulator_t FEB_ACC;
 
 CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
 static CAN_RxHeaderTypeDef FEB_CAN_Rx_Header;
-FEB_CAN_DEV FEB_CAN_NETWORK[FEB_NUM_CAN_DEV]={0};
+extern FEB_CAN_DEV FEB_CAN_NETWORK[FEB_NUM_CAN_DEV];
 static FEB_DEV_INDEX ping_alive;
 uint8_t FEB_CAN_Tx_Data[8];
 uint8_t FEB_CAN_Rx_Data[8];
@@ -35,6 +35,7 @@ void FEB_CAN_Init(void) {
 		FEB_CAN_NETWORK[i].FAck=0;
 		FEB_CAN_NETWORK[i].LaOn=0;
 		FEB_CAN_NETWORK[i].last_received=0;
+		FEB_CAN_NETWORK[i].initialized = true;
 	}
 
 	ping_alive = 0;
@@ -45,6 +46,7 @@ void FEB_CAN_Filter_Config(void) {
 	filter_bank = FEB_CAN_IVT_Filter_Config(&hcan1, CAN_RX_FIFO0, filter_bank);
 	filter_bank = FEB_CAN_DASH_Filter_Config(&hcan1,CAN_RX_FIFO0, filter_bank);
 	filter_bank = FEB_CAN_Charger_Filter_Config(&hcan1,CAN_RX_FIFO0, filter_bank);
+	filter_bank = FEB_CAN_Heartbeat_Filter_Config(&hcan1,CAN_RX_FIFO0, filter_bank);
 //	filter_bank = FEB_CAN_Filter(&hcan1, CAN_RX_FIFO0, filter_bank);
 
 	// Assign Filter
@@ -59,48 +61,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 		FEB_CAN_Charger_Store_Msg(&FEB_CAN_Rx_Header,FEB_CAN_Rx_Data);
 
 		FEB_CAN_Heartbeat_Store_Msg(&FEB_CAN_Rx_Header,FEB_CAN_Rx_Data);
-	}
-}
-
-void FEB_CAN_Heartbeat_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t RxData[]) {
-	switch(pHeader->StdId) {
-		uint8_t device;
-		case 0:
-	    	device = 0;
-			FEB_CAN_NETWORK[device].last_received = RxData;
-			FEB_CAN_NETWORK[device].FAck = 0;
-			FEB_CAN_NETWORK[device].LaOn = 0;
-			break;
-		case FEB_CAN_DASH_HEARTBEAT_FRAME_ID:
-			device = FEB_HB_DASH;
-			FEB_CAN_NETWORK[device].last_received = RxData;
-			FEB_CAN_NETWORK[device].FAck = 0;
-			FEB_CAN_NETWORK[device].LaOn = 0;
-		case FEB_CAN_PCU_HEARTBEAT_FRAME_ID: 
-			device = FEB_HB_PCU;
-			FEB_CAN_NETWORK[device].last_received = RxData;
-			FEB_CAN_NETWORK[device].FAck = 0;
-			FEB_CAN_NETWORK[device].LaOn = 0;
-		case FEB_CAN_LVPDB_HEARTBEAT_FRAME_ID:
-			device = FEB_HB_LVPDB;
-			FEB_CAN_NETWORK[device].last_received = RxData;
-			FEB_CAN_NETWORK[device].FAck = 0;
-			FEB_CAN_NETWORK[device].LaOn = 0;
-		case FEB_CAN_DCU_HEARTBEAT_FRAME_ID:
-			device = FEB_HB_DCU;
-			FEB_CAN_NETWORK[device].last_received = RxData;
-			FEB_CAN_NETWORK[device].FAck = 0;
-			FEB_CAN_NETWORK[device].LaOn = 0;
-		case FEB_CAN_FRONT_SENSOR_HEARTBEAT_MESSAGE_FRAME_ID:
-			device = FEB_HB_FSN;
-			FEB_CAN_NETWORK[device].last_received = RxData;
-			FEB_CAN_NETWORK[device].FAck = 0;
-			FEB_CAN_NETWORK[device].LaOn = 0;
-		case FEB_CAN_REAR_SENSOR_HEARTBEAT_MESSAGE_FRAME_ID:
-			device = FEB_HB_RSN;
-			FEB_CAN_NETWORK[device].last_received = RxData;
-			FEB_CAN_NETWORK[device].FAck = 0;
-			FEB_CAN_NETWORK[device].LaOn = 0;
 	}
 }
 
@@ -132,14 +92,21 @@ void FEB_SM_CAN_Transmit(void) {
 		// FEB_SM_Set_Current_State(FEB_SM_ST_SHUTDOWN);
 	}
 
-	// ping_alive = (ping_alive + 1) % FEB_NUM_CAN_DEV;
+	ping_alive = (ping_alive + 1) % FEB_NUM_CAN_DEV;
 
 	for ( int i = 0; i < FEB_NUM_CAN_DEV; i++ ) {
 		FEB_CAN_NETWORK[i].LaOn += 1;
 	}
 
-	if ( FEB_CAN_NETWORK[ping_alive==0?FEB_NUM_CAN_DEV-1:(ping_alive - 1) % FEB_NUM_CAN_DEV].last_received == 0 ) {
-		++FEB_CAN_NETWORK[ping_alive==0?FEB_NUM_CAN_DEV-1:(ping_alive - 1) % FEB_NUM_CAN_DEV].FAck;
+	int prev_device_index;
+	if (ping_alive == 0) {
+		prev_device_index = FEB_NUM_CAN_DEV - 1;
+	} else {
+		prev_device_index = (ping_alive - 1) % FEB_NUM_CAN_DEV;
+	}
+	
+	if (FEB_CAN_NETWORK[prev_device_index].last_received == 0) {
+		FEB_CAN_NETWORK[prev_device_index].FAck++;
 	}
 
 	// for(int i =0;i<FEB_NUM_CAN_DEV;i++){

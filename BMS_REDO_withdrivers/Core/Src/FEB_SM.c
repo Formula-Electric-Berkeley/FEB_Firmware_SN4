@@ -188,23 +188,24 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		//I'm not sure if this is actually good. Maybe we should use the
 		// charge sense input instead
 
-		// bool free = false;
-		// for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
-		// 	free &= FEB_CAN_NETWORK[FEB_HB_PCU].FAck < 3;
-		// }
-
-		// bool accum_free = (FEB_CAN_NETWORK[FEB_HB_PCU].FAck >= 3);
-
-		// if (accum_free) {
-		// 	LVPowerTransition(FEB_SM_ST_FREE);
-		// 	break;
-		// }
-
-		//Make sure shutdown loop is completed before going to health check
-		if (FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE){
+		FEB_DEV_STATUS accum_status = FEB_COMBINED_STATUS();
+		if (accum_status == INITIALIZED) {
+			break;
+		} else if (accum_status == DISCONNECTED) {
+			LVPowerTransition(FEB_SM_ST_FREE);
+			break;
+		} else if (accum_status == CONNECTED) {
+			if (FEB_PIN_RD(PN_SHS_IN) == FEB_RELAY_STATE_CLOSE) {
 				LVPowerTransition(FEB_SM_ST_HEALTH_CHECK);
-				break;
+				break;s
+			}
 		}
+
+		// //Make sure shutdown loop is completed before going to health check
+		// if (FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_CLOSE){
+		// 		LVPowerTransition(FEB_SM_ST_HEALTH_CHECK);
+		// 		break;
+		// }
 		break;
 	default:
 		return;
