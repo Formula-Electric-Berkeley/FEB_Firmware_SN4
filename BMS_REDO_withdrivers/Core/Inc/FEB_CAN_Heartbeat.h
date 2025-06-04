@@ -12,7 +12,8 @@
 #include "FEB_SM.h"
 
 // **************************************** Constants ***************************************
-#define FEB_FACK_THRESHOLD      3
+#define FEB_FACK_THRESHOLD		5
+#define INITIALIZED_THRESHOLD	3
 
 //***************************************** Structs *****************************************
 typedef enum {
@@ -32,7 +33,7 @@ typedef struct {
 	uint64_t last_received;
 	uint8_t FAck; //Failed Acknowledgments
 	uint8_t LaOn; // number of CAN SM Reports since last struct update
-    bool initialized;
+    uint8_t initialized;
 } FEB_CAN_DEV;
 
 typedef enum {

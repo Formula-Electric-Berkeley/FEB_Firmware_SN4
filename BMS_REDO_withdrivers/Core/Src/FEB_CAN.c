@@ -33,10 +33,10 @@ void FEB_CAN_Init(void) {
 	HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
 	//TODO: Create directory
 	for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
-		FEB_CAN_NETWORK[i].FAck=0;
-		FEB_CAN_NETWORK[i].LaOn=0;
-		FEB_CAN_NETWORK[i].last_received=0;
-		FEB_CAN_NETWORK[i].initialized = true;
+		// FEB_CAN_NETWORK[i].FAck=0;
+		// FEB_CAN_NETWORK[i].LaOn=0;
+		// FEB_CAN_NETWORK[i].last_received=0;
+		FEB_CAN_NETWORK[i].initialized = INITIALIZED_THRESHOLD;
 	}
 
 	ping_alive = 0;
@@ -93,6 +93,9 @@ void FEB_SM_CAN_Transmit(void) {
 		// FEB_SM_Set_Current_State(FEB_SM_ST_SHUTDOWN);
 	}
 
+	if (FEB_CAN_NETWORK[ping_alive].initialized > 0) {
+		FEB_CAN_NETWORK[ping_alive].initialized--;
+	}
 	ping_alive = (ping_alive + 1) % FEB_NUM_CAN_DEV;
 
 	for ( int i = 0; i < FEB_NUM_CAN_DEV; i++ ) {
