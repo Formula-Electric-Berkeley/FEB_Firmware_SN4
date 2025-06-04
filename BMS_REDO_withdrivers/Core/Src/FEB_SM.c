@@ -438,6 +438,16 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 		updateStateProtected(next_state);
 		break;
 	case FEB_SM_ST_DEFAULT:
+
+		FEB_DEV_STATUS accum_status = FEB_COMBINED_STATUS();
+		if (accum_status == INITIALIZED) {
+			break;
+		} else if (accum_status == DISCONNECTED) {
+			break;
+		} else if (accum_status == CONNECTED) {
+			LVPowerTransition(FEB_SM_ST_LV);
+		}
+
 		if ( FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE && FEB_CAN_Charger_Received() && !FEB_CAN_Charging_Status() ) {
 			FreeTransition(FEB_SM_ST_CHARGER_PRECHARGE);
 		}

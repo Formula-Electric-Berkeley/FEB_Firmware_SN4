@@ -85,7 +85,7 @@ void FEB_CAN_Heartbeat_Store_Msg(CAN_RxHeaderTypeDef* rx_header, uint8_t RxData[
 }
 
 FEB_DEV_STATUS FEB_GetStatus(uint8_t device_index) {
-	if (FEB_CAN_NETWORK[device_index].initialized) {
+	if (FEB_CAN_NETWORK[device_index].initialized > 0) {
 		return INITIALIZED;
 	} else if (FEB_CAN_NETWORK[device_index].FAck < FEB_FACK_THRESHOLD) {
 		return CONNECTED;

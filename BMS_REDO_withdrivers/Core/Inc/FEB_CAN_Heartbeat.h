@@ -12,8 +12,8 @@
 #include "FEB_SM.h"
 
 // **************************************** Constants ***************************************
-#define FEB_FACK_THRESHOLD		5
-#define INITIALIZED_THRESHOLD	3
+#define FEB_FACK_THRESHOLD		20
+#define INITIALIZED_THRESHOLD	20
 
 //***************************************** Structs *****************************************
 typedef enum {

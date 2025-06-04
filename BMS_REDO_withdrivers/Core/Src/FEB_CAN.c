@@ -33,7 +33,7 @@ void FEB_CAN_Init(void) {
 	HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
 	//TODO: Create directory
 	for ( size_t i = 0; i < FEB_NUM_CAN_DEV; ++i ) {
-		// FEB_CAN_NETWORK[i].FAck=0;
+		FEB_CAN_NETWORK[i].FAck = FEB_FACK_THRESHOLD;
 		// FEB_CAN_NETWORK[i].LaOn=0;
 		// FEB_CAN_NETWORK[i].last_received=0;
 		FEB_CAN_NETWORK[i].initialized = INITIALIZED_THRESHOLD;
