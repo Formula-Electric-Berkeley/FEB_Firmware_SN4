@@ -197,7 +197,7 @@ static void LVPowerTransition(FEB_SM_ST_t next_state){
 		} else if (accum_status == CONNECTED) {
 			if (FEB_PIN_RD(PN_SHS_IN) == FEB_RELAY_STATE_CLOSE) {
 				LVPowerTransition(FEB_SM_ST_HEALTH_CHECK);
-				break;s
+				break;
 			}
 		}
 
