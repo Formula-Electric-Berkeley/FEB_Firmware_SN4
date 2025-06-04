@@ -38,37 +38,50 @@ void FEB_CAN_Heartbeat_Store_Msg(CAN_RxHeaderTypeDef* rx_header, uint8_t RxData[
 			FEB_CAN_NETWORK[device].last_received = HAL_GetTick();
 			FEB_CAN_NETWORK[device].FAck = 0;
 			FEB_CAN_NETWORK[device].LaOn = 0;
+			FEB_CAN_NETWORK[device].initialized = false
 			break;
 		case FEB_CAN_DASH_HEARTBEAT_FRAME_ID:
 			device = FEB_HB_DASH;
 			FEB_CAN_NETWORK[device].last_received = HAL_GetTick();
 			FEB_CAN_NETWORK[device].FAck = 0;
 			FEB_CAN_NETWORK[device].LaOn = 0;
+			FEB_CAN_NETWORK[device].initialized = false
+			break;
 		case FEB_CAN_PCU_HEARTBEAT_FRAME_ID: 
 			device = FEB_HB_PCU;
 			FEB_CAN_NETWORK[device].last_received = HAL_GetTick();
 			FEB_CAN_NETWORK[device].FAck = 0;
 			FEB_CAN_NETWORK[device].LaOn = 0;
+			FEB_CAN_NETWORK[device].initialized = false;
+			break;
 		case FEB_CAN_LVPDB_HEARTBEAT_FRAME_ID:
 			device = FEB_HB_LVPDB;
 			FEB_CAN_NETWORK[device].last_received = HAL_GetTick();
 			FEB_CAN_NETWORK[device].FAck = 0;
 			FEB_CAN_NETWORK[device].LaOn = 0;
+			FEB_CAN_NETWORK[device].initialized = false;
+			break;
 		case FEB_CAN_DCU_HEARTBEAT_FRAME_ID:
 			device = FEB_HB_DCU;
 			FEB_CAN_NETWORK[device].last_received = HAL_GetTick();
 			FEB_CAN_NETWORK[device].FAck = 0;
 			FEB_CAN_NETWORK[device].LaOn = 0;
+			FEB_CAN_NETWORK[device].initialized = false;
+			break;
 		case FEB_CAN_FRONT_SENSOR_HEARTBEAT_MESSAGE_FRAME_ID:
 			device = FEB_HB_FSN;
 			FEB_CAN_NETWORK[device].last_received = HAL_GetTick();
 			FEB_CAN_NETWORK[device].FAck = 0;
 			FEB_CAN_NETWORK[device].LaOn = 0;
+			FEB_CAN_NETWORK[device].initialized = false;
+			break;
 		case FEB_CAN_REAR_SENSOR_HEARTBEAT_MESSAGE_FRAME_ID:
 			device = FEB_HB_RSN;
 			FEB_CAN_NETWORK[device].last_received = HAL_GetTick();
 			FEB_CAN_NETWORK[device].FAck = 0;
 			FEB_CAN_NETWORK[device].LaOn = 0;
+			FEB_CAN_NETWORK[device].initialized = false;
+			break;
 	}
 }
 
