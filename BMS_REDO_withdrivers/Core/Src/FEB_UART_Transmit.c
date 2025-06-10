@@ -66,30 +66,17 @@ void FEB_MONITOR_UART_Transmit(){
 			i+=sprintf(((char*)(UART_line)+i)," %s\n",
 					((FEB_ACC.banks[bank].cells[cell].discharging)==1?"true":"false"));
 
-
-
-
-
 			HAL_UART_Transmit(&huart2, (uint8_t*) UART_line, strlen(UART_line), 100);
 		}
 	}
 
-//	sprintf(((char*)(UART_line)),"relay %s %s %s\n",
-//			FEB_PIN_RD(PN_AIRP_SENSE) == 0 ? "true":"false",
-//			FEB_PIN_RD(PN_AIRM_SENSE) == 0 ? "true":"false",
-//			(FEB_PIN_RD(PN_PC_REL) == 0 ? "true":"false")
-//	);
-//
-//	HAL_UART_Transmit(&huart2, (uint8_t*) UART_line, strlen(UART_line), 100);
-	/*sprintf(((char*)(UART_line)),"ivt %f %f %f %f\n",
-			FEB_IVT_Current(),
-			FEB_IVT_V1_Voltage(),
-			FEB_IVT_V2_Voltage(),
-			FEB_IVT_V3_Voltage()
-	);
+	sprintf(((char*)(UART_line)),"relay %s %s %s\n",
+			FEB_PIN_RD(PN_AIRP_SENSE) == 0 ? "true":"false",
+			FEB_PIN_RD(PN_AIRM_SENSE) == 0 ? "true":"false",
+			(FEB_PIN_RD(PN_PC_REL) == 0 ? "true":"false")
+			);
 
-	HAL_UART_Transmit(&huart2, (uint8_t*) UART_line, strlen(UART_line), 100);*/
-
+	HAL_UART_Transmit(&huart2, (uint8_t*) UART_line, strlen(UART_line), 100);
 
 }
 

@@ -13,5 +13,5 @@ void FEB_CAN_Charger_UART_Transmit(void);
 void FEB_CAN_Charger_Start_Charge(void);
 void FEB_CAN_Charger_Stop_Charge(void);
 int8_t FEB_CAN_Charging_Status(void);
-
+void FEB_CAN_Charger_Serial(void);
 #endif /* INC_FEB_CHARGE_H_ */

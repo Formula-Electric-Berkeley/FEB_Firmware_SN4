@@ -23,7 +23,7 @@ void FEB_CAN_IVT_Store_Msg(CAN_RxHeaderTypeDef* rx_header, uint8_t rx_data[]);
 void FEB_CAN_IVT_Process(void);
 int32_t FEB_IVT_V1_Voltage();
 int32_t FEB_IVT_V1_Current();
-
+void FEB_IVT_Serial(void);
 #endif /* INC_FEB_IVT_H_ */
 
 

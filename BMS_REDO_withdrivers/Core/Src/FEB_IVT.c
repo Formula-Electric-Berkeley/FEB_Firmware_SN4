@@ -31,7 +31,7 @@ static IVT_CAN_flag_t IVT_CAN_flag;
 FEB_CAN_IVT_Message_t FEB_CAN_IVT_Message;
 
 // ******************************** Functions ********************************
-
+extern UART_HandleTypeDef huart2;
 uint8_t FEB_CAN_IVT_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uint8_t filter_bank) {
 	uint16_t ids[] = {FEB_CAN_ID_IVT_CURRENT, FEB_CAN_ID_IVT_VOLTAGE_1, FEB_CAN_ID_IVT_VOLTAGE_2, FEB_CAN_ID_IVT_VOLTAGE_3};
 
@@ -101,7 +101,15 @@ void FEB_CAN_IVT_Process(void) {
 	}
 }
 
+void FEB_IVT_Serial(void){
+	static char str[128];
+	sprintf(str, "ivt %f %f %f %f\n",
+	FEB_CAN_IVT_Message.current_mA, FEB_CAN_IVT_Message.voltage_1_mV, FEB_CAN_IVT_Message.voltage_2_mV, FEB_CAN_IVT_Message.voltage_3_mV
+	);
 
+	//while (osMutexAcquire(FEB_UART_LockHandle, UINT32_MAX) != osOK);
+	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
+}
 
 int32_t FEB_IVT_V1_Voltage(){
 	return FEB_CAN_IVT_Message.voltage_1_mV;

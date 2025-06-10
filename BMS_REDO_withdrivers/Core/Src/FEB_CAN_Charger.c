@@ -161,7 +161,21 @@ int8_t FEB_CAN_Charging_Status(void) {
 
 	return 0;
 }
+void FEB_CAN_Charger_Serial(void) {
+	static char str[128];
+	sprintf(str, "charger1 %d %d %d\n",
+	BMS_message.max_voltage_dV, BMS_message.max_current_dA, BMS_message.control
+	);
 
+	//while (osMutexAcquire(FEB_UART_LockHandle, UINT32_MAX) != osOK);
+	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
+	//osMutexRelease(FEB_UART_LockHandle);
+	sprintf(str, "charger2 %d %d %d\n",
+	CCS_message.op_voltage_dV, CCS_message.op_current_dA, CCS_message.status
+	);
+	HAL_UART_Transmit(&huart2, (uint8_t*) str, strlen(str), 100);
+
+}
 void FEB_CAN_Charger_UART_Transmit(void) {
 	static char str[128];
 

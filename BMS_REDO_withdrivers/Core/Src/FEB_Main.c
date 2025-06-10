@@ -64,11 +64,13 @@ void FEB_Task_UART() {
 		return;
 	} else {
 		cyc2=0;
-		FEB_SM_UART_Transmit();
+	//	FEB_SM_UART_Transmit();
 	//	FEB_Transmit_AIR_Status();
-	//	FEB_MONITOR_UART_Transmit();
-		FEB_IVT_V1_Transmit();
-		FEB_ADBMS_UART_Transmit();
-		FEB_CAN_Charger_UART_Transmit();
+		FEB_MONITOR_UART_Transmit();
+		FEB_IVT_Serial();
+		FEB_CAN_Charger_Serial();
+//		FEB_IVT_V1_Transmit();
+//		FEB_ADBMS_UART_Transmit();
+//		FEB_CAN_Charger_UART_Transmit();
 	}
 }
