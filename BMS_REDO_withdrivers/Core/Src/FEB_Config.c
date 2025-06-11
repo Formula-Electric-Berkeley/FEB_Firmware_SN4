@@ -16,7 +16,7 @@ void FEB_Config_Update(FEB_SM_ST_t current_state) {
 			cell_min_voltage_mV = 3200; /* Higher minimum voltage */
 			cell_max_voltage_mV = 4200;
 			cell_min_temperature_dC = -200.0f;
-			cell_max_temperature_dC = 600.0f;
+			cell_max_temperature_dC = 450.0f; // normal is 600
 			pack_min_current_mA = 0 - current_resolution_mA;
 			pack_max_current_mA = 0 + current_resolution_mA;
 			break;
@@ -32,7 +32,7 @@ void FEB_Config_Update(FEB_SM_ST_t current_state) {
 			cell_min_voltage_mV = 2500;
 			cell_max_voltage_mV = 4200;
 			cell_min_temperature_dC = -200.0f;
-			cell_max_temperature_dC = 600.0f;
+			cell_max_temperature_dC = 450.0f; // normal is 600
 			pack_min_current_mA = 0 - current_resolution_mA;
 			pack_max_current_mA = 100;
 			break;
@@ -40,7 +40,7 @@ void FEB_Config_Update(FEB_SM_ST_t current_state) {
 			cell_min_voltage_mV = 2500;
 			cell_max_voltage_mV = 4200;
 			cell_min_temperature_dC = -200.0f;
-			cell_max_temperature_dC = 600.0f;
+			cell_max_temperature_dC = 450.0f; // normal is 600
 			pack_min_current_mA = 0 - current_resolution_mA;
 			pack_max_current_mA = 60000;
 			break;
