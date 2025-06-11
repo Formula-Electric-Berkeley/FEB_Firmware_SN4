@@ -239,19 +239,26 @@ static void HealthCheckTransition(FEB_SM_ST_t next_state){
 					HealthCheckTransition(FEB_SM_ST_LV);
 
 		// AIR minus closed, air plus opened, precharge open make sure tsms
-		else if(FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE &&
-				FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN &&
-				FEB_PIN_RD(PN_PC_REL) == FEB_RELAY_STATE_OPEN
-		){
-			HealthCheckTransition(FEB_SM_ST_PRECHARGE);
+		
+		FEB_DEV_STATUS accum_status = FEB_COMBINED_STATUS();
+		if (accum_status == INITIALIZED) {
+			break;
+		} else if (accum_status == DISCONNECTED) {
+			LVPowerTransition(FEB_SM_ST_FREE);
+			break;
+		} else if (accum_status == CONNECTED) {
+			if(FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE && 
+					FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN &&
+					FEB_PIN_RD(PN_PC_REL) == FEB_RELAY_STATE_OPEN) 
+				{
+				HealthCheckTransition(FEB_SM_ST_PRECHARGE);
+			}
 		}
 		break;
 
 	default:
 		return;
 	}
-
-
 }
 
 static void PrechargeTransition(FEB_SM_ST_t next_state){
@@ -448,8 +455,15 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 			LVPowerTransition(FEB_SM_ST_LV);
 		}
 
-		if ( FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE && FEB_CAN_Charger_Received() && !FEB_CAN_Charging_Status() ) {
-			FreeTransition(FEB_SM_ST_CHARGER_PRECHARGE);
+		int8_t charging_status = FEB_CAN_Charging_Status();
+
+		if ( FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE && 
+				FEB_CAN_Charger_Received() && charging_status == 0 &&
+				HAL_GPIO_ReadPin(PN_CHARGE_SENSE.group, PN_CHARGE_SENSE.pin) == GPIO_PIN_SET){
+			
+				FreeTransition(FEB_SM_ST_CHARGER_PRECHARGE);
+		} else if (charging_status == -1) { 
+			FreeTransition(FEB_SM_ST_FAULT_BMS);
 		}
 	default:
 		return;
@@ -526,7 +540,7 @@ static void ChargingTransition(FEB_SM_ST_t next_state){
 		break;
 
 	case FEB_SM_ST_DEFAULT:
-		uint8_t charge_status = FEB_CAN_Charging_Status();
+		int8_t charge_status = FEB_CAN_Charging_Status();
 
 		if (charge_status == 1 || FEB_PIN_RD(PN_AIRM_SENSE)==FEB_RELAY_STATE_OPEN ) {
 			ChargingTransition(FEB_SM_ST_FREE);

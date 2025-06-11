@@ -40,6 +40,10 @@ static void charger_CAN_transmit(void);
 
 bool received_msg = false;
 
+static bool trickle_charge_enabled = false;
+static uint32_t last_trickle_toggle_time = 0;
+static bool charging_on = true;
+
 /* ******** CAN Functions ******** */
 
 uint8_t FEB_CAN_Charger_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_Assignment, uint8_t filter_bank) {
@@ -105,16 +109,49 @@ static void charger_CAN_transmit(void) {
 
 void FEB_CAN_Charger_Init(void) {
 	BMS_message.max_voltage_dV = FEB_NBANKS * FEB_NUM_CELL_PER_BANK * (FEB_Config_Get_Cell_Max_Voltage_mV() * 1e-2);
-	BMS_message.max_current_dA = 50;
+	BMS_message.max_current_dA = CHARGE_CURRENT_dA;
 	CCS_message.received = false;
 	BMS_message.done_charging = false;
 }
 
 void FEB_CAN_Charger_Process(void) {
-	if (FEB_SM_Get_Current_State() == FEB_SM_ST_CHARGING) {
-
-		charger_CAN_transmit();
+	if (FEB_SM_Get_Current_State() != FEB_SM_ST_CHARGING) {
+		return;
 	}
+
+	uint16_t current_pack_voltage_dV = (uint16_t)(FEB_ACC.total_voltage_V * 10.0);
+	
+	if (current_pack_voltage_dV >= TRICKLE_CHARGE_START_VOLTAGE_dV) {
+        trickle_charge_enabled = true;
+    } else {
+        trickle_charge_enabled = false;
+        charging_on = true;
+    }
+
+	if (trickle_charge_enabled) {
+        uint32_t current_time = HAL_GetTick();
+        
+        if ((current_time - last_trickle_toggle_time) >= TRICKLE_CHARGE_INTERVAL_MS) {
+            charging_on = !charging_on;
+            last_trickle_toggle_time = current_time;
+        }
+
+        if (charging_on) {
+            BMS_message.max_voltage_dV = TRICKLE_CHARGE_MAX_VOLTAGE_dV;
+            BMS_message.max_current_dA = TRICKLE_CHARGE_CURRENT_dA;
+            BMS_message.control = 0;
+        } else {
+            BMS_message.max_voltage_dV = TRICKLE_CHARGE_MAX_VOLTAGE_dV;
+            BMS_message.max_current_dA = 0;
+            BMS_message.control = 0;
+        }
+    } else {
+        BMS_message.max_voltage_dV = TRICKLE_CHARGE_MAX_VOLTAGE_dV;
+        BMS_message.max_current_dA = CHARGE_CURRENT_dA;
+        BMS_message.control = 0; 
+    }
+
+	charger_CAN_transmit();
 }
 
 void FEB_CAN_Charger_Start_Charge(void) {
@@ -135,11 +172,9 @@ int8_t FEB_CAN_Charging_Status(void) {
 	if (BMS_message.done_charging == true) {
 		return 1;
 	}
-	if ( FEB_ACC.total_voltage_V >= FEB_CONFIG_PACK_SOFT_MAX_VOLTAGE_V ) {
-		if ( FEB_ACC.total_voltage_V >= FEB_CONFIG_PACK_HARD_MAX_VOLTAGE_V ) {
-			return -1;
-		}
-		return 1;
+
+	if ( FEB_ACC.total_voltage_V >= FEB_CONFIG_PACK_HARD_MAX_VOLTAGE_V ) {
+		return -1;
 	}
 
 	for ( size_t i = 0; i < FEB_NBANKS; ++i) {

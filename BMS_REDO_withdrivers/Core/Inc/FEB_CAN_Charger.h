@@ -1,8 +1,12 @@
 #ifndef INC_FEB_CHARGE_H_
 #define INC_FEB_CHARGE_H_
 
+// **************************************** Includes ****************************************
+
 #include "stm32f4xx_hal.h"
 #include "stdbool.h"
+
+// **************************************** Functions ***************************************
 
 void FEB_CAN_Charger_Init(void);
 uint8_t FEB_CAN_Charger_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_Assignment, uint8_t filter_bank);
