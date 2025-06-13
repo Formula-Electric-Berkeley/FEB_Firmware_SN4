@@ -63,20 +63,23 @@ void FEB_CAN_IVT_Store_Msg(CAN_RxHeaderTypeDef* rx_header, uint8_t rx_data[]) {
 	switch(rx_header->StdId) {
 	    case FEB_CAN_ID_IVT_CURRENT:
 	    	IVT_CAN_flag.current = true;
-	    	FEB_CAN_IVT_Message.current_mA = (rx_data[2] << 24) + (rx_data[3] << 16) + (rx_data[4] << 8) + rx_data[5];
-	    	FEB_CAN_IVT_Message.current_mA *= -1; // correct IVT for reversed direction
+	    	int32_t raw_current = (int32_t) ((rx_data[2] << 24) | (rx_data[3] << 16) | (rx_data[4] << 8) + rx_data[5]);
+	    	FEB_CAN_IVT_Message.current_mA = ((float) raw_current) * (-0.001f) * 1000.0f;; // correct IVT for reversed direction
 			break;
 	    case FEB_CAN_ID_IVT_VOLTAGE_1:
 	    	IVT_CAN_flag.voltage_1 = true;
-	    	FEB_CAN_IVT_Message.voltage_1_mV = (rx_data[2] << 24) + (rx_data[3] << 16) + (rx_data[4] << 8) + rx_data[5];
+	    	uint32_t raw_voltage_1 = ((uint32_t)rx_data[2] << 24) | ((uint32_t)rx_data[3] << 16) | ((uint32_t)rx_data[4] << 8) | (uint32_t)rx_data[5];
+	    	FEB_CAN_IVT_Message.voltage_1_mV = (float) raw_voltage_1;
 	    	break;
 	    case FEB_CAN_ID_IVT_VOLTAGE_2:
 	    	IVT_CAN_flag.voltage_2 = true;
-	    	FEB_CAN_IVT_Message.voltage_2_mV = (rx_data[2] << 24) + (rx_data[3] << 16) + (rx_data[4] << 8) + rx_data[5];
+	    	uint32_t raw_voltage_2 = ((uint32_t)rx_data[2] << 24) | ((uint32_t)rx_data[3] << 16) | ((uint32_t)rx_data[4] << 8) | (uint32_t)rx_data[5];
+	    	FEB_CAN_IVT_Message.voltage_2_mV = (float) raw_voltage_2;
 	    	break;
 	    case FEB_CAN_ID_IVT_VOLTAGE_3:
 	    	IVT_CAN_flag.voltage_3 = true;
-	    	FEB_CAN_IVT_Message.voltage_3_mV = (rx_data[2] << 24) + (rx_data[3] << 16) + (rx_data[4] << 8) + rx_data[5];
+	    	uint32_t raw_voltage_3 = ((uint32_t)rx_data[2] << 24) | ((uint32_t)rx_data[3] << 16) | ((uint32_t)rx_data[4] << 8) | (uint32_t)rx_data[5];
+	    	FEB_CAN_IVT_Message.voltage_3_mV = (float) raw_voltage_3;
 	    	break;
 	}
 }

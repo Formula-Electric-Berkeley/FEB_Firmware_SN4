@@ -12,10 +12,10 @@
 
 
 typedef struct {
-	volatile int32_t current_mA;
-	volatile int32_t voltage_1_mV;
-	volatile int32_t voltage_2_mV;
-	volatile int32_t voltage_3_mV;
+	volatile float current_mA;
+	volatile float voltage_1_mV;
+	volatile float voltage_2_mV;
+	volatile float voltage_3_mV;
 } FEB_CAN_IVT_Message_t;
 
 uint8_t FEB_CAN_IVT_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uint8_t filter_bank);

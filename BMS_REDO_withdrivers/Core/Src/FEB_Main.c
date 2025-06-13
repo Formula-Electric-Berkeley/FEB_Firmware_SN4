@@ -60,7 +60,7 @@ void FEB_Task_CAN() {
 
 static int cyc2=0;
 void FEB_Task_UART() {
-	if(++cyc2<15) {
+	if(++cyc2<4) {
 		return;
 	} else {
 		cyc2=0;

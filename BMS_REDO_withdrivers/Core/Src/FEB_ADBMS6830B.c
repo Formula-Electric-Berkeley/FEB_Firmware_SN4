@@ -37,7 +37,7 @@ static bool dcto_bits[6] = {1,1,1,1,1,1};
 static uint16_t uv = 0x0010;
 static uint16_t ov = 0x3FF0;
 float MIN_CELL_VOLTAGE=3.1;
-float FEB_MIN_SLIPPAGE_V=0.01;
+float FEB_MIN_SLIPPAGE_V=0.05;
 
 // ******************************** Helper Functions ********************************
 
