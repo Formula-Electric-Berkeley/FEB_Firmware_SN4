@@ -338,6 +338,13 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 		bool af_en = (dash_data >> 7) & 0x01;
 		bool as_en = af_en;
 
+		// Read LV bus voltage
+		float lv_voltage = tps2482_bus_voltage[0] / 100.0f;
+
+		// Only enable Accumulator Fans if over certain threshold. 
+		bool af_en = (af_en && (bms_message.max_acc_temp > 35.0f) && (lv_voltage >= 23.0f)); // back turns on when 35*C
+		bool as_en = (as_en && (bms_message.max_acc_temp > 45.0f) && (lv_voltage >= 23.0f)); // front turns on when 45*C
+
 		bool tps2482_en_res[NUM_TPS2482 - 1];
 		GPIO_PinState tps2482_en_initial[NUM_TPS2482 - 1];
 		bool tps2482_en_success = true; // Assume successful enable
@@ -374,21 +381,21 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 		}
 	}
 
-	#endif
-
-	switch (rx_header->StdId) {
-		case FEB_CAN_BMS_STATE_FRAME_ID:
-			uint8_t rx_data[rx_header->DLC];
+	if ( rx_header->StdId == FEB_CAN_BMS_STATE_FRAME_ID ) {
+		uint8_t rx_data[rx_header->DLC];
 
 			memcpy(rx_data, data, rx_header->DLC);
 
 			if ( ((rx_data[0] & 0x1F) == FEB_SM_ST_HEALTH_CHECK) || (((rx_data[0] & 0xE0) >> 5) == FEB_HB_LVPDB) ) {
 				FEB_CAN_HEARTBEAT_Transmit();
 			}
-
-			break;
 	}
 
+	if (rx_header->StdId == FEB_CAN_BMS_ACCUMULATOR_TEMPERATURE_FRAME_ID ) { 
+		bms_message.max_acc_temp = (FEB_CAN_Rx_Data[5] << 8) | FEB_CAN_Rx_Data[4];
+	}
+
+	#endif
 }
 
 static void FEB_Compose_CAN_Data(void) {
