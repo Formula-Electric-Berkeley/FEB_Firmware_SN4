@@ -7,7 +7,6 @@
 #include "stm32f4xx_hal.h"
 #include <stdio.h>
 #include <stdbool.h>
-#include <FEB_IO_ICS.h>
 #include <FEB_CAN_Heartbeat.h>
 
 // ********************************** Structs **********************************

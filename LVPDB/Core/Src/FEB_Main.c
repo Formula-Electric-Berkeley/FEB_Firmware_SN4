@@ -117,6 +117,8 @@ double tps2482_shunt_voltage[NUM_TPS2482];
 
 FEB_LVPDB_CAN_Data can_data;
 
+bool bus_voltage_healthy = true;
+
 void FEB_Main_Setup(void) {
 	FEB_Variable_Init();
 	FEB_CAN_HEARTBEAT_Init();
@@ -341,9 +343,17 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 		// Read LV bus voltage
 		float lv_voltage = tps2482_bus_voltage[0] / 100.0f;
 
-		// Only enable Accumulator Fans if over certain threshold. 
-		bool af_en = (af_en && (bms_message.max_acc_temp > 35.0f) && (lv_voltage >= 23.0f)); // back turns on when 35*C
-		bool as_en = (as_en && (bms_message.max_acc_temp > 45.0f) && (lv_voltage >= 23.0f)); // front turns on when 45*C
+		if (lv_voltage < 23.0f) {
+			bus_voltage_healthy = false;
+		}
+
+		// Only enable Accumulator Fans if accum over certain temp threshold and bus voltage is over 23. 
+		af_en = (af_en && (bms_message.max_acc_temp > 35.0f) && bus_voltage_healthy); // back turns on when 35*C
+		as_en = (as_en && (bms_message.max_acc_temp > 45.0f) && bus_voltage_healthy); // front turns on when 45*C
+
+		// Only enable Coolant Pump and Rad Fans if bus voltage is over 23. 
+		cp_en = cp_en && bus_voltage_healthy;
+		rf_en = rf_en && bus_voltage_healthy;
 
 		bool tps2482_en_res[NUM_TPS2482 - 1];
 		GPIO_PinState tps2482_en_initial[NUM_TPS2482 - 1];
@@ -387,12 +397,13 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 			memcpy(rx_data, data, rx_header->DLC);
 
 			if ( ((rx_data[0] & 0x1F) == FEB_SM_ST_HEALTH_CHECK) || (((rx_data[0] & 0xE0) >> 5) == FEB_HB_LVPDB) ) {
-				FEB_CAN_HEARTBEAT_Transmit();
+				// FEB_CAN_HEARTBEAT_Transmit();
 			}
 	}
 
 	if (rx_header->StdId == FEB_CAN_BMS_ACCUMULATOR_TEMPERATURE_FRAME_ID ) { 
-		bms_message.max_acc_temp = (FEB_CAN_Rx_Data[5] << 8) | FEB_CAN_Rx_Data[4];
+		uint8_t rx_data[rx_header->DLC];
+		bms_message.max_acc_temp = (rx_data[5] << 8) | rx_data[4];
 	}
 
 	#endif
