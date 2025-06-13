@@ -449,8 +449,6 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 		FEB_DEV_STATUS accum_status = FEB_COMBINED_STATUS();
 		if (accum_status == INITIALIZED) {
 			break;
-		} else if (accum_status == DISCONNECTED) {
-			break;
 		} else if (accum_status == CONNECTED) {
 			LVPowerTransition(FEB_SM_ST_LV);
 		}
