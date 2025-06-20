@@ -243,9 +243,6 @@ static void HealthCheckTransition(FEB_SM_ST_t next_state){
 		FEB_DEV_STATUS accum_status = FEB_COMBINED_STATUS();
 		if (accum_status == INITIALIZED) {
 			break;
-		} else if (accum_status == DISCONNECTED) {
-			LVPowerTransition(FEB_SM_ST_FREE);
-			break;
 		} else if (accum_status == CONNECTED) {
 			if(FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE && 
 					FEB_PIN_RD(PN_AIRP_SENSE) == FEB_RELAY_STATE_OPEN &&
