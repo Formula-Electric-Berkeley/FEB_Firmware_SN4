@@ -449,17 +449,17 @@ static void FreeTransition(FEB_SM_ST_t next_state){
 		FEB_DEV_STATUS accum_status = FEB_COMBINED_STATUS();
 		if (accum_status == INITIALIZED) {
 			break;
-		} else if (accum_status == DISCONNECTED) {
-			break;
+//		} else if (accum_status == DISCONNECTED) {
+//			break;
 		} else if (accum_status == CONNECTED) {
 			LVPowerTransition(FEB_SM_ST_LV);
 		}
 
 		int8_t charging_status = FEB_CAN_Charging_Status();
-
+		GPIO_PinState k = HAL_GPIO_ReadPin(PN_CHARGE_SENSE.group, PN_CHARGE_SENSE.pin);
 		if ( FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_CLOSE && 
 				FEB_CAN_Charger_Received() && charging_status == 0 &&
-				HAL_GPIO_ReadPin(PN_CHARGE_SENSE.group, PN_CHARGE_SENSE.pin) == GPIO_PIN_SET){
+				k == GPIO_PIN_SET){
 			
 				FreeTransition(FEB_SM_ST_CHARGER_PRECHARGE);
 		} else if (charging_status == -1) { 

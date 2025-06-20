@@ -37,7 +37,7 @@ static bool dcto_bits[6] = {1,1,1,1,1,1};
 static uint16_t uv = 0x0010;
 static uint16_t ov = 0x3FF0;
 float MIN_CELL_VOLTAGE=3.1;
-float FEB_MIN_SLIPPAGE_V=0.05;
+float FEB_MIN_SLIPPAGE_V=0.03;
 
 // ******************************** Helper Functions ********************************
 
@@ -98,7 +98,8 @@ void read_cell_voltages() {
 	ADBMS6830B_rdcv(FEB_NUM_IC, IC_Config);
 	ADBMS6830B_rdsv(FEB_NUM_IC, IC_Config);
 }
-
+#define ingorebank 4
+#define ignorecell 0
 void store_cell_voltages() {
 	FEB_ACC.total_voltage_V = 0;
 	for (uint8_t bank = 0; bank < FEB_NBANKS; bank ++) {
@@ -112,6 +113,8 @@ void store_cell_voltages() {
 		}
 	}
 
+	FEB_ACC.banks[ingorebank].cells[ignorecell].voltage_V=FEB_ACC.banks[ingorebank].cells[(ignorecell+1)%FEB_NUM_CELL_PER_BANK].voltage_V;
+	FEB_ACC.banks[ingorebank].cells[ignorecell].voltage_S=FEB_ACC.banks[ingorebank].cells[(ignorecell+1)%FEB_NUM_CELL_PER_BANK].voltage_S;
 }
 
 void validate_voltages() {
