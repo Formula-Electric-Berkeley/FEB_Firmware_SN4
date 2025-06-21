@@ -11,6 +11,7 @@ extern uint32_t FEB_CAN_Tx_Mailbox;
 // ******************************** Variables ********************************
 
 ICS_UI_Values_t ICS_UI_Values;
+int16_t lv_voltage;
 
 // **************************************** Functions ****************************************
 
@@ -40,10 +41,12 @@ uint8_t FEB_CAN_ICS_Filter(CAN_HandleTypeDef* hcan, uint8_t FIFO_assignment, uin
 		FEB_CAN_BMS_STATE_FRAME_ID,
 		FEB_CAN_BMS_ACCUMULATOR_VOLTAGE_FRAME_ID,
 		FEB_CAN_BMS_ACCUMULATOR_TEMPERATURE_FRAME_ID,
-	    0xa5
+	    0xa5,
+		FEB_CAN_LVPDB_FLAGS_BUS_VOLTAGE_LV_CURRENT_FRAME_ID
+
 	};
 
-	for (uint8_t i = 0; i < 4; i++) {
+	for (uint8_t i = 0; i < 5; i++) {
 		CAN_FilterTypeDef filter_config;
 
 		// Standard CAN - 2.0A - 11 bit
@@ -91,6 +94,9 @@ void FEB_CAN_ICS_Rx_Handler(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_
 			uint8_t x3 = FEB_CAN_Rx_Data[2];
 			uint8_t x4 = FEB_CAN_Rx_Data[3];
 			uint16_t x5 = ICS_UI_Values.motor_speed;
+			break;
+		case FEB_CAN_LVPDB_FLAGS_BUS_VOLTAGE_LV_CURRENT_FRAME_ID:
+			lv_voltage = (FEB_CAN_Rx_Data[6] << 8) | FEB_CAN_Rx_Data[5];
 			break;
 //		case FEB_CAN_ID_IVT_VOLTAGE_1:
 //			ICS_UI_Values.ivt_voltage = ((FEB_CAN_Rx_Data[2] << 24) + (FEB_CAN_Rx_Data[3] << 16) + (FEB_CAN_Rx_Data[4] << 8) + FEB_CAN_Rx_Data[5]) * 0.001;

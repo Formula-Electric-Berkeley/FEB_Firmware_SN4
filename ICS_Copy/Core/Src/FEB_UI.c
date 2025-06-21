@@ -7,6 +7,7 @@
 Screen_Info_t screen_info;
 
 extern ICS_UI_Values_t ICS_UI_Values;
+extern uint16_t lv_voltage;
 
 //const char* BMS_STATE_LABELS[] = {"PRECHARGE", "CHARGE", "BALANCE", "DRIVE", "SHUTDOWN", "NULL"};
 //const int BMS_STATE_COLORS[] = {0xFAFF00, 0x33FF00, 0x00F0FF, 0xFA00FF, 0xFF0000, 0xC2C2C2};
@@ -200,16 +201,57 @@ void SOC_Set_Value(float ivt_voltage, float min_cell_voltage) {
     // uint8_t soc_value = (uint8_t) (soc_f + 0.5f);
 
     // Option 3: Lookup Table
-    float avg_cell_voltage = ivt_voltage / 140;
-    uint8_t soc_value = lookup_soc_from_voltage(avg_cell_voltage);
+    float avg_cell_voltage = ICS_UI_Values.pack_voltage;
+    float min_voltage = 390.0f;
+    float max_voltage = 588.0f;
+
+    uint8_t soc_value = (avg_cell_voltage - min_voltage) / (max_voltage - min_voltage);
+
+//    uint8_t soc_value = lookup_soc_from_voltage(avg_cell_voltage);
 
     // Update UI
     char soc_label[10];
     sprintf(soc_label, "%d%%", soc_value);
-    lv_label_set_text(ui_SoCNumerical, soc_label);
+    lv_label_set_text(ui_PackVoltageText, soc_label);
 
-    lv_bar_set_value(ui_BarSoC, soc_value, LV_ANIM_OFF);
-    lv_obj_set_style_bg_color(ui_BarSoC, get_soc_gradient_color(soc_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_bar_set_value(ui_PackNumerical, soc_value, LV_ANIM_OFF);
+    lv_obj_set_style_bg_color(ui_hvSoC, get_soc_gradient_color(soc_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+}
+
+void LV_Set_Value(void) {
+    // Calculate SoC using your original logic
+    // Option 1: Based on ivt_voltage
+    //uint8_t soc_value = abs((100 - (((int)((ivt_voltage / 600.0) * 100)) % 600)) % 100);
+
+    // Option 2: Based on min cell voltage (commented out)
+    // uint8_t soc_value = (uint8_t)(((min_cell_voltage - 25) / 20.0) * 100.0);
+
+	// Option 3: Linear (TERRIBLE) (avg_cell_voltage-cell_min) / (cell_max - cell_min)
+	// float avg_cell_voltage = ivt_voltage / 140;
+	// float soc_f = (avg_cell_voltage - 250) / (420 - 250) * 100;
+
+	// if (soc_f > 100.0) soc_f = 100.0;
+	// if (soc_f < 0.0) soc_f = 0.0;
+
+    // uint8_t soc_value = (uint8_t) (soc_f + 0.5f);
+
+    // Option 3: Lookup Table
+    float avg_voltage = lv_voltage;
+    float min_voltage = 21.0f;
+    float max_voltage = 27.0f;
+
+    float soc_value = (avg_voltage - min_voltage) / (max_voltage - min_voltage);
+
+//    uint8_t soc_value = lookup_soc_from_voltage(avg_cell_voltage);
+
+    // Update UI
+    char soc_label[32];
+    sprintf(soc_label, "%.1f V", soc_value);
+
+    lv_label_set_text(ui_LVText1, soc_label);
+
+//    lv_bar_set_value(ui_LVNumerical, soc_value, LV_ANIM_OFF);
+    lv_obj_set_style_bg_color(ui_lvSoC, get_soc_gradient_color(soc_value), LV_PART_INDICATOR | LV_STATE_DEFAULT);
 }
 
 uint8_t lookup_soc_from_voltage(float voltage) {
