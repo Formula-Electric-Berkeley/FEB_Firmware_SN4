@@ -55,6 +55,9 @@ bool FEB_CAN_BMS_GET_FAULTS(){
 	return (bms_message.bms_fault || bms_message.imd_fault);
 }
 
+bool FEB_CAN_GET_IMD_FAULT(){
+	return bms_message.imd_fault;
+}
 
 // ***** CAN FUNCTIONS ****
 
