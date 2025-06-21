@@ -343,13 +343,13 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 		// Read LV bus voltage
 		float lv_voltage = tps2482_bus_voltage[0] / 100.0f;
 
-		if (lv_voltage < 23.0f) {
+		if (lv_voltage < 21.0f) {
 			bus_voltage_healthy = false;
 		}
 
 		// Only enable Accumulator Fans if accum over certain temp threshold and bus voltage is over 23. 
-		af_en = (af_en && (bms_message.max_acc_temp > 35.0f) && bus_voltage_healthy); // back turns on when 35*C
-		as_en = (as_en && (bms_message.max_acc_temp > 45.0f) && bus_voltage_healthy); // front turns on when 45*C
+		af_en = (af_en && (bms_message.max_acc_temp > 40.0f) && bus_voltage_healthy); // back turns on when 35*C
+		as_en = (as_en && (bms_message.max_acc_temp > 50.0f) && bus_voltage_healthy); // front turns on when 45*C
 
 		// Only enable Coolant Pump and Rad Fans if bus voltage is over 23. 
 		cp_en = cp_en && bus_voltage_healthy;
