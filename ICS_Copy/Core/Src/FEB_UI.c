@@ -234,12 +234,14 @@ uint8_t lookup_soc_from_voltage(float voltage) {
 
 void TEMP_Set_Value(float max_acc_temp) {
     // Clamp temperature to expected range
-	float max_temp_C = max_acc_temp / 100.0f;
-    int max_temp = (int)(max_temp_C);
+	int max_temp = (int) (max_acc_temp / 100);
     // if (max_temp % 60 < 30) max_temp = 30.0;
 
-    // Scale: 0–60°C and 0–100%
-    uint8_t temp_value = (uint8_t)(((fminf(max_temp, 60.0f)) / 60.0f) * 100.0f);
+    // Scale: 12–60°C and 0–100%
+    uint8_t temp_value = 0;
+    if (max_temp > 12.0) {
+        temp_value = (uint8_t)(((fminf(max_temp, 60.0) - 12.0) / 48.0) * 100.0);
+    }
 
     if (temp_value > 100) temp_value = 100;
 
