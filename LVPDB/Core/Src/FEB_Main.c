@@ -341,7 +341,7 @@ void FEB_CAN1_Rx_Callback(CAN_RxHeaderTypeDef *rx_header, void *data) {
 		bool as_en = af_en;
 
 		// Read LV bus voltage
-		float lv_voltage = tps2482_bus_voltage[0] / 100.0f;
+		float lv_voltage = tps2482_bus_voltage[0] / 1000.0f;
 
 		if (lv_voltage < 21.0f) {
 			bus_voltage_healthy = false;
