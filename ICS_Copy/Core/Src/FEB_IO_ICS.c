@@ -5,9 +5,10 @@ extern UART_HandleTypeDef huart3;
 
 #define IOEXP_ADDR ((uint16_t) 0x20)
 #define BTN_HOLD_TIME ((uint32_t) 2000)
+#define MSN_BTN_HOLD_TIME ((uint32_t) 250)
 #define RTD_BUZZER_TIME ((uint32_t) 2000)
 #define RTD_BUZZER_EXIT_TIME ((uint32_t)500)
-#define AUTO_MODE_TRIGGER ((uint32_t))
+//#define AUTO_MODE_TRIGGER ((uint32_t) )
 
 static uint32_t rtd_press_start_time;
 static uint32_t rtd_buzzer_start_time = 0;
@@ -21,14 +22,24 @@ static uint8_t entered_drive = 0;
 static uint8_t exited_drive = 0;
 static uint32_t exit_buzzer_start_time = 0;
 
-static uint32_t datalog_press_start_time = 0;
-static uint8_t datalog_active = 0;
+//static uint32_t datalog_press_start_time = 0;
+//static uint8_t datalog_active = 0;
 
 static uint32_t button3_start_time = 0;
 static uint8_t button3_active = 0;
 //static uint8_t button2_last = 0;
 
-static uint32_t auto_mission_control_start_time = 0;
+static uint32_t auto_press_start_time = 0;
+static uint8_t auto_active = 0;
+static uint8_t auto_ms_button_cnt = 0;
+
+typedef enum {
+    NONE,
+	AUTOCROSS,
+	EBS_TEST,
+	INSPECTION,
+	MANUAL_DRIVE
+} auto_mission_state;
 
 
 // **************************************** Functions ****************************************
@@ -106,25 +117,58 @@ void FEB_IO_ICS_Loop(void) {
 	    IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
 	}
 
-	// Button 2 - Data Logger
+//	// Button 2 - Data Logger
+//	if (received_data & (1 << 2)) {
+//		if ((HAL_GetTick() - datalog_press_start_time) >= BTN_HOLD_TIME) {
+//			if (datalog_active == 0){
+//				datalog_active = 1;
+//			} else {
+//				datalog_active = 0;
+//			}
+//			IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
+//			datalog_press_start_time = HAL_GetTick();
+//		} else {
+//			IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
+//		}
+//	} else {
+//		datalog_press_start_time = HAL_GetTick();
+//		IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
+//	}
+//
+//	if(datalog_active){
+//		lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
+//
+//	}else{
+//		lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+//	}
+
+	// Button 2 - Replacing Data Logger button with auto
 	if (received_data & (1 << 2)) {
-		if ((HAL_GetTick() - datalog_press_start_time) >= BTN_HOLD_TIME) {
-			if (datalog_active == 0){
-				datalog_active = 1;
-			} else {
-				datalog_active = 0;
+		if ((((HAL_GetTick() - auto_press_start_time) >= MSN_BTN_HOLD_TIME) && ((HAL_GetTick() - auto_press_start_time) < BTN_HOLD_TIME)) && (auto_active == 1)) {
+			auto_ms_button_cnt++;
+
+			switch (auto_ms_button_cnt) {
+				case (1) :
+
 			}
-			IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
-			datalog_press_start_time = HAL_GetTick();
+		}
+		if ((HAL_GetTick() - auto_press_start_time) >= BTN_HOLD_TIME) {
+			if (auto_active == 0) {
+				auto_active = 1;
+			} else {
+				auto_active = 0;
+			}
+			IO_state = (uint8_t) set_n_bit(IO_state, 2, auto_active);
+			auto_press_start_time = HAL_GetTick();
 		} else {
-			IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
+			IO_state = (uint8_t) set_n_bit(IO_state, 2, auto_active);
 		}
 	} else {
-		datalog_press_start_time = HAL_GetTick();
-		IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
+		auto_press_start_time = HAL_GetTick();
+		IO_state = (uint8_t) set_n_bit(IO_state, 2, auto_active);
 	}
 
-	if(datalog_active){
+	if(auto_active){
 		lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
 
 	}else{
@@ -151,14 +195,14 @@ void FEB_IO_ICS_Loop(void) {
 		IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
 	}
 
-	// Button 4 (Auto Mission Control Button)
-	if (received_data & (1 << 4)) {
-		if ((HAL_GetTick() - auto_mission_control_start_time) >= AUTO_MODE_TRIGGER) {
-
-		}
-	} else {
-
-	}
+//	// Button 4 (Auto Mission Control Button)
+//	if (received_data & (1 << 4)) {
+//		if (() >= ) {
+//
+//		}
+//	} else {
+//
+//	}
 
 	// Switch 1 - (Coolant Pump)
 	if ((received_data & (1<<5))) {

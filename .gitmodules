@@ -1,0 +1,6 @@
+[submodule "FEB_CAN_Library_SN4"]
+	path = FEB_CAN_Library_SN4
+	url = https://github.com/Formula-Electric-Berkeley/FEB_CAN_Library_SN4
+[submodule "ICS_Copy/Core/Inc/FEB_CAN_Library_SN$"]
+	path = ICS_Copy/Core/Inc/FEB_CAN_Library_SN$
+	url = https://github.com/Formula-Electric-Berkeley/FEB_CAN_Library_SN4
