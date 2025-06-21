@@ -11,7 +11,7 @@
 // **************************************** Functions ****************************************
 
 void FEB_IO_ICS_Init(void);
-
+void FEB_IO_ICS_Reset_All(void);
 void FEB_IO_ICS_Loop(void);
 
 uint8_t set_n_bit(uint8_t num, uint8_t n, uint8_t bit_value);
