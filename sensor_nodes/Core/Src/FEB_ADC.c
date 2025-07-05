@@ -27,8 +27,6 @@ uint8_t Thermocouple_Data[8];
 uint8_t Lin_Pot_Data[8];
 uint8_t Coolant_Pressure_Data[8];
 
-char buf[164];
-
 // ******************************************** Functions **********************************************
 
 uint16_t StrainGaugeConversion(uint16_t adc_value) {
@@ -52,13 +50,15 @@ uint16_t CoolantPressureConversion(uint16_t adc_value) {
 void UART_Transmit_ADC1_Readings(void) {
 
 	for (int i = 0; i < 4; i++) {
-		sprintf(buf, "Strain Gauge %d: %u\r\n", i, (unsigned) ADC1_Readings[i]);
-		UART_Console(buf);
+		#ifdef DEBUG_ADC_UART_TRANSMIT_ADC1
+		printf("Strain Gauge %d: %u\r\n", i, (unsigned) ADC1_Readings[i]);
+		#endif
 	}
 
 	for (int i = 4; i < 7; i++) {
-		sprintf(buf, "Thermocouple %d: %u\r\n", i, (unsigned) ADC1_Readings[i]);
-		UART_Console(buf);
+		#ifdef DEBUG_ADC_UART_TRANSMIT_ADC1
+		printf("Thermocouple %d: %u\r\n", i, (unsigned) ADC1_Readings[i]);
+		#endif
 	}
 
 }
@@ -66,13 +66,15 @@ void UART_Transmit_ADC1_Readings(void) {
 void UART_Transmit_ADC2_Readings(void) {
 
 	for (int i = 0; i < 2; i++) {
-		sprintf(buf, "Linear Potentiometer %d: %u\r\n", i, (unsigned) ADC2_Readings[i]);
-		UART_Console(buf);
+		#ifdef DEBUG_ADC_UART_TRANSMIT_ADC2
+		printf("Linear Potentiometer %d: %u\r\n", i, (unsigned) ADC2_Readings[i]);
+		#endif
 	}
 
 	for (int i = 2; i < 4; i++) {
-		sprintf(buf, "Coolant Pressure %d: %u\r\n", i, (unsigned) ADC2_Readings[i]);
-		UART_Console(buf);
+		#ifdef DEBUG_ADC_UART_TRANSMIT_ADC2
+		printf("Coolant Pressure %d: %u\r\n", i, (unsigned) ADC2_Readings[i]);
+		#endif
 	}
 
 }

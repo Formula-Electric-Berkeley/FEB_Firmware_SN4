@@ -10,11 +10,6 @@
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart2;
 
-void UART_Console(const char *string)
-{
-    HAL_UART_Transmit(&huart2, (uint8_t*)string, strlen(string), 1000);
-}
-
 void CAN_Transmit(uint16_t CAN_ID, uint8_t TxData[8])
 {
 	CAN_TxHeaderTypeDef TxHeader;
@@ -32,9 +27,9 @@ void CAN_Transmit(uint16_t CAN_ID, uint8_t TxData[8])
 	if (HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
 	{
 		// Transmission request error
-		char msg[50];
-		sprintf(msg, "CAN transmit error");
-		UART_Console(msg);
+		#ifdef DEBUG_COMMS_CAN_TRANSMIT
+		printf("CAN transmit error\r\n");
+		#endif
 //		Error_Handler();
 	}
 }

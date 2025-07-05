@@ -28,7 +28,7 @@ void Tire_Temp_Init(void)
 	HAL_CAN_Start(&hcan2);
 	if (HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
 	{
-//		Error_Handler();
+		Error_Handler();
 	}
 
 	// Configure Tire Temp Sensors
@@ -79,15 +79,14 @@ void Configure_Tire_Temp_Sensor(uint16_t currentCAN_ID, uint16_t newCAN_ID, floa
 		if (HAL_CAN_AddTxMessage(&hcan2, &TxHeader, TxData, &TxMailbox) != HAL_OK)
 		{
 			// Transmission request error
-			char msg[50];
-			sprintf(msg, "CAN transmit error");
-			UART_Transmit(msg);
-//			Error_Handler();
+			#ifdef DEBUG_TIRE_TEMP_CONFIGURE
+			printf("CAN transmit error\r\n");
+			#endif
+			Error_Handler();
 		}
 
 		HAL_Delay(1000);
 	}
-
 }
 
 void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
@@ -105,9 +104,10 @@ void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
 
 		// Send data through UART
 		float temperature = temp_raw * 0.01 - 100;
-		char msg[50];
-		sprintf(msg, "Channel %d Temperature: %d C\n", channelStart + i, (int) temperature);
-		UART_Transmit(msg);
+		
+#ifdef DEBUG_READ_TIRE_TEMP
+		printf("Channel %d Temperature: %d C\r\n", channelStart + i, (int) temperature);
+#endif
 	}
 
 	average_temp /= 4;
@@ -133,7 +133,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
 	    // Retrieve the message
 	    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK) {
-//	    	Error_Handler();
+			#ifdef DEBUG_TIRE_TEMP_CAN_RX
+			printf("CAN receive error\r\n");
+			#endif
+			Error_Handler();
 	    }
 
 	    if ((RxHeader.StdId >> 4) == (TIRE_TEMP_BASE_CAN_ID >> 4)) // Check if the message is from one of the tire temp sensors

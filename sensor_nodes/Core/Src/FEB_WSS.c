@@ -108,9 +108,9 @@ void WSS_Main(void)
 	wss_left = (uint8_t) ((float) ticks_left * TIMER_ELAPSED_HZ / TICKS_PER_ROTATION * 60);
 
 	// Send the wheel speed data
-	char buf[164];
-	sprintf(buf, "Right: %c%d rpm  %d mph\tLeft: %c%d  %d mph\r\n", direction_right, wss_right, direction_left, wss_left, (int) (wss_right * RPM_to_MPH), (int) (wss_left * RPM_to_MPH));
-	UART_Console(buf);
+#ifdef DEBUG_READ_WSS
+	printf("Right: %c%d rpm  %d mph\tLeft: %c%d  %d mph\r\n", direction_right, wss_right, direction_left, wss_left, (int) (wss_right * RPM_to_MPH), (int) (wss_left * RPM_to_MPH));
+#endif
 
 	Fill_WSS_Data();
 

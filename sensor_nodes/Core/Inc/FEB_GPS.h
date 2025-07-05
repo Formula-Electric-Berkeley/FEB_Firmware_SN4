@@ -20,6 +20,16 @@
 #include <stdbool.h>
 #include <string.h>
 
+// **************************************** Debug Macros ****************************************
+
+// GPS debug output - comment out to disable
+#define DEBUG_GPS_PRINTF
+
+// Granular debug macros for GPS functions
+#define DEBUG_GPS_READ_DATA
+#define DEBUG_GPS_PARSE_MESSAGE
+#define DEBUG_GPS_CONVERT_COORDINATES
+
 // **************************************** Functions ****************************************
 
 void Read_GPS_Data(void);

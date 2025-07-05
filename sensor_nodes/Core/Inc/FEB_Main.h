@@ -23,6 +23,10 @@
 #include "FEB_IMU.h"
 #include "FEB_Coolant_ReedSW.h"
 
+// ******************************** Configuration ********************************
+
+#define IS_FRONT_NODE
+
 // ******************************** Functions ********************************
 
 void FEB_Main_Setup(void);

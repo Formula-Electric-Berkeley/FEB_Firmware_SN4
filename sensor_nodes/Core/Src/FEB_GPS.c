@@ -30,9 +30,9 @@ void Read_GPS_Data(void)
 
 	if (HAL_UART_Receive(&huart4, GPS_Buffer, sizeof(GPS_Buffer), HAL_MAX_DELAY) != HAL_OK)
 	{
-		char msg[50];
-		sprintf(msg, "UART GPS receiving error");
-		HAL_UART_Transmit(&huart2, (uint8_t *) msg, sizeof((uint8_t *) msg), HAL_MAX_DELAY);
+		#ifdef DEBUG_GPS_READ_DATA
+		printf("UART GPS receiving error\r\n");
+		#endif
 //		Error_Handler();
 	}
 
@@ -42,7 +42,9 @@ float convertToDegrees(const char *coord) {
     char *dotPos = strchr(coord, '.');  // Find the position of the period
 
     if (dotPos == NULL || (dotPos - coord) < 2) {
-        printf("Invalid coordinate format: %s\n", coord);
+        #ifdef DEBUG_GPS_CONVERT_COORDINATES
+        printf("Invalid coordinate format: %s\r\n", coord);
+        #endif
         return 0.0;
     }
 
@@ -68,9 +70,9 @@ void Parse_NMEA_Message(void)
 {
 	if (HAL_UART_Transmit(&huart2, GPS_Buffer, sizeof(GPS_Buffer), HAL_MAX_DELAY) != HAL_OK)
 	{
-		char msg[50];
-		sprintf(msg, "UART GPS transmitting error");
-		HAL_UART_Transmit(&huart2, (uint8_t *) msg, sizeof((uint8_t *) msg), HAL_MAX_DELAY);
+		#ifdef DEBUG_GPS_PARSE_MESSAGE
+		printf("UART GPS transmitting error\r\n");
+		#endif
 //		Error_Handler();
 	}
 	token = strtok_r((char*) GPS_Buffer, ",", &saveptr);

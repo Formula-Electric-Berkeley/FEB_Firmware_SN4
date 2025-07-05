@@ -17,6 +17,14 @@
 #include <stdio.h>
 #include <string.h>
 
+// ******************************** Configuration ********************************
+
+// Granular debug macros for Tire Temperature functions
+#define DEBUG_READ_TIRE_TEMP
+#define DEBUG_TIRE_TEMP_CONFIGURE
+#define DEBUG_TIRE_TEMP_READ_DATA
+#define DEBUG_TIRE_TEMP_CAN_RX
+
 // ******************************** Functions ********************************
 
 void Tire_Temp_Init(void);

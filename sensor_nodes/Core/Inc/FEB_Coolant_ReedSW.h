@@ -18,6 +18,14 @@
 #include <string.h>
 #include <stdio.h>
 
+// **************************************** Debug Macros ****************************************
+
+// Coolant Reed Switch debug output - comment out to disable
+#define DEBUG_COOLANT_REEDSW_PRINTF
+
+// Granular debug macros for Coolant Reed Switch functions
+#define DEBUG_COOLANT_REEDSW_MAIN
+
 // **************************************** Functions ****************************************
 
 void Coolant_ReedSW_Main(void);

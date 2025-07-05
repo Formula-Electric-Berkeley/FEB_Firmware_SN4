@@ -17,6 +17,17 @@
 #include <stdio.h>
 #include <string.h>
 
+// **************************************** Debug Macros ****************************************
+
+// IMU debug output - comment out to disable
+#define DEBUG_IMU_PRINTF
+
+// Granular debug macros for IMU functions
+#define DEBUG_IMU_I2C_SCAN
+#define DEBUG_IMU_BNO08X_INIT
+#define DEBUG_IMU_READ_PACKET
+#define DEBUG_IMU_GET_RAW_DATA
+
 // **************************************** Variables ****************************************
 
 // Define BNO085 I2C Address

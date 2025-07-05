@@ -15,6 +15,12 @@
 #include <stdio.h>
 #include <string.h>
 
+// **************************************** Debug Macros ****************************************
+
+// Granular debug macros for Comms functions
+#define DEBUG_COMMS_PRINTF
+#define DEBUG_COMMS_CAN_TRANSMIT
+
 // ************************************** CAN Constants ***************************************
 
 #define IS_FRONT_NODE 0

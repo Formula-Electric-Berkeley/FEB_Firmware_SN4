@@ -17,6 +17,15 @@
 #include <stdio.h>
 #include <string.h>
 
+// **************************************** Debug Macros ****************************************
+
+// ADC debug output - comment out to disable
+#define DEBUG_ADC_PRINTF
+
+// Granular debug macros for ADC functions
+#define DEBUG_ADC_UART_TRANSMIT_ADC1
+#define DEBUG_ADC_UART_TRANSMIT_ADC2
+
 // **************************************** Functions ****************************************
 
 uint16_t StrainGaugeConversion(uint16_t adc_value);

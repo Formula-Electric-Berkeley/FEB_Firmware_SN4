@@ -11,9 +11,9 @@ void Coolant_ReedSW_Main(void) {
 
 	Coolant_Reed_SW_Data[0] = SWstate;
 
-	char buf[164];
-	sprintf(buf, "Coolant Reed Switch: %u\n", SWstate);
-	UART_Console(buf);
+	#ifdef DEBUG_COOLANT_REEDSW_MAIN
+	printf("Coolant Reed Switch: %u\r\n", SWstate);
+	#endif
 
 	CAN_Transmit(CAN_ID_COOLANT_REED_SW, Coolant_Reed_SW_Data);
 }
