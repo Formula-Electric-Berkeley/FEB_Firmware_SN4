@@ -114,11 +114,11 @@ void WSS_Main(void)
 
 	Fill_WSS_Data();
 
-	if (IS_FRONT_NODE) {
+#ifdef IS_FRONT_NODE
 		CAN_Transmit(CAN_ID_WSS_FRONT, WSS_Data);
-	} else {
+#else
 		CAN_Transmit(CAN_ID_WSS_REAR, WSS_Data);
-	}
+#endif
 
 }
 

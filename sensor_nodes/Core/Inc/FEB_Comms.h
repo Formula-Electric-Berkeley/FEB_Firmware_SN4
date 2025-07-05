@@ -23,8 +23,6 @@
 
 // ************************************** CAN Constants ***************************************
 
-#define IS_FRONT_NODE 0
-
 // ADCs
 #define CAN_ID_LIN_POT_FRONT 0x500
 #define CAN_ID_LIN_POT_REAR 0x501

@@ -147,9 +147,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 		Fill_Strain_Gauge_Data();
 
-		if (!IS_FRONT_NODE) {
+#ifndef IS_FRONT_NODE
 			Fill_Thermocouple_Data();
-		}
+#endif
 	}
 
 	if (hadc->Instance == ADC2) {
@@ -157,9 +157,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 		Fill_Lin_Pot_Data();
 
-		if (!IS_FRONT_NODE) {
+#ifndef IS_FRONT_NODE
 			Fill_Coolant_Pressure_Data();
-		}
+#endif
 	}
 
 }
@@ -190,20 +190,16 @@ void ADC_Main(void) {
 	HAL_ADC_Stop(&hadc2);
 
 
-	if (IS_FRONT_NODE) {
-
+#ifdef IS_FRONT_NODE
 		CAN_Transmit(CAN_ID_LIN_POT_FRONT, Lin_Pot_Data);
 		CAN_Transmit(CAN_ID_STRAIN_GAUGE_FRONT, Strain_Gauge_Data);
-
-	} else {
-
+#else
 		CAN_Transmit(CAN_ID_LIN_POT_REAR, Lin_Pot_Data);
 		CAN_Transmit(CAN_ID_STRAIN_GAUGE_REAR, Strain_Gauge_Data);
 
 		CAN_Transmit(CAN_ID_COOLANT_PRESSURE, Coolant_Pressure_Data);
 		CAN_Transmit(CAN_ID_THERMOCOUPLE, Thermocouple_Data);
-
-	}
+#endif
 
 }
 

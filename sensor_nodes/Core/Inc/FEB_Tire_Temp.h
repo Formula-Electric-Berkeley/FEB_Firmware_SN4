@@ -10,12 +10,14 @@
 
 // ******************************** Includes ********************************
 
-#include "FEB_Comms.h"
-
 #include "stm32f4xx_hal.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "main.h"
+
+#include "FEB_Main.h"
 
 // ******************************** Configuration ********************************
 
