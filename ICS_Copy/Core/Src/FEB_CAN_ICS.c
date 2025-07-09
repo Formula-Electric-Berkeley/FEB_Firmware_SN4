@@ -96,8 +96,9 @@ void FEB_CAN_ICS_Rx_Handler(CAN_RxHeaderTypeDef *FEB_CAN_Rx_Header, uint8_t FEB_
 			uint16_t x5 = ICS_UI_Values.motor_speed;
 			break;
 		case FEB_CAN_LVPDB_FLAGS_BUS_VOLTAGE_LV_CURRENT_FRAME_ID:
-			lv_voltage = (FEB_CAN_Rx_Data[6] << 8) | FEB_CAN_Rx_Data[5];
+			lv_voltage = (FEB_CAN_Rx_Data[5] << 8) | FEB_CAN_Rx_Data[4];
 			break;
+
 //		case FEB_CAN_ID_IVT_VOLTAGE_1:
 //			ICS_UI_Values.ivt_voltage = ((FEB_CAN_Rx_Data[2] << 24) + (FEB_CAN_Rx_Data[3] << 16) + (FEB_CAN_Rx_Data[4] << 8) + FEB_CAN_Rx_Data[5]) * 0.001;
 //			break;
