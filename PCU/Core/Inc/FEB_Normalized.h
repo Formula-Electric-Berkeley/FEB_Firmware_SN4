@@ -19,6 +19,7 @@
 void FEB_Read_Accel_Pedal1();
 void FEB_Read_Accel_Pedal2();
 void FEB_Read_Brake_Pedal();
+uint16_t FEB_Read_ADC(uint32_t channel);
 
 float FEB_Normalized_getAcc();
 void FEB_Normalized_setAcc0();

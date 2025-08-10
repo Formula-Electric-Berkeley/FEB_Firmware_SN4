@@ -68,6 +68,7 @@ void FEB_Main_While(void){
 
 	FEB_Normalized_CAN_sendBrake();
 	FEB_CAN_HEARTBEAT_Transmit();
+	FEB_CAN_ACC();
 	FEB_CAN_TPS_Transmit();
 
 	HAL_Delay(10);
