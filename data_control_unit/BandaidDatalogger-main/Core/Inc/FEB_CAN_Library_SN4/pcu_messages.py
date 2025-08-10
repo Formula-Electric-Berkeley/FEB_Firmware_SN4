@@ -188,6 +188,32 @@ def get_tps_voltage_current(frame_id: int):
 
     return msg
 
+def get_raw_acc(frame_id: int):    
+    pcu_acc0_signal = cantools.db.Signal(
+        name="acc0",
+        start=0,
+        length=16,
+        byte_order="little_endian",
+    )
+    
+    pcu_acc1_signal = cantools.db.Signal(
+        name="acc1",
+        start=16,
+        length=16,
+        byte_order="little_endian",
+    )
+
+    msg = cantools.db.Message(
+        frame_id=frame_id,
+        name="pcu_raw_acc",
+        length=4,
+        signals=[pcu_acc0_signal, pcu_acc1_signal],
+        comment="PCU RAW ACC ADC",
+        strict=True
+    )
+
+    return msg
+
 def get_pcu_heartbeat(frame_id: int):
     error0 = cantools.db.Signal(name="error0", start=0, length=1, byte_order="little_endian", is_signed=False)
     error1 = cantools.db.Signal(name="error1", start=1, length=1, byte_order="little_endian", is_signed=False)

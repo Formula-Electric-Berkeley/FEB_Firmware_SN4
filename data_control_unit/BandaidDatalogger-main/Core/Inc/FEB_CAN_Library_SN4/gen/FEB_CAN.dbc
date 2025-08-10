@@ -547,6 +547,10 @@ BO_ 226 FEB_PING_PONG_counter3: 8 Vector__XXX
 BO_ 227 FEB_PING_PONG_counter4: 8 Vector__XXX
  SG_ counter : 0|32@1- (1,0) [0|0] "" Vector__XXX
 
+BO_ 255 pcu_raw_acc: 4 Vector__XXX
+ SG_ acc1 : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ acc0 : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
 
 
 
@@ -579,6 +583,7 @@ CM_ BO_ 224 "PING PONG counter1.";
 CM_ BO_ 225 "PING PONG counter2.";
 CM_ BO_ 226 "PING PONG counter3.";
 CM_ BO_ 227 "PING PONG counter4.";
+CM_ BO_ 255 "PCU RAW ACC ADC";
 BA_DEF_ BO_  "SystemMessageLongSymbol" STRING ;
 BA_DEF_DEF_  "SystemMessageLongSymbol" "";
 BA_ "SystemMessageLongSymbol" BO_ 22 "lvpdb_flags_bus_voltage_lv_current";

@@ -13,11 +13,16 @@ import dart_messages as dart_msg
 import iv_meter_messages as iv_meter_msg
 import ping_pong_messages as ping_pong_msg
 
+import res_messages as res_msg
+
 
 
 # List of functions, used to generate CAN messages.
 MESSAGE_GEN_LIST = [
-    #0x0-0x3
+    #0x0
+    #res_msg.get_res_state,
+
+    #0x0-0x4
     bms_msg.get_bms_state,
     bms_msg.get_bms_cell_data,
     bms_msg.get_accumulator_voltage, 
@@ -91,13 +96,19 @@ MESSAGE_GEN_LIST = [
     ping_pong_msg.get_ping_pong_counter1,
     ping_pong_msg.get_ping_pong_counter2,
     ping_pong_msg.get_ping_pong_counter3,
-    ping_pong_msg.get_ping_pong_counter4
+    ping_pong_msg.get_ping_pong_counter4,
+
+    #0xff
+    pcu_msg.get_raw_acc,
 ]
 
 # List of priority assignments for each CAN message above
 MESSAGE_GEN_ID = [
+    #RES
+    #0,
+
     #BMS
-    0, 1, 2, 3, 4, 
+    0, 1, 2, 3, 4,
 
     #PCU break and BSDPD
     9, 10,
@@ -124,7 +135,10 @@ MESSAGE_GEN_ID = [
     208, 209, 210, 211, 212, 213,
 
     #PING PONG
-    224, 225, 226, 227
+    224, 225, 226, 227,
+
+    #RAW ACC
+    255,
 ]
 
 def main():
