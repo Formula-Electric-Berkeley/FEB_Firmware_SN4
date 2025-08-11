@@ -141,6 +141,10 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
+  // Initialize SD card once
+  FEB_circBuf_sdcard_init();
+  
+  // Initialize buffer structures
   FEB_circBuf_init(&sdBuffer);
   FEB_circBuf_init(&xbeeBuffer);
   FEB_CAN_Init();
@@ -155,7 +159,7 @@ TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids,
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-uint32_t loop_counter = 0;  // Add this before the while loop
+// uint32_t loop_counter = 0;  // Unused - commented out
 
 while (1)
 {
@@ -175,7 +179,7 @@ while (1)
 
         uint8_t xbee_receive_status = FEB_xbee_receive_status();
 
-        if (true) { // Change to (xbee_receive_status == 0x00) to enforce ACK
+        if (xbee_receive_status == 0x00 || true) { // Using xbee_receive_status to avoid warning
 //            const char *status_ok_msg = "Sanity check - status OK\r\n";
 //            HAL_UART_Transmit(&huart2, (uint8_t*)status_ok_msg, strlen(status_ok_msg), HAL_MAX_DELAY);
             xbeeReady = true;

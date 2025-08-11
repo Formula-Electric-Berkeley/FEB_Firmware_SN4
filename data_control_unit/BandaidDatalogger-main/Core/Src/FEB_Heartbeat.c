@@ -44,6 +44,8 @@ uint8_t FEB_CAN_HEARTBEAT_Filter_Config(CAN_HandleTypeDef* hcan, uint8_t FIFO_as
 }
 */
 
+// DISABLED: CAN transmit disabled for data logger operation
+/*
 void FEB_CAN_HEARTBEAT_Transmit() {
 
     FEB_CAN_Tx_Header.StdId = FEB_CAN_DCU_HEARTBEAT_FRAME_ID;
@@ -60,6 +62,11 @@ void FEB_CAN_HEARTBEAT_Transmit() {
 		// Code Error - Shutdown
 	}
 
+}
+*/
+void FEB_CAN_HEARTBEAT_Transmit() {
+    // DISABLED: CAN transmit disabled for data logger operation
+    return;
 }
 
 void FEB_CAN_HEARTBEAT_Init() {

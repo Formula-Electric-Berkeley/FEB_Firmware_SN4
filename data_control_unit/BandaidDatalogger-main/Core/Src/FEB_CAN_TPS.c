@@ -12,6 +12,8 @@ extern uint8_t tps2482_i2c_addresses[1];
 #define FLOAT_TO_INT16_T(n)			((int16_t)(n * 1000)) // for voltage (mV)
 #define SIGN_MAGNITUDE(n)			(int16_t)((((n >> 15) & 0x01) == 1) ? -(n & 0x7FFF) : (n & 0x7FFF)) // for current reg
 
+// DISABLED: CAN transmit disabled for data logger operation
+/*
 void FEB_CAN_TPS_Transmit() {
     uint16_t voltage_raw;
     TPS2482_Poll_Bus_Voltage(&hi2c1, tps2482_i2c_addresses, (uint16_t *) &voltage_raw, 1);
@@ -44,4 +46,9 @@ void FEB_CAN_TPS_Transmit() {
 	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
 		// Code Error - Shutdown
 	}
+}
+*/
+void FEB_CAN_TPS_Transmit() {
+    // DISABLED: CAN transmit disabled for data logger operation
+    return;
 }

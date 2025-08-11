@@ -21,7 +21,7 @@ uint8_t FEB_CAN_Rx_Data[8];
 
 uint32_t FEB_CAN_Tx_Mailbox;
 
-bool logging = false;
+bool logging = true;  // Enable logging by default for data logger
 
 // **************************************** Functions **************************************** //
 

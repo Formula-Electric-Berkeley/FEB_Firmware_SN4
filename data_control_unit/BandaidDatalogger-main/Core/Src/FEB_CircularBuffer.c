@@ -21,32 +21,22 @@ uint32_t totalSpace, freeSpace;
 uint8_t iteration;
 
 
-//----CIRCBUF INIT----//
-/* Will mount SD card and initialize the CSV file depending on space */
-void FEB_circBuf_init(circBuffer *cb)
+//----SD CARD INIT----//
+/* Initialize SD card and create log file - call once only */
+static bool sd_initialized = false;
+void FEB_circBuf_sdcard_init(void)
 {
-   // Circular buffer initialization
-   if (cb->buffer == NULL) {
-    printf("Error! Memory not allocated for buffer.");
-    exit(0);
+  // Only initialize SD card once
+  if (sd_initialized) {
+    return;
   }
-
-  for (size_t i = 0; i < 64; i++) {
-    memset(cb->buffer[i].data, 0, 8);
-    cb->buffer[i].id = 0;
-  }
-
-  cb->capacity = 64;
-  cb->count = 0;
-  cb->write = 0;
-  cb->read = 0;
 
   // Mount SD card
   fres = f_mount(&fs, "",1);
   if (fres!= FR_OK){
-	  HAL_UART_Transmit(&huart2, "Error mounting SD Card \r\n", 27, HAL_MAX_DELAY);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)"Error mounting SD Card \r\n", 27, HAL_MAX_DELAY);
   }else{
-	  HAL_UART_Transmit(&huart2, "SD Card mounted successfully \r\n", 32, HAL_MAX_DELAY);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)"SD Card mounted successfully \r\n", 32, HAL_MAX_DELAY);
   }
 
   f_getfree("", &fre_clust, &pfs);
@@ -66,7 +56,7 @@ void FEB_circBuf_init(circBuffer *cb)
   FRESULT fres;
   DIR dir;
   FILINFO fno;
-  int maxRunNum = -1;  // Start at -1 so even 'run.csv' counts as 0
+  int maxRunNum = -1;  // Start at -1 to indicate no files found
 
   // Open the directory (root in this case)
   fres = f_opendir(&dir, "");
@@ -77,36 +67,79 @@ void FEB_circBuf_init(circBuffer *cb)
 
           // Check if file name starts with "run" and ends with ".csv"
           if (strstr(fno.fname, "run") == fno.fname && strstr(fno.fname, ".csv")) {
-              int runNum = 0;
+              int runNum = -1;
+              int scanned = 0;
 
-              // Match "run.csv" as 0 or "runX.csv" where X is number
+              // Try to extract run number from filename
               if (strcmp(fno.fname, "run.csv") == 0) {
-                  runNum = 0;
+                  runNum = 0;  // Base case: "run.csv" is run number 0
+                  scanned = 1;
               } else {
-                  sscanf(fno.fname, "run%d.csv", &runNum);
+                  // Try to parse "runX.csv" format where X is a number
+                  scanned = sscanf(fno.fname, "run%d.csv", &runNum);
               }
 
-              if (runNum > maxRunNum) {
+              // Only update maxRunNum if we successfully parsed a valid number
+              if (scanned == 1 && runNum >= 0 && runNum > maxRunNum) {
                   maxRunNum = runNum;
               }
           }
       }
       f_closedir(&dir);
+  } else {
+      // Directory open failed - report error but continue
+      HAL_UART_Transmit(&huart2, (uint8_t*)"Warning: Cannot read SD directory\r\n", 34, HAL_MAX_DELAY);
   }
 
-  // Generate new file name
+  // Generate new file name based on found files
   if (maxRunNum < 0) {
-      strcpy(newFileName, "run.csv");  // No runs found, use default
+      // No valid run files found, start with run.csv (run number 0)
+      strcpy(newFileName, "run.csv");
   } else {
+      // Create next sequential run file
       sprintf(newFileName, "run%d.csv", maxRunNum + 1);
   }
+
+  // Report which file we're creating
+  char msg[80];  // Increased size to avoid overflow warning
+  sprintf(msg, "Creating new log file: %s\r\n", newFileName);
+  HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 
   // Open the file for writing
   fres = f_open(&fil, newFileName, FA_CREATE_ALWAYS | FA_WRITE);
   if (fres != FR_OK) {
-      HAL_UART_Transmit(&huart2, "Can't open new run file\r\n", 26, HAL_MAX_DELAY);
+      sprintf(msg, "ERROR: Cannot create file %s (Error: %d)\r\n", newFileName, fres);
+      HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
       return;
   }
+
+  // Write CSV header
+  fres = f_write(&fil, "Timestamp(ms), CAN_ID, Byte0, Byte1, Byte2, Byte3, Byte4, Byte5, Byte6, Byte7\n", 79, &bw);
+  if (fres == FR_OK) {
+      f_sync(&fil);  // Ensure header is written to SD card
+      HAL_UART_Transmit(&huart2, (uint8_t*)"CSV header written successfully\r\n", 33, HAL_MAX_DELAY);
+  } else {
+      HAL_UART_Transmit(&huart2, (uint8_t*)"ERROR: Cannot write CSV header\r\n", 32, HAL_MAX_DELAY);
+  }
+  
+  // Mark SD card as initialized
+  sd_initialized = true;
+}
+
+//----CIRCBUF INIT----//
+/* Initialize circular buffer structure only */
+void FEB_circBuf_init(circBuffer *cb)
+{
+  // Circular buffer initialization
+  for (size_t i = 0; i < 64; i++) {
+    memset(cb->buffer[i].data, 0, 8);
+    cb->buffer[i].id = 0;
+  }
+
+  cb->capacity = 64;
+  cb->count = 0;
+  cb->write = 0;
+  cb->read = 0;
 }
 
 // Buffer for data write
@@ -172,20 +205,20 @@ void FEB_circBuf_read(circBuffer *cb) {
         return;
     }
 
-    // Timestamp
-    int size_len = sprintf(str, "Time(ms): %ld \r\n", cb->buffer[cb->read].timestamp);
+    // Timestamp (for debugging, currently unused)
+    (void)sprintf(str, "Time(ms): %lu \r\n", (unsigned long)cb->buffer[cb->read].timestamp);
     //HAL_UART_Transmit(&huart2, (uint8_t*) str, size_len , HAL_MAX_DELAY);
 
     // Move to end of file
     fres = f_lseek(&fil, f_size(&fil));
     if(fres != FR_OK){
-        HAL_UART_Transmit(&huart2, "Can't find eof\r\n", 15, HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart2, (uint8_t*)"Can't find eof\r\n", 15, HAL_MAX_DELAY);
         f_close(&fil);
         return;
     }
 
     // Write CSV data
-    int len = snprintf(strToWrite, sizeof(strToWrite), "%u, 0x%04X", cb->buffer[cb->read].timestamp, cb->buffer[cb->read].id);
+    int len = snprintf(strToWrite, sizeof(strToWrite), "%lu, 0x%04lX", (unsigned long)cb->buffer[cb->read].timestamp, (unsigned long)cb->buffer[cb->read].id);
     for (int j = 0; j < 8; j++) {
         len += snprintf(strToWrite + len, sizeof(strToWrite) - len, ", %u", cb->buffer[cb->read].data[j]);
     }
@@ -200,13 +233,13 @@ void FEB_circBuf_read(circBuffer *cb) {
 
     //HAL_UART_Transmit(&huart2, (uint8_t*)"Wrote\r\n", 20, HAL_MAX_DELAY);
 
-    // Print ID
-    size_len = sprintf(str, "ID: %ld \n\r", cb->buffer[cb->read].id);
+    // Print ID (for debugging, currently unused)
+    (void)sprintf(str, "ID: %lu \n\r", (unsigned long)cb->buffer[cb->read].id);
     //HAL_UART_Transmit(&huart2, (uint8_t*) str, size_len , HAL_MAX_DELAY);
 
-    // Print Byte Data
+    // Print Byte Data (for debugging, currently unused)
     for (int i = 0; i < 8; i++) {
-        int size_len = sprintf(str, "\t Byte: %d \n\r", cb->buffer[cb->read].data[i]);
+        (void)sprintf(str, "\t Byte: %d \n\r", cb->buffer[cb->read].data[i]);
         //HAL_UART_Transmit(&huart2, (uint8_t*) str, size_len , HAL_MAX_DELAY);
     }
 
@@ -221,7 +254,7 @@ void FEB_circBuf_read(circBuffer *cb) {
     if(iteration >= 5){
         fres = f_sync(&fil);
         if(fres != FR_OK){
-            HAL_UART_Transmit(&huart2, "Can't sync data \n\r", 15, HAL_MAX_DELAY);
+            HAL_UART_Transmit(&huart2, (uint8_t*)"Can't sync data \n\r", 15, HAL_MAX_DELAY);
             f_close(&fil);
             return;
         }

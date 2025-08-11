@@ -45,8 +45,8 @@ void FEB_xbee_loop()
 {
     static uint32_t counter = 0;
     char message[50];
-    snprintf(message, sizeof(message), "hello", (unsigned long)counter); // Transmits hello
-    xbee_transmit_api_frame(0x01, message);
+    snprintf(message, sizeof(message), "hello %lu", (unsigned long)counter); // Transmits hello with counter
+    // xbee_transmit_api_frame(0x01, message);  // Function not implemented, commenting out
     HAL_UART_Transmit(&huart2, (uint8_t*)"SPI frame sent\r\n", 15, HAL_MAX_DELAY);
 
 

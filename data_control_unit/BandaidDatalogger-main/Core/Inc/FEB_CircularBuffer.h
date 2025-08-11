@@ -25,7 +25,8 @@ typedef struct circBuffer {
 } circBuffer;
 
 // Function prototypes
-void FEB_circBuf_init(circBuffer *cb);
+void FEB_circBuf_sdcard_init(void);  // Initialize SD card once
+void FEB_circBuf_init(circBuffer *cb);  // Initialize buffer structure
 void FEB_circBuf_write(circBuffer *cb, uint32_t rec_id, uint8_t *rec_data);
 void FEB_circBuf_read(circBuffer *cb);
 void FEB_circBuf_dummy(circBuffer *cb);
