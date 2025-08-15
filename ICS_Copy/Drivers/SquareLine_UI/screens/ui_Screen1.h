@@ -14,15 +14,16 @@ extern "C" {
 extern void ui_Screen1_screen_init(void);
 extern void ui_Screen1_screen_destroy(void);
 extern lv_obj_t * ui_Screen1;
-extern lv_obj_t * ui_uiRegenPanel;
-extern lv_obj_t * ui_RegenText;
 extern lv_obj_t * ui_uiSoCPanel;
-extern lv_obj_t * ui_BarSoC;
-extern lv_obj_t * ui_SoCText;
-extern lv_obj_t * ui_SoCNumerical;
+extern lv_obj_t * ui_hvSoC;
+extern lv_obj_t * ui_PackVoltageText;
+extern lv_obj_t * ui_PackNumerical;
 extern lv_obj_t * ui_BarTemp;
 extern lv_obj_t * ui_tempText;
 extern lv_obj_t * ui_tempNumerical;
+extern lv_obj_t * ui_lvSoC;
+extern lv_obj_t * ui_LVText1;
+extern lv_obj_t * ui_LVNumerical;
 extern lv_obj_t * ui_hvState;
 extern lv_obj_t * ui_speedNumerical;
 extern lv_obj_t * ui_speedText;
@@ -39,10 +40,6 @@ extern lv_obj_t * ui_AccFanText;
 extern lv_obj_t * ui_RTDText;
 extern lv_obj_t * ui_ButtonDataLog;
 extern lv_obj_t * ui_DataLogText;
-extern lv_obj_t * ui_ButtonAutoOn;
-extern lv_obj_t * ui_AutoOnText;
-extern lv_obj_t * ui_uiAutoMissionPanel;
-extern lv_obj_t * ui_AutoMissionSelect;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

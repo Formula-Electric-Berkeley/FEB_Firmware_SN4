@@ -43,4 +43,6 @@ void TEMP_Set_Value(float acc_temp);
 
 void SPEED_Set_Value(float motor_speed_rpm);
 
+void LV_Set_Value(void);
+
 #endif /* INC_FEB_UI_H_ */

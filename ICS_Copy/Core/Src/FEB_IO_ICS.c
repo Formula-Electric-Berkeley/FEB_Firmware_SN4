@@ -5,10 +5,8 @@ extern UART_HandleTypeDef huart3;
 
 #define IOEXP_ADDR ((uint16_t) 0x20)
 #define BTN_HOLD_TIME ((uint32_t) 2000)
-#define MSN_BTN_HOLD_TIME ((uint32_t) 250)
 #define RTD_BUZZER_TIME ((uint32_t) 2000)
 #define RTD_BUZZER_EXIT_TIME ((uint32_t)500)
-//#define AUTO_MODE_TRIGGER ((uint32_t) )
 
 static uint32_t rtd_press_start_time;
 static uint32_t rtd_buzzer_start_time = 0;
@@ -22,25 +20,15 @@ static uint8_t entered_drive = 0;
 static uint8_t exited_drive = 0;
 static uint32_t exit_buzzer_start_time = 0;
 
-//static uint32_t datalog_press_start_time = 0;
-//static uint8_t datalog_active = 0;
+static uint32_t datalog_press_start_time = 0;
+static uint8_t datalog_active = 0;
 
 static uint32_t button3_start_time = 0;
 static uint8_t button3_active = 0;
 //static uint8_t button2_last = 0;
 
-static uint32_t auto_press_start_time = 0;
-static uint8_t auto_active = 0;
-static uint8_t auto_ms_button_cnt = 0;
-
-typedef enum {
-    NONE,
-	AUTOCROSS,
-	EBS_TEST,
-	INSPECTION,
-	MANUAL_DRIVE
-} auto_mission_state;
-
+static uint8_t tssi_startup = 0;
+static uint8_t imd_startup = 0;
 
 // **************************************** Functions ****************************************
 
@@ -50,6 +38,23 @@ void FEB_IO_ICS_Init(void) {
 	uint8_t initial_io_exp_state = 0xF;
 	HAL_I2C_Master_Transmit(&hi2c1, IOEXP_ADDR << 1, &initial_io_exp_state, sizeof(initial_io_exp_state), HAL_MAX_DELAY);
 	bms_state = FEB_CAN_BMS_Get_State();
+}
+
+void FEB_IO_ICS_Reset_All(void) {
+    rtd_press_start_time = 0;
+    rtd_buzzer_start_time = 0;
+    set_rtd_buzzer = 1;
+    r2d = 0;
+
+    entered_drive = 0;
+    exited_drive = 0;
+    exit_buzzer_start_time = 0;
+
+    datalog_press_start_time = 0;
+    datalog_active = 0;
+
+    button3_start_time = 0;
+    button3_active = 0;
 }
 
 void FEB_IO_ICS_Loop(void) {
@@ -64,12 +69,33 @@ void FEB_IO_ICS_Loop(void) {
 	prev_state = bms_state;
 	bms_state = FEB_CAN_BMS_Get_State();
 
+	// Reset all variables
+	if (bms_state == FEB_SM_ST_LV) {
+	    FEB_IO_ICS_Reset_All();
+	}
+
 	// TSSI
 	if (FEB_CAN_BMS_GET_FAULTS()) {
-		HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_RESET);
+		if(tssi_startup){
+			HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_RESET);
+		} else{
+			HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_SET);
+		}
 	} else {
+		tssi_startup = 1;
 		HAL_GPIO_WritePin(GPIOG, GPIO_PIN_10, GPIO_PIN_SET);
 	}
+
+	if (FEB_CAN_GET_IMD_FAULT()) {
+			if(imd_startup){
+				HAL_GPIO_WritePin(GPIOG, GPIO_PIN_13, GPIO_PIN_SET);
+			} else{
+				HAL_GPIO_WritePin(GPIOG, GPIO_PIN_13, GPIO_PIN_RESET);
+			}
+		} else {
+			imd_startup = 1;
+			HAL_GPIO_WritePin(GPIOG, GPIO_PIN_13, GPIO_PIN_RESET);
+		}
 
 	// Buzzer Logic
 	if (prev_state == FEB_SM_ST_ENERGIZED && bms_state == FEB_SM_ST_DRIVE) {
@@ -89,6 +115,7 @@ void FEB_IO_ICS_Loop(void) {
 		lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0xFFFF00), LV_PART_MAIN | LV_STATE_DEFAULT );
 	}else {
 		lv_obj_set_style_bg_color(ui_ButtonRTD, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+		r2d = 0;
 	}
 
 	// Button 1 - Ready-to-Drive (RTD) button
@@ -117,58 +144,25 @@ void FEB_IO_ICS_Loop(void) {
 	    IO_state = (uint8_t) set_n_bit(IO_state, 1, r2d);
 	}
 
-//	// Button 2 - Data Logger
-//	if (received_data & (1 << 2)) {
-//		if ((HAL_GetTick() - datalog_press_start_time) >= BTN_HOLD_TIME) {
-//			if (datalog_active == 0){
-//				datalog_active = 1;
-//			} else {
-//				datalog_active = 0;
-//			}
-//			IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
-//			datalog_press_start_time = HAL_GetTick();
-//		} else {
-//			IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
-//		}
-//	} else {
-//		datalog_press_start_time = HAL_GetTick();
-//		IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
-//	}
-//
-//	if(datalog_active){
-//		lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
-//
-//	}else{
-//		lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
-//	}
-
-	// Button 2 - Replacing Data Logger button with auto
+	// Button 2 - Data Logger
 	if (received_data & (1 << 2)) {
-		if ((((HAL_GetTick() - auto_press_start_time) >= MSN_BTN_HOLD_TIME) && ((HAL_GetTick() - auto_press_start_time) < BTN_HOLD_TIME)) && (auto_active == 1)) {
-			auto_ms_button_cnt++;
-
-			switch (auto_ms_button_cnt) {
-				case (1) :
-
-			}
-		}
-		if ((HAL_GetTick() - auto_press_start_time) >= BTN_HOLD_TIME) {
-			if (auto_active == 0) {
-				auto_active = 1;
-			} else {
-				auto_active = 0;
-			}
-			IO_state = (uint8_t) set_n_bit(IO_state, 2, auto_active);
-			auto_press_start_time = HAL_GetTick();
+		    if ((HAL_GetTick() - datalog_press_start_time) >= BTN_HOLD_TIME) {
+		    	if (datalog_active == 0){
+		    		datalog_active = 1;
+		    	} else {
+		    		datalog_active = 0;
+		    	}
+		    	IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
+		    	datalog_press_start_time = HAL_GetTick();
+		    } else {
+		        IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
+		    }
 		} else {
-			IO_state = (uint8_t) set_n_bit(IO_state, 2, auto_active);
+			datalog_press_start_time = HAL_GetTick();
+		    IO_state = (uint8_t) set_n_bit(IO_state, 2, datalog_active);
 		}
-	} else {
-		auto_press_start_time = HAL_GetTick();
-		IO_state = (uint8_t) set_n_bit(IO_state, 2, auto_active);
-	}
 
-	if(auto_active){
+	if(datalog_active){
 		lv_obj_set_style_bg_color(ui_ButtonDataLog, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
 
 	}else{
@@ -176,33 +170,24 @@ void FEB_IO_ICS_Loop(void) {
 	}
 
 	// Button 3 (Temp Coolant Pump)
-	if (received_data & (1 << 3)) {
-		if ((HAL_GetTick() - button3_start_time) >= RTD_BUZZER_EXIT_TIME) {
-			if (button3_active == 0){
-				button3_active = 1;
-				lv_obj_set_style_bg_color(ui_ButtonCoolPump, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
-			} else {
-				button3_active = 0;
-				lv_obj_set_style_bg_color(ui_ButtonCoolPump, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
-			}
-			IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
-			button3_start_time = HAL_GetTick();
-		} else {
-			IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
-		}
-	} else {
-		button3_start_time = HAL_GetTick();
-		IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
-	}
-
-//	// Button 4 (Auto Mission Control Button)
-//	if (received_data & (1 << 4)) {
-//		if (() >= ) {
-//
-//		}
-//	} else {
-//
-//	}
+	// if (received_data & (1 << 3)) {
+	// 	    if ((HAL_GetTick() - button3_start_time) >= RTD_BUZZER_EXIT_TIME) {
+	// 	    	if (button3_active == 0){
+	// 	    		button3_active = 1;
+	// 				lv_obj_set_style_bg_color(ui_ButtonCoolPump, lv_color_hex(0x019F02), LV_PART_MAIN | LV_STATE_DEFAULT );
+	// 	    	} else {
+	// 	    		button3_active = 0;
+	// 				lv_obj_set_style_bg_color(ui_ButtonCoolPump, lv_color_hex(0xFE0000), LV_PART_MAIN | LV_STATE_DEFAULT );
+	// 	    	}
+	// 	    	IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
+	// 	    	button3_start_time = HAL_GetTick();
+	// 	    } else {
+	// 	        IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
+	// 	    }
+	// 	} else {
+	// 		button3_start_time = HAL_GetTick();
+	// 	    IO_state = (uint8_t) set_n_bit(IO_state, 5, button3_active);
+	// 	}
 
 	// Switch 1 - (Coolant Pump)
 	if ((received_data & (1<<5))) {
