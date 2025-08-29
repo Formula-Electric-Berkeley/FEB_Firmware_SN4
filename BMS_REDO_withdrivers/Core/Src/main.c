@@ -117,6 +117,7 @@ int main(void)
 	  FEB_Task_ADBMS();
 	  FEB_Task_SM();
 	  FEB_Task_Charge();
+//	  Uncomment for balancing
 //	  FEB_Task_Balance();
 	  FEB_Task_IVT();
 	  FEB_Task_CAN();
@@ -455,3 +456,4 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
