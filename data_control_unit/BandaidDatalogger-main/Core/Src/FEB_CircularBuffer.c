@@ -151,28 +151,46 @@ char messToWrite[128];
 /* Will check for space and write data into buffer */
 void FEB_circBuf_write(circBuffer *cb, uint32_t rec_id, uint8_t *rec_data)
 {
-  if (cb->count == cb->capacity) {
-    printf("Error! No space to write.\r\n");
-    return;
-  }
+    if (cb == NULL || rec_data == NULL) {
+        return;
+    }
+    
+    /* Implement overflow protection for SD buffer */
+    if (cb->count >= cb->capacity) {
+        /* Buffer full - overwrite oldest entry (FIFO behavior) */
+        cb->read = (cb->read + 1) % cb->capacity;
+        cb->count--;
+        
+        /* Optional: log overflow warning */
+        static uint32_t last_sd_overflow_warning = 0;
+        uint32_t now = HAL_GetTick();
+        if (now - last_sd_overflow_warning > 10000) { /* Throttle warnings to every 10 seconds */
+            HAL_UART_Transmit(&huart2, (uint8_t*)"WARN: SD buffer overflow\r\n", 26, 100);
+            last_sd_overflow_warning = now;
+        }
+    }
 
-  // Write data into buffer
-  memcpy(cb->buffer[cb->write].data, rec_data, 8);
-  cb->buffer[cb->write].id = rec_id;
-  cb->buffer[cb->write].timestamp = HAL_GetTick();
+    /* Write data into buffer */
+    memcpy(cb->buffer[cb->write].data, rec_data, 8);
+    cb->buffer[cb->write].id = rec_id;
+    cb->buffer[cb->write].timestamp = HAL_GetTick();
 
-  cb->write = (cb->write + 1) % cb->capacity;
-  cb->count++;
+    cb->write = (cb->write + 1) % cb->capacity;
+    cb->count++;
 }
 
 void FEB_circBuf_addOrReplace(circBuffer *cb, uint32_t rec_id, uint8_t *rec_data)
 {
-    // Check for existing CAN ID
+    if (cb == NULL || rec_data == NULL) {
+        return;
+    }
+    
+    /* Check for existing CAN ID */
     if (cb->count > 0) {
         size_t index = cb->read;
         for (size_t i = 0; i < cb->count; i++) {
             if (cb->buffer[index].id == rec_id) {
-                // Replace data and timestamp
+                /* Replace data and timestamp */
                 memcpy(cb->buffer[index].data, rec_data, 8);
                 cb->buffer[index].timestamp = HAL_GetTick();
                 return;
@@ -181,10 +199,19 @@ void FEB_circBuf_addOrReplace(circBuffer *cb, uint32_t rec_id, uint8_t *rec_data
         }
     }
 
-    // If ID doesn't exist, check space to write new
-    if (cb->count == cb->capacity) {
-        printf("Error! No space to write.\r\n");
-        return;
+    /* If ID doesn't exist and buffer is full, implement overflow protection */
+    if (cb->count >= cb->capacity) {
+        /* Buffer full - overwrite oldest entry (FIFO behavior) */
+        cb->read = (cb->read + 1) % cb->capacity;
+        cb->count--;
+        
+        /* Optional: log overflow warning */
+        static uint32_t last_overflow_warning = 0;
+        uint32_t now = HAL_GetTick();
+        if (now - last_overflow_warning > 5000) { /* Throttle warnings to every 5 seconds */
+            HAL_UART_Transmit(&huart2, (uint8_t*)"WARN: XBEE buffer overflow\r\n", 29, 100);
+            last_overflow_warning = now;
+        }
     }
 
     // Add new message

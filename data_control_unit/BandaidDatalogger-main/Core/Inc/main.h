@@ -62,10 +62,40 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define SD_CS_Pin GPIO_PIN_4
-#define SD_CS_GPIO_Port GPIOC
-#define SPI3_CS_Pin GPIO_PIN_15
-#define SPI3_CS_GPIO_Port GPIOA
+#define XB_NRTS_Pin GPIO_PIN_1
+#define XB_NRTS_GPIO_Port GPIOC
+#define XB_DTR_Pin GPIO_PIN_2
+#define XB_DTR_GPIO_Port GPIOC
+#define mSD_CS_Pin GPIO_PIN_1
+#define mSD_CS_GPIO_Port GPIOA
+#define PG_Pin GPIO_PIN_4
+#define PG_GPIO_Port GPIOA
+#define mSD_SCK_Pin GPIO_PIN_5
+#define mSD_SCK_GPIO_Port GPIOA
+#define mSD_MISO_Pin GPIO_PIN_6
+#define mSD_MISO_GPIO_Port GPIOA
+#define mSD_MOSI_Pin GPIO_PIN_7
+#define mSD_MOSI_GPIO_Port GPIOA
+#define XB_MOSI_Pin GPIO_PIN_0
+#define XB_MOSI_GPIO_Port GPIOB
+#define XB_CTS_Pin GPIO_PIN_2
+#define XB_CTS_GPIO_Port GPIOB
+#define XB_RST_Pin GPIO_PIN_10
+#define XB_RST_GPIO_Port GPIOB
+#define XB_ON_Pin GPIO_PIN_6
+#define XB_ON_GPIO_Port GPIOC
+#define XB_CS_Pin GPIO_PIN_15
+#define XB_CS_GPIO_Port GPIOA
+#define XB_SCK_Pin GPIO_PIN_10
+#define XB_SCK_GPIO_Port GPIOC
+#define XB_MISO_Pin GPIO_PIN_11
+#define XB_MISO_GPIO_Port GPIOC
+#define XB_ATTN_Pin GPIO_PIN_12
+#define XB_ATTN_GPIO_Port GPIOC
+#define TPS_PG_Pin GPIO_PIN_6
+#define TPS_PG_GPIO_Port GPIOB
+#define TPS_ALERT_Pin GPIO_PIN_7
+#define TPS_ALERT_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

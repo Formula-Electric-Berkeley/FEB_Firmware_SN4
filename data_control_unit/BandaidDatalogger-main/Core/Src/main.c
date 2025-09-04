@@ -33,6 +33,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "FEB_CircularBuffer.h"
+#include "FEB_XBee.h"
+#include "FEB_CAN.h"
+#include "FEB_CAN_Heartbeat.h"
+#include "TPS2482.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,6 +47,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define MAIN_DEBUG_ENABLED 1
+
+/* Define XBEE_UART_MODE to 1 to enable UART passthrough mode */
+/* When enabled: XBee switches to UART mode for XCTU configuration */
+/* When disabled (0): Normal data logging and transmission mode */
+#define XBEE_UART_MODE 1
 
 #define XBEE_ATTN_PORT GPIOC
 #define XBEE_ATTN_PIN  GPIO_PIN_12
@@ -89,6 +100,7 @@ static void MX_I2C1_Init(void);
 circBuffer sdBuffer;
 circBuffer xbeeBuffer;
 bool xbeeReady = true;
+static bool xbee_uart_mode_active = false; /* Track if XBee is in UART mode */
 
 static TPS2482_Configuration tps2482_configurations[1];
 uint8_t tps2482_i2c_addresses[1];
@@ -147,13 +159,89 @@ int main(void)
   // Initialize buffer structures
   FEB_circBuf_init(&sdBuffer);
   FEB_circBuf_init(&xbeeBuffer);
+  
+  // Initialize XBEE with proper startup sequence
+  HAL_UART_Transmit(&huart2, (uint8_t*)"Initializing XBEE...\r\n", 22, 100);
+  
+  /* Configure XBee control pins for proper operation */
+  HAL_GPIO_WritePin(GPIOC, XB_ON_Pin, GPIO_PIN_SET);     /* ON pin HIGH to power XBee */
+  HAL_GPIO_WritePin(GPIOC, XB_DTR_Pin, GPIO_PIN_RESET);  /* DTR LOW for normal operation */
+  HAL_GPIO_WritePin(GPIOC, XB_NRTS_Pin, GPIO_PIN_RESET); /* RTS LOW (active) */
+  HAL_GPIO_WritePin(GPIOB, XB_CTS_Pin, GPIO_PIN_RESET);  /* CTS LOW to enable transmission */
+  
+  /* Reset XBee with proper timing */
+  HAL_GPIO_WritePin(GPIOB, XB_RST_Pin, GPIO_PIN_RESET);  /* Assert reset */
+  HAL_Delay(10);
+  HAL_GPIO_WritePin(GPIOB, XB_RST_Pin, GPIO_PIN_SET);    /* Release reset */
+  HAL_Delay(1000); /* Wait for XBee to fully boot and initialize */
+  
+  HAL_UART_Transmit(&huart2, (uint8_t*)"XBEE startup complete\r\n", 23, 100);
+  
+  /* Check startup mode configuration */
+#if XBEE_UART_MODE
+  HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 100);
+  HAL_UART_Transmit(&huart2, (uint8_t*)"=================================================\r\n", 51, 100);
+  HAL_UART_Transmit(&huart2, (uint8_t*)"=== XBEE MODE SWITCH: SPI -> UART ===\r\n", 40, 100);
+  HAL_UART_Transmit(&huart2, (uint8_t*)"=================================================\r\n", 51, 100);
+  
+  /* Attempt to switch XBee from SPI to UART mode */
+  HAL_StatusTypeDef uart_switch_status = FEB_xbee_switch_to_uart_mode();
+  
+  if (uart_switch_status == HAL_OK) {
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"=================================================\r\n", 51, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"          XBEE UART SWITCH COMPLETE!\r\n", 39, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"=================================================\r\n", 51, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"NEXT STEPS:\r\n", 13, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"1. Power cycle the XBee module\r\n", 32, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"2. Disconnect from this board\r\n", 31, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"3. Connect XBee to XCTU via USB adapter\r\n", 42, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"4. Configure at 9600 baud\r\n", 27, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"*** SYSTEM HALTED - NO FURTHER OPERATIONS ***\r\n", 48, 100);
+  } else {
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"!!! ERROR: UART MODE SWITCH FAILED !!!\r\n", 41, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"The XBee may already be in UART mode or\r\n", 42, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"there was a communication error.\r\n", 34, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"Try power cycling and checking connections.\r\n", 46, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 100);
+    HAL_UART_Transmit(&huart2, (uint8_t*)"*** SYSTEM HALTED - NO FURTHER OPERATIONS ***\r\n", 48, 100);
+  }
+  
+  /* Set flags to prevent ALL operations */
+  xbeeReady = false;
+  xbee_uart_mode_active = true;
+  
+  /* Infinite loop - system is done, no further operations */
+  while (1) {
+    HAL_Delay(1000);
+    /* Do nothing - system is halted after mode switch */
+  }
+  
+#else
+  HAL_UART_Transmit(&huart2, (uint8_t*)"=== XBEE STARTUP: SPI MODE ===\r\n", 33, 100);
+  
+  // Test XBEE SPI communication with full config display
+  FEB_xbee_spi_test();
+  HAL_Delay(500);
+  
+  // Run simple transmission test
+  FEB_xbee_simple_test();
+  HAL_Delay(500);
+  
+  FEB_xbee_uart_fallback_test();
+#endif
+  
+  /* Initialize CAN and other peripherals only in normal mode */
+#if !XBEE_UART_MODE
   FEB_CAN_Init();
-
-FEB_CAN_HEARTBEAT_Init();
-
-FEB_Variable_Init();
-bool tps2482_init_res[1];
-TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, 1);
+  FEB_CAN_HEARTBEAT_Init();
+  FEB_Variable_Init();
+  bool tps2482_init_res[1];
+  TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, 1);
+#endif
 
   /* USER CODE END 2 */
 
@@ -163,59 +251,86 @@ TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids,
 
 while (1)
 {
-    // --- Loop counter print ---
-//    char loop_msg[32];
-//    snprintf(loop_msg, sizeof(loop_msg), "Loop #%lu start\r\n", (unsigned long)loop_counter++);
-//    HAL_UART_Transmit(&huart2, (uint8_t*)loop_msg, strlen(loop_msg), HAL_MAX_DELAY);
-
-    // --- Print before checking ATTn pin ---
-//    const char *pre_attn_msg = "Checking ATTn pin...\r\n";
-//    HAL_UART_Transmit(&huart2, (uint8_t*)pre_attn_msg, strlen(pre_attn_msg), HAL_MAX_DELAY);
-
+#if XBEE_UART_MODE
+    /* This code should never execute - system halts after mode switch */
+    /* If we somehow get here, just do nothing */
+    HAL_Delay(1000);
+#else
+    /* Normal operation mode - data logging and transmission */
+    
     // --- Check ATTn pin (active LOW) ---
     if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_12) == GPIO_PIN_RESET) {
-//        const char *attn_msg = "ATTn LOW: Reading status...\r\n";
-//        HAL_UART_Transmit(&huart2, (uint8_t*)attn_msg, strlen(attn_msg), HAL_MAX_DELAY);
+#if MAIN_DEBUG_ENABLED
+        HAL_UART_Transmit(&huart2, (uint8_t*)"ATTn LOW\r\n", 11, 100);
+#endif
 
         uint8_t xbee_receive_status = FEB_xbee_receive_status();
+        
+#if MAIN_DEBUG_ENABLED
+        char status_msg[50];
+        snprintf(status_msg, sizeof(status_msg), "XBEE status: 0x%02X\r\n", xbee_receive_status);
+        HAL_UART_Transmit(&huart2, (uint8_t*)status_msg, strlen(status_msg), 100);
+#endif
 
-        if (xbee_receive_status == 0x00 || true) { // Using xbee_receive_status to avoid warning
-//            const char *status_ok_msg = "Sanity check - status OK\r\n";
-//            HAL_UART_Transmit(&huart2, (uint8_t*)status_ok_msg, strlen(status_ok_msg), HAL_MAX_DELAY);
+        if (xbee_receive_status == 0x01 || xbee_receive_status == 0x00) { /* 0x00 = success, 0x01 = no ACK but sent */
+#if MAIN_DEBUG_ENABLED
+            HAL_UART_Transmit(&huart2, (uint8_t*)"Setting xbeeReady=true\r\n", 25, 100);
+#endif
             xbeeReady = true;
         } else {
-//            const char *status_fail_msg = "GRRRR - status NOT OK\r\n";
-//            HAL_UART_Transmit(&huart2, (uint8_t*)status_fail_msg, strlen(status_fail_msg), HAL_MAX_DELAY);
+#if MAIN_DEBUG_ENABLED
+            HAL_UART_Transmit(&huart2, (uint8_t*)"Setting xbeeReady=false\r\n", 26, 100);
+#endif
+            xbeeReady = false;
         }
 
+    } else {
+        /* ATTn pin is HIGH - force transmission for testing */
+        static uint32_t force_counter = 0;
+        force_counter++;
+        if (force_counter % 1000 == 0) { /* Every 1000 loops */
+#if MAIN_DEBUG_ENABLED
+            HAL_UART_Transmit(&huart2, (uint8_t*)"ATTn HIGH - forcing XBEE ready\r\n", 33, 100);
+#endif
+            xbeeReady = true;
+        }
     }
 
-    // --- Print before checking xbeeReady flag ---
-//    const char *pre_xbee_ready_msg = "Checking xbeeReady flag...\r\n";
-//    HAL_UART_Transmit(&huart2, (uint8_t*)pre_xbee_ready_msg, strlen(pre_xbee_ready_msg), HAL_MAX_DELAY);
+    // --- Transmit if xbeeReady is set and not in UART mode ---
+    if (xbeeReady == true && !xbee_uart_mode_active) {
+#if MAIN_DEBUG_ENABLED
+        HAL_UART_Transmit(&huart2, (uint8_t*)"xbeeReady=true, transmitting\r\n", 31, 100);
+#endif
 
-    // --- Transmit if xbeeReady is set ---
-    if (xbeeReady == true) {
-//        const char *ready_msg = "xbeeReady is TRUE\r\n";
-//        HAL_UART_Transmit(&huart2, (uint8_t*)ready_msg, strlen(ready_msg), HAL_MAX_DELAY);
-
-//        const char *tx_msg = "Transmitting hello...\r\n";
-//        HAL_UART_Transmit(&huart2, (uint8_t*)tx_msg, strlen(tx_msg), HAL_MAX_DELAY);
-
-        FEB_xbee_transmit_can_data(&xbeeBuffer);
-        xbeeReady = false;
+        /* Check if buffer has data before transmitting */
+        if (xbeeBuffer.count == 0) {
+            /* Add test data if buffer is empty */
+            uint8_t test_data[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+            FEB_circBuf_addOrReplace(&xbeeBuffer, 0x123, test_data);
+        }
+        
+        HAL_StatusTypeDef xbee_status = FEB_xbee_transmit_can_data(&xbeeBuffer);
+        if (xbee_status == HAL_OK) {
+#if MAIN_DEBUG_ENABLED
+            HAL_UART_Transmit(&huart2, (uint8_t*)"CAN data TX success\r\n", 22, 100);
+#endif
+            xbeeReady = false; /* Only clear flag on successful transmission */
+        } else {
+#if MAIN_DEBUG_ENABLED
+            HAL_UART_Transmit(&huart2, (uint8_t*)"CAN data TX failed\r\n", 21, 100);
+#endif
+            /* Keep xbeeReady true to retry on next iteration */
+            static uint32_t last_error_log = 0;
+            uint32_t now = HAL_GetTick();
+            if (now - last_error_log > 2000) { /* Throttle error messages */
+                last_error_log = now;
+            }
+        }
     }
-
-    // --- Print before CAN TPS transmit ---
-//    const char *pre_can_msg = "Running CAN TPS transmit...\r\n";
-//    HAL_UART_Transmit(&huart2, (uint8_t*)pre_can_msg, strlen(pre_can_msg), HAL_MAX_DELAY);
-
-//    FEB_CAN_TPS_Transmit();
-//    const char *post_can_msg = "Done with CAN TPS transmit...\r\n";
-//    HAL_UART_Transmit(&huart2, (uint8_t*)post_can_msg, strlen(post_can_msg), HAL_MAX_DELAY);
 
     // Write to SD Card
     FEB_circBuf_read(&sdBuffer);
+#endif /* XBEE_UART_MODE */
 }
 
 
@@ -534,52 +649,59 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, XB_NRTS_Pin|XB_DTR_Pin|XB_ON_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, SD_CS_Pin|GPIO_PIN_5, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(mSD_CS_GPIO_Port, mSD_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SPI3_CS_GPIO_Port, SPI3_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, XB_CTS_Pin|XB_RST_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PA1 SPI3_CS_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|SPI3_CS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(XB_CS_GPIO_Port, XB_CS_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : PA4 */
-  GPIO_InitStruct.Pin = GPIO_PIN_4;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SD_CS_Pin */
-  GPIO_InitStruct.Pin = SD_CS_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-  HAL_GPIO_Init(SD_CS_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PC5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  /*Configure GPIO pins : XB_NRTS_Pin XB_DTR_Pin XB_ON_Pin */
+  GPIO_InitStruct.Pin = XB_NRTS_Pin|XB_DTR_Pin|XB_ON_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB10 PB14 */
-  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_14;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  /*Configure GPIO pins : mSD_CS_Pin XB_CS_Pin */
+  GPIO_InitStruct.Pin = mSD_CS_Pin|XB_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PG_Pin */
+  GPIO_InitStruct.Pin = PG_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(PG_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : XB_CTS_Pin XB_RST_Pin */
+  GPIO_InitStruct.Pin = XB_CTS_Pin|XB_RST_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : XB_ATTN_Pin */
+  GPIO_InitStruct.Pin = XB_ATTN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(XB_ATTN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : TPS_PG_Pin TPS_ALERT_Pin */
+  GPIO_InitStruct.Pin = TPS_PG_Pin|TPS_ALERT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -604,8 +726,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
