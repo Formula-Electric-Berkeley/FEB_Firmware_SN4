@@ -245,6 +245,8 @@ void FEB_CAN_ACC(void) {
 	uint16_t acc_pedal_1 = FEB_Read_ADC(ACC_PEDAL_1);
 	uint16_t acc_pedal_2 = FEB_Read_ADC(ACC_PEDAL_2);
 
+	printf("ACC 0: %u, ACC 1: %u\r\n", acc_pedal_1, acc_pedal_2);
+
 	FEB_CAN_RMS_Transmit_updateAcc(acc_pedal_1, acc_pedal_2);
 }
 
