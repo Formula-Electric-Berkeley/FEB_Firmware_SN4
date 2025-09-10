@@ -235,8 +235,13 @@ void FEB_CAN_RMS_Torque(void){
 	float accPos = FEB_Normalized_Acc_Pedals();
 	float brkPos = FEB_Normalized_getBrake();
 
-	RMSControl.torque = 10 * accPos * FEB_CAN_RMS_getMaxTorque(); // temp
+	// RMSControl.torque = 10 * accPos * FEB_CAN_RMS_getMaxTorque(); // temp
+	
+	RMSControl.torque = accPos * FEB_CAN_RMS_getMaxTorque(); // Check if not multiplying by 10 helps
 
+	if (brkPos > 0.2) {
+		RMSControl.torque = 0.0; //Safety check to ensure that if brake is pressed torque is 0.
+	}
 
 	FEB_CAN_RMS_Transmit_updateTorque();
 }

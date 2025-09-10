@@ -35,7 +35,7 @@ void FEB_HECS_update(){
 	uint16_t current_HECS = FEB_Read_ADC1(HECS_SIGNAL);
 	uint16_t current_ACC1 = FEB_Read_ADC1(ACC_PEDAL_1);
 	uint16_t current_BRAKE1 = FEB_Read_ADC1(BRAKE_PRESS_1);
-	uint16_t current_ACC2 = FEB_Read_ADC1(ACC_PEDAL_1);
+	uint16_t current_ACC2 = FEB_Read_ADC1(ACC_PEDAL_2);
 	uint16_t current_BRAKE2 = FEB_Read_ADC1(BRAKE_PRESS_2);
 
 	char buf[128];

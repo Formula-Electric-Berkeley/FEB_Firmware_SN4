@@ -38,7 +38,7 @@ void FEB_Main_While(void){
 //	FEB_CAN_ICS_Transmit();
 	FEB_SM_ST_t bms_state = FEB_CAN_BMS_getState();
 
-	if (!auto_on){
+	// if (!auto_on){
 		if (FEB_Ready_To_Drive() && (bms_state == FEB_SM_ST_DRIVE /*|| bms_state == FEB_SM_ST_DRIVE_REGEN*/)) {
 			FEB_Normalized_updateAcc();
 			FEB_CAN_RMS_Process();
@@ -55,16 +55,16 @@ void FEB_Main_While(void){
 
 		FEB_CAN_RMS_Torque();
 
-	} else {
-		if (bms_state == FEB_SM_ST_ENERGIZED) {
-			FEB_CAN_RMS_Process();
-		}else {
-			FEB_Normalized_setAcc0();
-			FEB_CAN_RMS_Disable();
-		}
+	// } else {
+	// 	if (bms_state == FEB_SM_ST_ENERGIZED) {
+	// 		FEB_CAN_RMS_Process();
+	// 	}else {
+	// 		FEB_Normalized_setAcc0();
+	// 		FEB_CAN_RMS_Disable();
+	// 	}
 		
-		FEB_CAN_RMS_AUTO_Torque(torque);
-	}
+	// 	FEB_CAN_RMS_AUTO_Torque(torque);
+	// }
 
 	FEB_Normalized_CAN_sendBrake();
 	//	FEB_CAN_HEARTBEAT_Transmit();
