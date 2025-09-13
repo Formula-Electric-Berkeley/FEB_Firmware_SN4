@@ -10,7 +10,7 @@ extern uint32_t FEB_CAN_Tx_Mailbox;
 
 // ******************************** Variables ********************************
 //bool READY_TO_DRIVE = 0;
-static bool previous_button_state = false;
+// static bool previous_button_state = false;  // Currently unused, commented out to avoid warning
 static bool READY_TO_DRIVE = false;
 
 // **************************************** Functions ****************************************

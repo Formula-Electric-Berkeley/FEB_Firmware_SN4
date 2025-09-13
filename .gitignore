@@ -63,6 +63,7 @@ __pycache__
 # -------- Specific markdown files --------
 agents.md
 claude.md
+gemini.md
 
 # -------- VS Code --------
 

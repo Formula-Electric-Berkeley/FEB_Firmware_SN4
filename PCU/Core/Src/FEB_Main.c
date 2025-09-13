@@ -37,39 +37,82 @@ void FEB_Main_Setup(void){
 void FEB_Main_While(void){
 //	FEB_CAN_ICS_Transmit();
 	FEB_SM_ST_t bms_state = FEB_CAN_BMS_getState();
+	bool ready_to_drive = FEB_Ready_To_Drive();
+	
+	// Debug logging for state transitions
+	static FEB_SM_ST_t last_bms_state = FEB_SM_ST_DEFAULT;
+	static bool last_ready_to_drive = false;
+	
+	if (bms_state != last_bms_state || ready_to_drive != last_ready_to_drive) {
+		buf_len = snprintf(buf, sizeof(buf), "[STATE_CHANGE] BMS=%d->%d, R2D=%d->%d, Auto=%d\r\n",
+						  last_bms_state, bms_state, last_ready_to_drive, ready_to_drive, auto_on);
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
+		last_bms_state = bms_state;
+		last_ready_to_drive = ready_to_drive;
+	}
 
 	if (!auto_on){
-		if (FEB_Ready_To_Drive() && (bms_state == FEB_SM_ST_DRIVE /*|| bms_state == FEB_SM_ST_DRIVE_REGEN*/)) {
+		#if TORQUE_TEST_MODE
+		// Test mode: Allow torque commands regardless of drive state
+		// WARNING: This bypasses normal safety checks - use only for testing
+    FEB_Normalized_updateAcc();
+    FEB_CAN_RMS_Process();
+
+    buf_len = snprintf(buf, sizeof(buf), "[TEST_MODE] Torque enabled: R2D=%d, BMS=%d\r\n",
+              ready_to_drive, bms_state);
+    if (buf_len > 0 && buf_len < sizeof(buf)) {
+      HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+    }
+		#else
+		// Normal mode: Require both ready_to_drive and DRIVE state
+		if (ready_to_drive && (bms_state == FEB_SM_ST_DRIVE /*|| bms_state == FEB_SM_ST_DRIVE_REGEN*/)) {
 			FEB_Normalized_updateAcc();
 			FEB_CAN_RMS_Process();
 	//		FEB_TPS2482_sendReadings();
+			
+			buf_len = snprintf(buf, sizeof(buf), "[MAIN_LOOP] DRIVE mode: R2D=1, BMS=%d\r\n", bms_state);
+			if (buf_len > 0 && buf_len < sizeof(buf)) {
+				HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+			}
 
 		} else {
 			FEB_Normalized_setAcc0();
 			FEB_CAN_RMS_Disable();
+			
+			buf_len = snprintf(buf, sizeof(buf), "[MAIN_LOOP] NOT ready: R2D=%d, BMS=%d\r\n", 
+							  ready_to_drive, bms_state);
+			if (buf_len > 0 && buf_len < sizeof(buf)) {
+				HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+			}
 		}
+		#endif
 	//	FEB_Normalized_updateAcc();
 	//	FEB_CAN_RMS_Process();
 
 		FEB_HECS_update();
-
+		
+		// Always call torque function in manual mode - it will handle safety checks internally
 		FEB_CAN_RMS_Torque();
 
 	} else {
+		// Auto mode
 		if (bms_state == FEB_SM_ST_ENERGIZED) {
 			FEB_CAN_RMS_Process();
-		}else {
+			FEB_CAN_RMS_AUTO_Torque(torque);
+		} else {
 			FEB_Normalized_setAcc0();
 			FEB_CAN_RMS_Disable();
+			FEB_CAN_RMS_Disable_Torque();  // Ensure torque is disabled
 		}
-		
-		FEB_CAN_RMS_AUTO_Torque(torque);
 	}
 
 	FEB_Normalized_CAN_sendBrake();
 	FEB_CAN_HEARTBEAT_Transmit();
 	FEB_CAN_ACC();
 	FEB_CAN_TPS_Transmit();
+	FEB_CAN_Send_Diagnostics();  // Send diagnostic info for debugging
 
 	HAL_Delay(10);
 }

@@ -1,6 +1,7 @@
 // **************************************** Includes & External ****************************************
 
 #include "FEB_Normalized.h"
+#include <math.h>
 
 extern CAN_HandleTypeDef hcan1;
 extern ADC_HandleTypeDef hadc1;
@@ -27,6 +28,7 @@ uint16_t psi1;
 uint16_t psi2; 
 
 bool isImpl = false;
+bool acc_valid = false;  // Track if acceleration has been properly updated
 //float time = 0.0;
 
 //float normalizedTrigger = 0.1; // portion of brake pedal we can press before we trigger a the soft BSPD
@@ -57,6 +59,15 @@ float FEB_Normalized_getAcc(){
 
 void FEB_Normalized_setAcc0(){
 	normalized_acc = 0.0;
+	acc_valid = false;  // Mark as invalid when forced to 0
+	
+	// Debug logging
+	char buf[128];
+	int buf_len;
+	buf_len = snprintf(buf, sizeof(buf), "[ACC_SET_0] Acc forced to 0, valid=false\r\n");
+	if (buf_len > 0 && buf_len < sizeof(buf)) {
+		HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+	}
 }
 
 //// unused (hopefully)
@@ -133,22 +144,36 @@ void FEB_Read_Brake_Pedal() {
 	int brake_pedal_position_int2 = brake_pedal_position_frac * 1000;
 
 	char buf[128];
-	sprintf(buf, "[SENSOR] Brake Position RAW: %d\n", brake_pedal_raw);
+	sprintf(buf, "[SENSOR] Brake Position RAW: %d\r\n", brake_pedal_raw);
 	HAL_UART_Transmit(&huart2,(uint8_t *)buf, strlen(buf), HAL_MAX_DELAY);
 
 	char buf1[128];
-	sprintf(buf1, "[SENSOR] Brake Position: %d.%d%%\n", brake_pedal_position_int1, brake_pedal_position_int2);
+	sprintf(buf1, "[SENSOR] Brake Position: %d.%d\r\n", brake_pedal_position_int1, brake_pedal_position_int2);
 	HAL_UART_Transmit(&huart2,(uint8_t *)buf1, strlen(buf1), HAL_MAX_DELAY);
 }
 
 void FEB_Normalized_updateAcc(){
-	normalized_acc = FEB_Normalized_Acc_Pedals();
+	// Get the new acceleration value
+	float new_acc = FEB_Normalized_Acc_Pedals();
+	
+	// Atomically update both the value and validity flag
+	// This prevents race conditions where torque could be commanded with stale data
+	__disable_irq();  // Critical section start
+	normalized_acc = new_acc;
+	acc_valid = true;  // Mark as valid after successful update
+	__enable_irq();   // Critical section end
 
+	// Debug logging
 	char buf[128];
-	uint8_t buf_len;
-	buf_len = sprintf(buf, "normalized_acc: %f\n", normalized_acc);
-//	HAL_UART_Transmit(&huart2,(uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+	int buf_len;
+	buf_len = snprintf(buf, sizeof(buf), "[ACC_UPDATE] normalized_acc: %.3f, valid=true\r\n", normalized_acc);
+	if (buf_len > 0 && buf_len < sizeof(buf)) {
+		HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+	}
+}
 
+bool FEB_Normalized_isAccValid(){
+	return acc_valid;
 }
 
 float FEB_Normalized_Acc_Pedals() {
@@ -161,13 +186,35 @@ float FEB_Normalized_Acc_Pedals() {
 	float ped1_normalized = (acc_pedal_1 - ACC_PEDAL_1_START)/ (1.0f*ACC_PEDAL_1_END - ACC_PEDAL_1_START);
 	// sensor 2 has negative slope
 	float ped2_normalized = (acc_pedal_2 - ACC_PEDAL_2_START) / (1.0f*ACC_PEDAL_2_END - ACC_PEDAL_2_START);
+	
 	char msg[100];
-	snprintf(msg, sizeof(msg), "Pedal1: %.3f | Pedal2: %.3f \n\r", ped1_normalized, ped2_normalized);
+	snprintf(msg, sizeof(msg), "Pedal1: %.3f | Pedal2: %.3f | isImpl: %d\n\r", ped1_normalized, ped2_normalized, isImpl);
 	HAL_UART_Transmit(&huart2, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+	
+	#if TORQUE_TEST_MODE
+	// In test mode, bypass all implausibility checks and just return the average
+	float final_normalized = 0.5f * (ped1_normalized + ped2_normalized);
+	final_normalized = (final_normalized < 0.0f) ? 0.0f : (final_normalized > 1.0f ? 1.0f : final_normalized);
+	
+	// Clear implausibility flag in test mode
+	if (isImpl) {
+		char impl_msg[128];
+		snprintf(impl_msg, sizeof(impl_msg), "[TEST_MODE] Bypassing implausibility, returning %.3f\n\r", final_normalized);
+		HAL_UART_Transmit(&huart2, (uint8_t *)impl_msg, strlen(impl_msg), HAL_MAX_DELAY);
+		isImpl = false;
+	}
+	
+	return final_normalized;
+	#endif
 
 	// check implausibility for shorting. TODO: check if this fulfills the short circuiting rules.
 	if (acc_pedal_1 > ACC_PEDAL_1_END + 20 || acc_pedal_1 < ACC_PEDAL_1_START - 20
 			|| acc_pedal_2 < ACC_PEDAL_2_START - 20 || acc_pedal_2 > ACC_PEDAL_2_END + 20) {
+		if (!isImpl) {
+			char impl_msg[128];
+			snprintf(impl_msg, sizeof(impl_msg), "[IMPL_SET] Out of range: P1=%d P2=%d\r\n", acc_pedal_1, acc_pedal_2);
+			HAL_UART_Transmit(&huart2, (uint8_t *)impl_msg, strlen(impl_msg), HAL_MAX_DELAY);
+		}
 		isImpl = true;
 		return 0.0;
 	}
@@ -177,7 +224,13 @@ float FEB_Normalized_Acc_Pedals() {
 
 
 	// sensor measurements mismatch by more than 10%
-	if(abs(ped1_normalized - ped2_normalized) > 0.1 ){
+	if(fabs(ped1_normalized - ped2_normalized) > 0.1 ){
+		if (!isImpl) {
+			char impl_msg[128];
+			snprintf(impl_msg, sizeof(impl_msg), "[IMPL_SET] Mismatch: P1=%.3f P2=%.3f diff=%.3f\r\n", 
+					ped1_normalized, ped2_normalized, fabs(ped1_normalized - ped2_normalized));
+			HAL_UART_Transmit(&huart2, (uint8_t *)impl_msg, strlen(impl_msg), HAL_MAX_DELAY);
+		}
 		isImpl = true;
 		return 0.0;
 	}
@@ -213,8 +266,8 @@ float FEB_Normalized_Acc_Pedals() {
 	// }
 
 	// Calculate final normalized accelerator value
-	float final_normalized = 0.5f * (ped1_normalized + ped2_normalized); // take the average of the two sensor inputs
-	final_normalized = (final_normalized < 0.0f) ? 0.0f : (final_normalized > 1.0f ? 1.0f : final_normalized); //clamp between 0 and 1
+	float final_normalized_val = 0.5f * (ped1_normalized + ped2_normalized); // take the average of the two sensor inputs
+	final_normalized_val = (final_normalized_val < 0.0f) ? 0.0f : (final_normalized_val > 1.0f ? 1.0f : final_normalized_val); //clamp between 0 and 1
 
 	// BSPD digital read protection (active-low)
 	// GPIO_PinState bspd_reading = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7);
@@ -228,14 +281,37 @@ float FEB_Normalized_Acc_Pedals() {
 	//	}
 
 	// Only recover once both pedals are fully released
-	if (final_normalized < 0.05f && normalized_brake < 0.15f && isImpl) {
+	// In test mode, only require accelerator to be released for recovery
+	#if TORQUE_TEST_MODE
+	if (final_normalized_val < 0.05f && isImpl) {
+		char impl_msg[128];
+		snprintf(impl_msg, sizeof(impl_msg), "[IMPL_CLEAR] Test mode recovery: Acc=%.3f\r\n", final_normalized_val);
+		HAL_UART_Transmit(&huart2, (uint8_t *)impl_msg, strlen(impl_msg), HAL_MAX_DELAY);
 		isImpl = false;
 	}
+	#else
+	if (final_normalized_val < 0.05f && normalized_brake < 0.15f && isImpl) {
+		char impl_msg[128];
+		snprintf(impl_msg, sizeof(impl_msg), "[IMPL_CLEAR] Normal recovery: Acc=%.3f Brk=%.3f\r\n", 
+				final_normalized_val, normalized_brake);
+		HAL_UART_Transmit(&huart2, (uint8_t *)impl_msg, strlen(impl_msg), HAL_MAX_DELAY);
+		isImpl = false;
+	}
+	#endif
 
 	// Apply implausibility override
 	if (!isImpl) {
-		return final_normalized;
+		return final_normalized_val;
 	} else {
+		// Log when returning 0 due to implausibility
+		static uint32_t last_impl_log = 0;
+		uint32_t current_time = HAL_GetTick();
+		if (current_time - last_impl_log > 1000) {  // Log once per second max
+			char impl_msg[128];
+			snprintf(impl_msg, sizeof(impl_msg), "[IMPL_ACTIVE] Returning 0, need release\r\n");
+			HAL_UART_Transmit(&huart2, (uint8_t *)impl_msg, strlen(impl_msg), HAL_MAX_DELAY);
+			last_impl_log = current_time;
+		}
 		return 0.0f;
 	}
 }
@@ -261,11 +337,13 @@ float FEB_Normalized_Brake_Pedals() {
 	// final_normalized = final_normalized > 1 ? 1 : final_normalized;
 	// final_normalized = final_normalized < 0.05 ? 0 : final_normalized;
 
+	// Debug logging
 	char buf[128];
-	uint8_t buf_len;
-	buf_len = sprintf(buf, "brake_Pos: %f\n", final_normalized);
-
-//	HAL_UART_Transmit(&huart2,(uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+	int buf_len;
+	buf_len = snprintf(buf, sizeof(buf), "brake_Pos: %.3f\r\n", final_normalized);
+	if (buf_len > 0 && buf_len < sizeof(buf)) {
+		// HAL_UART_Transmit(&huart2,(uint8_t *)buf, buf_len, HAL_MAX_DELAY);  // Commented out as it was originally
+	}
 
 	// Soft BSPD
 //	char buf1[1];
@@ -340,7 +418,7 @@ void FEB_Normalized_CAN_sendBrake() {
 		//error - shutdown
 		char buf[128];
 		uint8_t buf_len;
-		buf_len = sprintf(buf, "CAN MESSAGE FAIL TO SEND: %f\n", normalized_brake);
+		buf_len = sprintf(buf, "CAN MESSAGE FAIL TO SEND: %f\r\n", normalized_brake);
 		HAL_UART_Transmit(&huart2,(uint8_t *)buf, buf_len, HAL_MAX_DELAY);
 	}
 

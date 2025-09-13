@@ -1,4 +1,4 @@
-// this file was left here for purposes of showing what tests were run.\
+// this file was left here for purposes of showing what tests were run.
 // use VS code compare tool to fix any changes made
 // Copy / Paste into https://www.onlinegdb.com/online_c_compiler
 #define COMPILE_UNIT_TEST 0 

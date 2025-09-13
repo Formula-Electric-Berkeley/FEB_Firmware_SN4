@@ -1,6 +1,9 @@
 // **************************************** Includes & External ****************************************
 
 #include "FEB_CAN.h"
+#include "FEB_CAN_BMS.h"
+#include "FEB_CAN_RMS.h"
+#include "FEB_CAN_ICS.h"
 
 extern CAN_HandleTypeDef hcan1;
 

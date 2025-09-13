@@ -2,6 +2,7 @@
 
 #include "FEB_CAN_RMS.h"
 #include <math.h>
+#include "FEB_CAN_ICS.h"  // For FEB_Ready_To_Drive()
 
 #define FEB_CAN_ID_RMS_VOLTAGE 0xa7
 #define FEB_CAN_ID_RMS_MOTOR 0xa5
@@ -11,6 +12,7 @@ extern UART_HandleTypeDef huart2;
 extern uint8_t FEB_CAN_Tx_Data[8];
 extern CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
 extern uint32_t FEB_CAN_Tx_Mailbox;
+extern bool auto_on;  // From FEB_CAN_AUTO.c
 
 // *********************************** Struct ************************************
 
@@ -48,6 +50,21 @@ void FEB_CAN_RMS_Process(void){
 
 void FEB_CAN_RMS_Disable(void){
 	RMSControl.enabled = 0;
+}
+
+void FEB_CAN_RMS_Disable_Torque(void){
+	// Send explicit zero torque command to motor
+	RMSControl.torque = 0;
+	RMSControl.enabled = 0;
+	FEB_CAN_RMS_Transmit_updateTorque();
+	
+	// Log for debugging
+	char buf[128];
+	int buf_len;
+	buf_len = snprintf(buf, sizeof(buf), "[TORQUE_DISABLE] Torque set to 0, enabled=%d\r\n", RMSControl.enabled);
+	if (buf_len > 0 && buf_len < sizeof(buf)) {
+		HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+	}
 }
 
 #define min(x1, x2) x1 < x2 ? x1 : x2;
@@ -185,7 +202,7 @@ void FEB_CAN_RMS_Disable_undervolt(void){
 float FEB_get_peak_current_delimiter()
 {
 	float accumulator_voltage = (RMS_MESSAGE.HV_Bus_Voltage-50.0) / 10.0;
-	float estimated_voltage_drop_at_peak = PEAK_CURRENT;
+	// float estimated_voltage_drop_at_peak = PEAK_CURRENT;  // Currently unused
 	float start_derating_voltage = 400.0 + PEAK_CURRENT; // Assume R_acc = 1ohm
 	// Note: Comments are based on start_derating_voltage = 460V and PEAK_CURRENT = 60
 
@@ -232,11 +249,98 @@ float FEB_CAN_RMS_getMaxTorque(void){
 
 void FEB_CAN_RMS_Torque(void){
 	FEB_SM_ST_t current_BMS_state = FEB_CAN_BMS_getState(); // TODO: FOR ALEX
-	float accPos = FEB_Normalized_Acc_Pedals();
-	float brkPos = FEB_Normalized_getBrake();
-
-	RMSControl.torque = 10 * accPos * FEB_CAN_RMS_getMaxTorque(); // temp
-
+	// Use the validated acceleration value instead of re-reading
+	float accPos = FEB_Normalized_getAcc();  // Use validated value
+	float brkPos = FEB_Normalized_getBrake();  // Get brake position for safety interlock
+	bool acc_is_valid = FEB_Normalized_isAccValid();  // Check if acceleration was properly updated
+	
+	// Safety interlock: Multiple checks before commanding torque
+	// Check for brake-accelerator conflict (BSPD software implementation)
+	if (brkPos > BRAKE_POSITION_THRESH && accPos > 0.05f) {
+		// Brake and accelerator both pressed - safety violation
+		RMSControl.torque = 0;
+		
+		// Debug logging
+		char buf[128];
+		int buf_len;
+		buf_len = snprintf(buf, sizeof(buf), "[BSPD_INTERLOCK] Brake=%.3f, Acc=%.3f, torque=0\r\n", brkPos, accPos);
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
+	} else if (!acc_is_valid) {
+		// Acceleration was never properly updated, force to 0
+		RMSControl.torque = 0;
+		
+		// Debug logging
+		char buf[128];
+		int buf_len;
+		buf_len = snprintf(buf, sizeof(buf), "[TORQUE_INTERLOCK] Acc not valid, torque=0\r\n");
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
+	} else if (!RMSControl.enabled && !TORQUE_TEST_MODE) {
+		// Motor controller is disabled (skip this check in test mode)
+		RMSControl.torque = 0;
+		
+		// Debug logging
+		char buf[128];
+		int buf_len;
+		buf_len = snprintf(buf, sizeof(buf), "[TORQUE_INTERLOCK] RMS disabled, torque=0\r\n");
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
+	} else if (accPos <= 0.0001f) {  // Small epsilon for float comparison
+		// Acceleration is effectively 0
+		RMSControl.torque = 0;
+		
+		// Debug logging
+		char buf[128];
+		int buf_len;
+		buf_len = snprintf(buf, sizeof(buf), "[TORQUE_SAFETY] Acc=%.6f~0, forcing torque=0\r\n", accPos);
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
+	} else {
+		// All checks passed, calculate torque
+		float max_torque = FEB_CAN_RMS_getMaxTorque();
+		// Add proper rounding for fixed-point conversion (multiply by 10 for RMS protocol)
+		float torque_float = 10.0f * accPos * max_torque;
+		int16_t calculated_torque = (int16_t)(torque_float + 0.5f);  // Round to nearest integer
+		RMSControl.torque = calculated_torque;
+		
+		// Debug: Log calculated torque before bounds check
+		#if TORQUE_TEST_MODE
+		char debug_buf[128];
+		int debug_len = snprintf(debug_buf, sizeof(debug_buf), "[TEST_CALC] torque_float=%.1f, calc_torque=%d\r\n", 
+								torque_float, calculated_torque);
+		if (debug_len > 0 && debug_len < sizeof(debug_buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)debug_buf, debug_len, HAL_MAX_DELAY);
+		}
+		#endif
+		
+		// Bounds check on final torque value
+		if (RMSControl.torque < 0) {
+			RMSControl.torque = 0;
+		} else if (RMSControl.torque > (int16_t)(max_torque * 10)) {
+			RMSControl.torque = (int16_t)(max_torque * 10);
+		}
+		
+		// Additional safety: Limit torque if brake is pressed at all
+		#if !TORQUE_TEST_MODE
+		if (brkPos > 0.05f) {
+			RMSControl.torque = 0;  // No acceleration while braking
+		}
+		#endif
+		
+		// Debug logging
+		char buf[128];
+		int buf_len;
+		buf_len = snprintf(buf, sizeof(buf), "[TORQUE_CMD] Acc=%.3f, Torque=%d, MaxT=%.1f, Brk=%.3f, En=%d, BMS=%d\r\n", 
+						  accPos, RMSControl.torque, max_torque, brkPos, RMSControl.enabled, current_BMS_state);
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
+	}
 
 	FEB_CAN_RMS_Transmit_updateTorque();
 }
@@ -295,7 +399,12 @@ void FEB_CAN_RMS_Transmit_updateTorque(void) { //TODO: Create Custom Transmit fu
 	FEB_CAN_Tx_Data[2] = 0;
 	FEB_CAN_Tx_Data[3] = 0;
 	FEB_CAN_Tx_Data[4] = 1;
+	// In test mode, force enable flag to 1 if we have torque command
+	#if TORQUE_TEST_MODE
+	FEB_CAN_Tx_Data[5] = (RMSControl.torque != 0) ? 1 : RMSControl.enabled;
+	#else
 	FEB_CAN_Tx_Data[5] = RMSControl.enabled;
+	#endif
 	FEB_CAN_Tx_Data[6] = 0;
 	FEB_CAN_Tx_Data[7] = 0;
 
@@ -481,5 +590,43 @@ void FEB_CAN_RMS_Store_Msg(CAN_RxHeaderTypeDef* pHeader, uint8_t *RxData) {
 		case FEB_CAN_ID_RMS_MOTOR:
 			memcpy(&(RMS_MESSAGE.Motor_Speed), RxData+2, 2);
 			break;
+	}
+}
+
+void FEB_CAN_Send_Diagnostics(void) {
+	// Send diagnostic CAN message with PCU debug info
+	// Using CAN ID 0x600 for PCU diagnostics (not conflicting with existing IDs)
+	FEB_CAN_Tx_Header.DLC = 8;
+	FEB_CAN_Tx_Header.StdId = 0x600;  // PCU diagnostic frame ID
+	FEB_CAN_Tx_Header.IDE = CAN_ID_STD;
+	FEB_CAN_Tx_Header.RTR = CAN_RTR_DATA;
+	FEB_CAN_Tx_Header.TransmitGlobalTime = DISABLE;
+	
+	// Get current system state
+	float acc = FEB_Normalized_getAcc();
+	bool acc_valid = FEB_Normalized_isAccValid();
+	FEB_SM_ST_t bms_state = FEB_CAN_BMS_getState();
+	bool ready_to_drive = FEB_Ready_To_Drive();
+	
+	// Pack diagnostic data
+	FEB_CAN_Tx_Data[0] = (uint8_t)(acc * 100);  // Acceleration percentage (0-100)
+	FEB_CAN_Tx_Data[1] = (uint8_t)acc_valid;     // Acceleration valid flag
+	FEB_CAN_Tx_Data[2] = (uint8_t)RMSControl.enabled;  // RMS enabled flag
+	FEB_CAN_Tx_Data[3] = (uint8_t)ready_to_drive;      // Ready to drive flag
+	FEB_CAN_Tx_Data[4] = (uint8_t)bms_state;           // BMS state
+	FEB_CAN_Tx_Data[5] = (uint8_t)(RMSControl.torque & 0xFF);     // Torque low byte
+	FEB_CAN_Tx_Data[6] = (uint8_t)((RMSControl.torque >> 8) & 0xFF); // Torque high byte
+	FEB_CAN_Tx_Data[7] = (uint8_t)auto_on;  // Auto mode flag
+	
+	// Wait for mailbox and send
+	while (HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0) {}
+	
+	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
+		// Log error but don't shutdown for diagnostic messages
+		char buf[128];
+		int buf_len = snprintf(buf, sizeof(buf), "[DIAG_CAN] Failed to send diagnostic msg\r\n");
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
 	}
 }

@@ -24,6 +24,7 @@ uint16_t FEB_Read_ADC(uint32_t channel);
 float FEB_Normalized_getAcc();
 void FEB_Normalized_setAcc0();
 void FEB_Normalized_updateAcc();
+bool FEB_Normalized_isAccValid();
 float FEB_Normalized_Acc_Pedals();
 float FEB_Normalized_getBrake();
 void FEB_Normalized_update_Brake();

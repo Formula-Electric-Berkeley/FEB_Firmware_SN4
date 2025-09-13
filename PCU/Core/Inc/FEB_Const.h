@@ -49,6 +49,12 @@
 
 #define HECS_CURRENT 3025.0 //check if current is too high for BSPD
 
+// **************************************** Testing Configuration ****************************************
+// WARNING: TORQUE_TEST_MODE bypasses drive state requirement for torque commands
+// This should ONLY be enabled for controlled testing environments
+// Set to 1 to enable test mode, 0 for normal operation
+#define TORQUE_TEST_MODE 1
+
 #define ACC_PEDAL_1 ADC_CHANNEL_1
 #define ACC_PEDAL_2 ADC_CHANNEL_0
 #define BRAKE_PRESS_1 ADC_CHANNEL_12
