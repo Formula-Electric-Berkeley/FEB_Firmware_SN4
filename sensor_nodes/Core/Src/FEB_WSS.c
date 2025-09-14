@@ -9,6 +9,8 @@
 
 #include "FEB_WSS.h"
 
+#include <math.h>
+
 extern CAN_HandleTypeDef hcan1;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim5;
@@ -18,9 +20,9 @@ extern UART_HandleTypeDef huart2;
 
 uint8_t WSS_Data[8];
 
-#define TIMER_ELAPSED_HZ 1000 // # of times TIM6 elapses per second
-#define TICKS_PER_ROTATION 84 * 4
-#define RPM_to_MPH 0.06098555871
+#define TIMER_ELAPSED_HZ 10 // # of times TIM6 elapses per second
+#define TICKS_PER_ROTATION 40 * 4
+#define RPM_to_MPH 12 * M_PI * 60 / 63360
 
 int32_t ticks_right = 0;
 int32_t ticks_left = 0;
@@ -53,32 +55,49 @@ void Fill_WSS_Data(void)
 
 void update_WSS_ticks(int32_t *ticks, uint16_t *prev_counter, TIM_HandleTypeDef *htim)
 {
-	uint16_t counter = (uint16_t) __HAL_TIM_GET_COUNTER(htim);
 
-	if (!(__HAL_TIM_IS_TIM_COUNTING_DOWN(htim))) // Check if the wheel is moving forward
-	{
-		if (counter > *prev_counter)
-		{
-			*ticks = counter - *prev_counter;
-		}
-		else // Check if the timer has reloaded
-		{
-			*ticks = counter + (__HAL_TIM_GET_AUTORELOAD(htim) - *prev_counter);
-		}
-	}
-	else // Reverse direction
-	{
-		if (counter < *prev_counter)
-		{
-			*ticks = counter - *prev_counter;
-		}
-		else
-		{
-			*ticks = counter - (__HAL_TIM_GET_AUTORELOAD(htim) + *prev_counter);
-		}
-	}
+    uint16_t counter = (uint16_t)__HAL_TIM_GET_COUNTER(htim);
+    uint32_t ARR = __HAL_TIM_GET_AUTORELOAD(htim);
 
-	*prev_counter = counter;
+    // signed difference, modulo ARR+1
+    int32_t diff = (int32_t)((counter - *prev_counter + (ARR + 1)) % (ARR + 1));
+
+    printf("Counting Down?: %d\n", __HAL_TIM_IS_TIM_COUNTING_DOWN(htim));
+
+    *ticks = diff;
+    *prev_counter = counter;
+
+
+//	uint16_t counter = (uint16_t) __HAL_TIM_GET_COUNTER(htim);
+//
+//	if (counter == *prev_counter)
+//	{
+//		*ticks = 0;
+//	}
+//	else if (!(__HAL_TIM_IS_TIM_COUNTING_DOWN(htim))) // Check if the wheel is moving forward
+//	{
+//		if (counter > *prev_counter)
+//		{
+//			*ticks = counter - *prev_counter;
+//		}
+//		else // Check if the timer has reloaded
+//		{
+//			*ticks = counter + (__HAL_TIM_GET_AUTORELOAD(htim) - *prev_counter);
+//		}
+//	}
+//	else // Reverse direction
+//	{
+//		if (counter < *prev_counter)
+//		{
+//			*ticks = counter - *prev_counter;
+//		}
+//		else
+//		{
+//			*ticks = counter - (__HAL_TIM_GET_AUTORELOAD(htim) + *prev_counter);
+//		}
+//	}
+//
+//	*prev_counter = counter;
 }
 
 void handle_reverse_ticks(int32_t *ticks, char *direction)
@@ -86,19 +105,20 @@ void handle_reverse_ticks(int32_t *ticks, char *direction)
 	if (*ticks < 0)
 	{
 		*ticks = 0 - *ticks; // Make the ticks positive
-		*direction = '-';
+		*direction = '+';
 	}
 	else
 	{
-		*direction = '+';
+		*direction = '-';
 	}
 }
 
 void WSS_Main(void)
 {
+
 	// Update the tick values
-	update_WSS_ticks(&ticks_right, &wss_counter_right, &htim3);
-	update_WSS_ticks(&ticks_left, &wss_counter_left, &htim5);
+	update_WSS_ticks(&ticks_right, &wss_counter_right, &htim5);
+	update_WSS_ticks(&ticks_left, &wss_counter_left, &htim3);
 
 	handle_reverse_ticks(&ticks_right, &direction_right);
 	handle_reverse_ticks(&ticks_left, &direction_left);
@@ -109,12 +129,14 @@ void WSS_Main(void)
 
 	// Send the wheel speed data
 #if WSS
-	printf("Right: %c%d rpm  %d mph\tLeft: %c%d  %d mph\r\n", direction_right, wss_right, direction_left, wss_left, (int) (wss_right * RPM_to_MPH), (int) (wss_left * RPM_to_MPH));
+	printf("Right Counter: %hd Left Counter: %hd \n", wss_counter_right, wss_counter_left);
+	printf("Right Ticks: %ld Left Ticks: %ld \n\n", ticks_right, ticks_left);
+//	printf("Right: %c%d rpm  %d mph\tLeft: %c%d  %d mph\r\n", direction_right, wss_right, direction_left, wss_left, (int) (wss_right * RPM_to_MPH), (int) (wss_left * RPM_to_MPH));
 #endif
 
 #if IS_FRONT_NODE & SEND_CAN
 	CAN_Transmit(CAN_ID_WSS_FRONT, WSS_Data);
-#elseif SEND_CAN
+#elif SEND_CAN
 	CAN_Transmit(CAN_ID_WSS_REAR, WSS_Data);
 #endif
 

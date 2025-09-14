@@ -19,8 +19,8 @@ extern CAN_HandleTypeDef hcan1;
 #define ADC_RESOLUTION 4095
 #define LIN_POT_LENGTH 75000 // micrometers
 
-uint16_t ADC1_Readings[7];
-uint16_t ADC2_Readings[4]; // 1st and 2nd are linear potentiometer, 3rd and 4th are coolant pressure
+uint32_t ADC1_Readings[7];
+uint32_t ADC2_Readings[4]; // 1st and 2nd are linear potentiometer, 3rd and 4th are coolant pressure
 
 uint8_t Strain_Gauge_Data[8];
 uint8_t Thermocouple_Data[8];
@@ -29,19 +29,19 @@ uint8_t Coolant_Pressure_Data[8];
 
 // ******************************************** Functions **********************************************
 
-uint16_t StrainGaugeConversion(uint16_t adc_value) {
+uint16_t StrainGaugeConversion(uint32_t adc_value) {
 	return  adc_value & 0xFFFF;
 }
 
-uint16_t ThermocoupleConversion(uint16_t adc_value) {
+uint16_t ThermocoupleConversion(uint32_t adc_value) {
 	return adc_value & 0xFFFF;
 }
 
-uint16_t LinearPotentiometerConversion(uint16_t adc_value) {
+uint16_t LinearPotentiometerConversion(uint32_t adc_value) {
 	return (uint16_t) adc_value / ADC_RESOLUTION * LIN_POT_LENGTH;
 }
 
-uint16_t CoolantPressureConversion(uint16_t adc_value) {
+uint16_t CoolantPressureConversion(uint32_t adc_value) {
 	float voltage = (float) adc_value * 3.3 / ADC_RESOLUTION;
 	return (uint16_t) 1000 * ((voltage - 0.5) * 30) / (4.5 - 0.5);
 }
@@ -120,6 +120,8 @@ void Fill_Lin_Pot_Data(void) {
 	uint16_t LinPot2 = LinearPotentiometerConversion(ADC2_Readings[1]);
 
 	// Fill the data
+	printf("LinPot1: %hu \n\r LinPot2: %hu", LinPot1, LinPot2);
+
 	Lin_Pot_Data[0] = (LinPot1 >> 8) & 0xFF;
 	Lin_Pot_Data[1] = LinPot1 & 0xFF;
 	Lin_Pot_Data[2] = (LinPot2 >> 8) & 0xFF;
@@ -147,7 +149,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 		Fill_Strain_Gauge_Data();
 
-#ifndef IS_FRONT_NODE
+#if IS_FRONT_NODE
 			Fill_Thermocouple_Data();
 #endif
 	}
@@ -157,7 +159,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 
 		Fill_Lin_Pot_Data();
 
-#ifndef IS_FRONT_NODE
+#if IS_FRONT_NODE
 			Fill_Coolant_Pressure_Data();
 #endif
 	}
@@ -165,8 +167,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 }
 
 void ADC_Init(void) {
-//	HAL_ADC_Start_DMA(&hadc1, ADC1_Readings, 7);
-//	HAL_ADC_Start_DMA(&hadc2, ADC2_Readings, 4);
+	HAL_ADC_Start_DMA(&hadc1, ADC1_Readings, 7);
+	HAL_ADC_Start_DMA(&hadc2, ADC2_Readings, 4);
 }
 
 void ADC_Main(void) {
@@ -190,7 +192,7 @@ void ADC_Main(void) {
 	HAL_ADC_Stop(&hadc2);
 
 
-#ifdef IS_FRONT_NODE
+#if IS_FRONT_NODE
 		CAN_Transmit(CAN_ID_LIN_POT_FRONT, Lin_Pot_Data);
 		CAN_Transmit(CAN_ID_STRAIN_GAUGE_FRONT, Strain_Gauge_Data);
 #else
