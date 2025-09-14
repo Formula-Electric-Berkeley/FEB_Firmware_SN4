@@ -45,6 +45,15 @@ void FEB_CAN_RMS_Process(void){
 	if (!RMSControl.enabled){
 //		FEB_CAN_RMS_Init();
 		RMSControl.enabled = 1;
+		
+		#if TORQUE_TEST_MODE
+		// In test mode, log when enabling RMS
+		char buf[128];
+		int buf_len = snprintf(buf, sizeof(buf), "[TEST_MODE] RMS enabled for testing\r\n");
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
+		#endif
 	}
 }
 
@@ -398,13 +407,10 @@ void FEB_CAN_RMS_Transmit_updateTorque(void) { //TODO: Create Custom Transmit fu
 	FEB_CAN_Tx_Data[1] = (uint8_t)(RMSControl.torque >> 8) & 0xFF;
 	FEB_CAN_Tx_Data[2] = 0;
 	FEB_CAN_Tx_Data[3] = 0;
-	FEB_CAN_Tx_Data[4] = 1;
-	// In test mode, force enable flag to 1 if we have torque command
-	#if TORQUE_TEST_MODE
-	FEB_CAN_Tx_Data[5] = (RMSControl.torque != 0) ? 1 : RMSControl.enabled;
-	#else
+	FEB_CAN_Tx_Data[4] = 1;  // Inverter enable (always 1)
+	// Use actual RMSControl.enabled state for both test and normal modes
+	// Test mode only bypasses torque safety checks, not enable state
 	FEB_CAN_Tx_Data[5] = RMSControl.enabled;
-	#endif
 	FEB_CAN_Tx_Data[6] = 0;
 	FEB_CAN_Tx_Data[7] = 0;
 
@@ -415,6 +421,22 @@ void FEB_CAN_RMS_Transmit_updateTorque(void) { //TODO: Create Custom Transmit fu
 	if (HAL_CAN_AddTxMessage(&hcan1, &FEB_CAN_Tx_Header, FEB_CAN_Tx_Data, &FEB_CAN_Tx_Mailbox) != HAL_OK) {
 		// Code Error - Shutdown
 	}
+	
+	#if TORQUE_TEST_MODE
+	// Log the actual CAN message being sent
+	static uint32_t last_can_log = 0;
+	uint32_t current_time = HAL_GetTick();
+	if (current_time - last_can_log > 500) {  // Log every 500ms
+		char buf[128];
+		int buf_len = snprintf(buf, sizeof(buf), "[CAN_TX] ID=0x%lX Torque=%d RMS.en=%d Enable=%d (Bytes: %02X %02X .. %02X %02X)\r\n", 
+							  FEB_CAN_Tx_Header.StdId, RMSControl.torque, RMSControl.enabled, FEB_CAN_Tx_Data[5],
+							  FEB_CAN_Tx_Data[0], FEB_CAN_Tx_Data[1], FEB_CAN_Tx_Data[4], FEB_CAN_Tx_Data[5]);
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
+		last_can_log = current_time;
+	}
+	#endif
 }
 
 void FEB_CAN_RMS_Transmit_updateAcc(uint16_t acc0, uint16_t acc1) {

@@ -55,16 +55,24 @@ void FEB_Main_While(void){
 
 	if (!auto_on){
 		#if TORQUE_TEST_MODE
-		// Test mode: Allow torque commands regardless of drive state
-		// WARNING: This bypasses normal safety checks - use only for testing
-    FEB_Normalized_updateAcc();
-    FEB_CAN_RMS_Process();
-
-    buf_len = snprintf(buf, sizeof(buf), "[TEST_MODE] Torque enabled: R2D=%d, BMS=%d\r\n",
-              ready_to_drive, bms_state);
-    if (buf_len > 0 && buf_len < sizeof(buf)) {
-      HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
-    }
+		// Test mode: Allow torque calculation for testing, but still require drive state for enable
+		// Always update acceleration for testing torque calculations
+		FEB_Normalized_updateAcc();
+		
+		// Only enable RMS if in proper drive state (same as normal mode)
+		if (ready_to_drive && (bms_state == FEB_SM_ST_DRIVE)) {
+			FEB_CAN_RMS_Process();  // This sets RMSControl.enabled = 1
+			buf_len = snprintf(buf, sizeof(buf), "[TEST_MODE] RMS ENABLED: R2D=%d, BMS=%d\r\n",
+					  ready_to_drive, bms_state);
+		} else {
+			FEB_CAN_RMS_Disable();  // This sets RMSControl.enabled = 0
+			buf_len = snprintf(buf, sizeof(buf), "[TEST_MODE] RMS DISABLED: R2D=%d, BMS=%d\r\n",
+					  ready_to_drive, bms_state);
+		}
+		
+		if (buf_len > 0 && buf_len < sizeof(buf)) {
+			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
+		}
 		#else
 		// Normal mode: Require both ready_to_drive and DRIVE state
 		if (ready_to_drive && (bms_state == FEB_SM_ST_DRIVE /*|| bms_state == FEB_SM_ST_DRIVE_REGEN*/)) {
