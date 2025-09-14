@@ -25,14 +25,14 @@
 
 // ******************************** Configuration ********************************
 
-#define IS_FRONT_NODE 0
+#define IS_FRONT_NODE 1
 
 // For isolating one sensor
 #define SEND_CAN 1
 
 #define WSS 0
-#define TIRETEMP 0
-#define ADCS 1
+#define TIRETEMP 1
+#define ADCS 0
 #define STEER 0
 #define IMU 0
 #define GPS 0

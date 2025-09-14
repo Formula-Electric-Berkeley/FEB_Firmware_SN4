@@ -28,8 +28,8 @@
 
 // **************************************** Functions ****************************************
 
-uint16_t StrainGaugeConversion(uint16_t adc_value);
-uint16_t ThermocoupleConversion(uint16_t adc_value);
+uint16_t StrainGaugeConversion(uint32_t adc_value);
+uint16_t ThermocoupleConversion(uint32_t adc_value);
 uint16_t LinearPotentiometerConversion(uint16_t adc_value);
 uint16_t CoolantPressureConversion(uint16_t adc_value);
 void UART_Transmit_ADC1_Readings(void);

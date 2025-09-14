@@ -32,7 +32,7 @@ void Tire_Temp_Init(void)
 	}
 
 	// Configure Tire Temp Sensors
-#ifdef IS_FRONT_NODE
+#if IS_FRONT_NODE
 		Configure_Tire_Temp_Sensor(0x4B0, 0x4B0, 0.85, 8, 160, 2);
 		Configure_Tire_Temp_Sensor(0x4B4, 0x4B4, 0.85, 8, 160, 2);
 #else
@@ -83,7 +83,9 @@ void Configure_Tire_Temp_Sensor(uint16_t currentCAN_ID, uint16_t newCAN_ID, floa
 		}
 
 		HAL_Delay(1000);
+		UART_Transmit("Init");
 	}
+	UART_Transmit("finish init\n\r");
 }
 
 void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
@@ -123,6 +125,8 @@ void Read_Tire_Temp_Data(CAN_RxHeaderTypeDef RxHeader, uint8_t *RxData)
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
+	UART_Transmit("CAN Message");
+
 	if (hcan->Instance == CAN2)
 	{
 		CAN_RxHeaderTypeDef RxHeader;
@@ -146,7 +150,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
 void Tire_Temp_Main(void)
 {
-#ifdef IS_FRONT_NODE
+#if IS_FRONT_NODE
 		CAN_Transmit(FEB_CAN_ID_FRONT_LEFT_TIRE_TEMP, (uint8_t*) tire_temp_right);
 		CAN_Transmit(FEB_CAN_ID_FRONT_RIGHT_TIRE_TEMP, (uint8_t*) tire_temp_left);
 #else
