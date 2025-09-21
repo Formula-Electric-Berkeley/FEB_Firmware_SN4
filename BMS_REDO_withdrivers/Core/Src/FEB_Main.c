@@ -10,7 +10,7 @@ void FEB_Main_Setup() {
 	FEB_ADBMS_Init();
 
 	// Uncomment to Balance
-	// FEB_Cell_Balance_Start();
+	 FEB_Cell_Balance_Start();
 
 	FEB_CAN_Init();
 	FEB_SM_Init(); //this occurs last to transition out of boot
