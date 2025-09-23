@@ -38,7 +38,7 @@ extern uint16_t bms_pack_voltage;
 
 void FEB_CAN_RMS_Setup(void){
 	 RMSControl.enabled = 0;
-	 RMSControl.torque= 0.0;
+	 RMSControl.torque = 0;
 }
 
 void FEB_CAN_RMS_Process(void){
@@ -298,14 +298,14 @@ void FEB_CAN_RMS_Torque(void){
 		if (buf_len > 0 && buf_len < sizeof(buf)) {
 			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
 		}
-	} else if (accPos <= 0.0001f) {  // Small epsilon for float comparison
-		// Acceleration is effectively 0
+	} else if (accPos < 0.05f) {  // 5% deadband for accelerator to prevent noise/drift
+		// Acceleration is below deadband threshold
 		RMSControl.torque = 0;
 		
 		// Debug logging
 		char buf[128];
 		int buf_len;
-		buf_len = snprintf(buf, sizeof(buf), "[TORQUE_SAFETY] Acc=%.6f~0, forcing torque=0\r\n", accPos);
+		buf_len = snprintf(buf, sizeof(buf), "[TORQUE_SAFETY] Acc=%.3f < 5%% deadband, forcing torque=0\r\n", accPos);
 		if (buf_len > 0 && buf_len < sizeof(buf)) {
 			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
 		}

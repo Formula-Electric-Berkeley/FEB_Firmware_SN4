@@ -194,6 +194,12 @@ float FEB_Normalized_Acc_Pedals() {
 	#if TORQUE_TEST_MODE
 	// In test mode, bypass all implausibility checks and just return the average
 	float final_normalized = 0.5f * (ped1_normalized + ped2_normalized);
+	
+	// Add deadband: treat values below 5% as zero to prevent noise/drift from creating torque
+	if (final_normalized < 0.05f) {
+		final_normalized = 0.0f;
+	}
+	
 	final_normalized = (final_normalized < 0.0f) ? 0.0f : (final_normalized > 1.0f ? 1.0f : final_normalized);
 	
 	// Clear implausibility flag in test mode
