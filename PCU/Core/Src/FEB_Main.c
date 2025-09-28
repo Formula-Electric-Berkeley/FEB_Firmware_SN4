@@ -12,6 +12,7 @@ uint8_t buf_len; //stolen from Main_Setup (SN2)
 static TPS2482_Configuration tps2482_configurations[1];
 uint8_t tps2482_i2c_addresses[1];
 static uint16_t tps2482_ids[1];
+uint8_t loop_counter = 0;
 
 // ********************************** Functions **********************************
 
@@ -102,7 +103,12 @@ void FEB_Main_While(void){
 		FEB_HECS_update();
 		
 		// Always call torque function in manual mode - it will handle safety checks internally
-		FEB_CAN_RMS_Torque();
+		if (loop_counter == 10) {
+			loop_counter = 0;
+			FEB_CAN_RMS_Torque();
+		}
+		loop_counter++;
+
 
 	} else {
 		// Auto mode

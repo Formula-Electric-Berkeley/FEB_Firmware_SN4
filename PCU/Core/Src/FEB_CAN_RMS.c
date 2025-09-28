@@ -298,7 +298,7 @@ void FEB_CAN_RMS_Torque(void){
 		if (buf_len > 0 && buf_len < sizeof(buf)) {
 			HAL_UART_Transmit(&huart2, (uint8_t *)buf, buf_len, HAL_MAX_DELAY);
 		}
-	} else if (accPos < 0.05f) {  // 5% deadband for accelerator to prevent noise/drift
+	} else if (accPos < 0.03f) {  // 5% deadband for accelerator to prevent noise/drift
 		// Acceleration is below deadband threshold
 		RMSControl.torque = 0;
 		
@@ -313,7 +313,7 @@ void FEB_CAN_RMS_Torque(void){
 		// All checks passed, calculate torque
 		float max_torque = FEB_CAN_RMS_getMaxTorque();
 		// Add proper rounding for fixed-point conversion (multiply by 10 for RMS protocol)
-		float torque_float = 10.0f * accPos * max_torque;
+		float torque_float = accPos * max_torque;
 		int16_t calculated_torque = (int16_t)(torque_float + 0.5f);  // Round to nearest integer
 		RMSControl.torque = calculated_torque;
 		

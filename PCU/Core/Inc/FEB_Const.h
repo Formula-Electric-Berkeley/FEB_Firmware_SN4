@@ -10,11 +10,11 @@
 
 #define SLEEP_TIME 10
 
-#define ACC_PEDAL_1_START 1555.0 //right apps
-#define ACC_PEDAL_1_END 2078.0
+#define ACC_PEDAL_2_START 3105.5 //right apps
+#define ACC_PEDAL_2_END 3604.48
 
-#define ACC_PEDAL_2_START 3032.0 //left apps
-#define ACC_PEDAL_2_END 3665.0
+#define ACC_PEDAL_1_START 1535.38 //left apps
+#define ACC_PEDAL_1_END 2057.92
 
 //#define BRAKE_PEDAL_1_START 1350.0
 //#define BRAKE_PEDAL_1_END 910.0
