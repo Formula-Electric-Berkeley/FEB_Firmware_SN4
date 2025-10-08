@@ -354,7 +354,13 @@ static void EnergizedTransition(FEB_SM_ST_t next_state){
 	case FEB_SM_ST_DEFAULT:
 		if ( FEB_PIN_RD(PN_SHS_IN)==FEB_RELAY_STATE_OPEN  \
 				|| FEB_PIN_RD(PN_AIRM_SENSE) == FEB_RELAY_STATE_OPEN ) {
-			PrechargeTransition(FEB_SM_ST_LV);
+			EnergizedTransition(FEB_SM_ST_LV);
+		}
+
+		// Check if IVT voltage falls below 80% of pack voltage
+		float ivt_voltage_V = (float) FEB_CAN_IVT_Message.voltage_1_mV * 0.001;
+		if (ivt_voltage_V < 0.8 * FEB_ACC.total_voltage_V) {
+			EnergizedTransition(FEB_SM_ST_FAULT_BMS);
 		}
 
 		if(FEB_CAN_DASH_Get_R2R()){
@@ -410,6 +416,12 @@ static void DriveTransition(FEB_SM_ST_t next_state){
 		}else if(!FEB_CAN_DASH_Get_R2R()){
 			//Toggle to energized
 			DriveTransition(FEB_SM_ST_ENERGIZED);
+		}
+
+		// Check if IVT voltage falls below 80% of pack voltage
+		float ivt_voltage_V = (float) FEB_CAN_IVT_Message.voltage_1_mV * 0.001;
+		if (ivt_voltage_V < 0.8 * FEB_ACC.total_voltage_V) {
+			DriveTransition(FEB_SM_ST_FAULT_BMS);
 		}
 		break;
 
