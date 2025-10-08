@@ -100,6 +100,46 @@ BO_ 24 lvpdb_autonomous: 8 Vector__XXX
  SG_ auto_steering_voltage : 16|16@1+ (1,0) [0|0] "" Vector__XXX
  SG_ lidar_current : 0|16@1+ (1,0) [0|0] "" Vector__XXX
 
+BO_ 30 linear_potentiometer_front: 4 Vector__XXX
+ SG_ linear_potrentiometer_2_front : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ linear_potrentiometer_1_front : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 31 linear_potentiometer_rear: 4 Vector__XXX
+ SG_ linear_potrentiometer_2_rear : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ linear_potrentiometer_1_rear : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 32 front_left_tire_temp: 8 Vector__XXX
+ SG_ rightmost_temp_FL : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ center_right_temp_FL : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ center_left_temp_FL : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ leftmost_temp_FL : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 33 front_right_tire_temp: 8 Vector__XXX
+ SG_ rightmost_temp_FR : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ center_right_temp_FR : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ center_left_temp_FR : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ leftmost_temp_FR : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 34 rear_left_tire_temp: 8 Vector__XXX
+ SG_ rightmost_temp_RL : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ center_right_temp_RL : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ center_left_temp_RL : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ leftmost_temp_RL : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 35 rear_right_tire_temp: 8 Vector__XXX
+ SG_ rightmost_temp_RR : 48|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ center_right_temp_RR : 32|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ center_left_temp_RR : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ leftmost_temp_RR : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 36 wss_front_data: 8 Vector__XXX
+ SG_ wss_left_front : 32|32@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ wss_right_front : 0|32@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 37 wss_rear_data: 8 Vector__XXX
+ SG_ wss_left_rear : 32|32@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ wss_right_rear : 0|32@1+ (1,0) [0|0] "" Vector__XXX
+
 BO_ 45 DART_TACH_measurements_1234: 8 Vector__XXX
  SG_ fan4_speed : 48|16@1+ (1,0) [0|0] "" Vector__XXX
  SG_ fan3_speed : 32|16@1+ (1,0) [0|0] "" Vector__XXX
@@ -565,6 +605,14 @@ CM_ BO_ 16 "Dash button and switch message";
 CM_ BO_ 22 "LVPDB message for flags, bus voltage, and LV current.";
 CM_ BO_ 23 "LVPDB message for Coolant Pump, Accumulator Fans, Radiator Fans, Shutdown.";
 CM_ BO_ 24 "LVPDB message for autonomous systems.";
+CM_ BO_ 30 "Linear Potentiometer Front.";
+CM_ BO_ 31 "Linear Potentiometer Rear.";
+CM_ BO_ 32 "Message for front left tire temp data.";
+CM_ BO_ 33 "Message for front right tire temp data.";
+CM_ BO_ 34 "Message for rear left tire temp data.";
+CM_ BO_ 35 "Message for rear right tire temp data.";
+CM_ BO_ 36 "Wheel speed sensor data for left and right front wheels.";
+CM_ BO_ 37 "Wheel speed sensor data for left and right rear wheels.";
 CM_ BO_ 45 "DART message for Tachometer measurements first 4 fan speeds.";
 CM_ BO_ 46 "DART message for Tachometer measurements 5th fan speed.";
 CM_ BO_ 52 "BBB TPS Chip";

@@ -110,7 +110,9 @@ void Fill_GPS_Data () {
 }
 void GPS_Main(void)
 {
+#if GPS
 	Read_GPS_Data();
 	Parse_NMEA_Message();
 	CAN_Transmit(FEB_CAN_ID_GPS, GPS_Data);
+#endif
 }

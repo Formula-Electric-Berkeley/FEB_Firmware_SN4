@@ -146,10 +146,11 @@ void Fill_CAN_Data_IMU(void) {
 }
 
 void IMU_Main(void) {
-
+#if IMU
 	BNO08X_GetRawData();
 	Fill_CAN_Data_IMU();
 	CAN_Transmit(CAN_ID_IMU, IMUData);
+#endif
 }
 
 
