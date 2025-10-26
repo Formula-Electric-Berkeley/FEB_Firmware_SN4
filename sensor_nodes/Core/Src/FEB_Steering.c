@@ -29,7 +29,7 @@ typedef struct {
 
 static CAN_Data can_data;
 
-#if SEND_CAN
+#if SEND_CAN && STEER
 static uint8_t canTx[8];
 #endif
 
