@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "FEB_CircularBuffer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,8 +44,6 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define XBEE_ATTN_PORT GPIOC
-#define XBEE_ATTN_PIN  GPIO_PIN_12
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -87,8 +86,7 @@ static void MX_I2C1_Init(void);
 
 
 circBuffer sdBuffer;
-circBuffer xbeeBuffer;
-bool xbeeReady = true;
+circBuffer uartBuffer;
 
 static TPS2482_Configuration tps2482_configurations[1];
 uint8_t tps2482_i2c_addresses[1];
@@ -146,73 +144,24 @@ int main(void)
   
   // Initialize buffer structures
   FEB_circBuf_init(&sdBuffer);
-  FEB_circBuf_init(&xbeeBuffer);
+  FEB_circBuf_init(&uartBuffer);
   FEB_CAN_Init();
 
-FEB_CAN_HEARTBEAT_Init();
-
-FEB_Variable_Init();
-bool tps2482_init_res[1];
-TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, 1);
+//FEB_CAN_HEARTBEAT_Init();
+//
+//FEB_Variable_Init();
+//bool tps2482_init_res[1];
+//TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, 1);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-// uint32_t loop_counter = 0;  // Unused - commented out
 
 while (1)
 {
-    // --- Loop counter print ---
-//    char loop_msg[32];
-//    snprintf(loop_msg, sizeof(loop_msg), "Loop #%lu start\r\n", (unsigned long)loop_counter++);
-//    HAL_UART_Transmit(&huart2, (uint8_t*)loop_msg, strlen(loop_msg), HAL_MAX_DELAY);
-
-    // --- Print before checking ATTn pin ---
-//    const char *pre_attn_msg = "Checking ATTn pin...\r\n";
-//    HAL_UART_Transmit(&huart2, (uint8_t*)pre_attn_msg, strlen(pre_attn_msg), HAL_MAX_DELAY);
-
-    // --- Check ATTn pin (active LOW) ---
-    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_12) == GPIO_PIN_RESET) {
-//        const char *attn_msg = "ATTn LOW: Reading status...\r\n";
-//        HAL_UART_Transmit(&huart2, (uint8_t*)attn_msg, strlen(attn_msg), HAL_MAX_DELAY);
-
-        uint8_t xbee_receive_status = FEB_xbee_receive_status();
-
-        if (xbee_receive_status == 0x00 || true) { // Using xbee_receive_status to avoid warning
-//            const char *status_ok_msg = "Sanity check - status OK\r\n";
-//            HAL_UART_Transmit(&huart2, (uint8_t*)status_ok_msg, strlen(status_ok_msg), HAL_MAX_DELAY);
-            xbeeReady = true;
-        } else {
-//            const char *status_fail_msg = "GRRRR - status NOT OK\r\n";
-//            HAL_UART_Transmit(&huart2, (uint8_t*)status_fail_msg, strlen(status_fail_msg), HAL_MAX_DELAY);
-        }
-
-    }
-
-    // --- Print before checking xbeeReady flag ---
-//    const char *pre_xbee_ready_msg = "Checking xbeeReady flag...\r\n";
-//    HAL_UART_Transmit(&huart2, (uint8_t*)pre_xbee_ready_msg, strlen(pre_xbee_ready_msg), HAL_MAX_DELAY);
-
-    // --- Transmit if xbeeReady is set ---
-    if (xbeeReady == true) {
-//        const char *ready_msg = "xbeeReady is TRUE\r\n";
-//        HAL_UART_Transmit(&huart2, (uint8_t*)ready_msg, strlen(ready_msg), HAL_MAX_DELAY);
-
-//        const char *tx_msg = "Transmitting hello...\r\n";
-//        HAL_UART_Transmit(&huart2, (uint8_t*)tx_msg, strlen(tx_msg), HAL_MAX_DELAY);
-
-        FEB_xbee_transmit_can_data(&xbeeBuffer);
-        xbeeReady = false;
-    }
-
-    // --- Print before CAN TPS transmit ---
-//    const char *pre_can_msg = "Running CAN TPS transmit...\r\n";
-//    HAL_UART_Transmit(&huart2, (uint8_t*)pre_can_msg, strlen(pre_can_msg), HAL_MAX_DELAY);
-
-//    FEB_CAN_TPS_Transmit();
-//    const char *post_can_msg = "Done with CAN TPS transmit...\r\n";
-//    HAL_UART_Transmit(&huart2, (uint8_t*)post_can_msg, strlen(post_can_msg), HAL_MAX_DELAY);
+    // Print CSV data to UART
+    FEB_circBuf_print_uart(&uartBuffer);
 
     // Write to SD Card
     FEB_circBuf_read(&sdBuffer);
@@ -504,7 +453,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 921600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -582,6 +531,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PC12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
 }
@@ -604,8 +559,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.

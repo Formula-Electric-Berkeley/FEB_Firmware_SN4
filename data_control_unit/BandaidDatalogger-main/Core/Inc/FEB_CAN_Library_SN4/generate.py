@@ -47,21 +47,18 @@ MESSAGE_GEN_LIST = [
     lvpdb_msg.get_lvpdb_L_AS_AB_current,
 
     #Leaving 5 IDs for space
+    
+    #0x1E-0x25 Sensor Node Messages (only WSS, Tire Temp, Linear Pot)
+    sensor_msg.get_LinPot_Front,
+    sensor_msg.get_LinPot_Rear,
+    sensor_msg.get_front_left_tire_temp_data,
+    sensor_msg.get_front_right_tire_temp_data,
+    sensor_msg.get_rear_left_tire_temp_data,
+    sensor_msg.get_rear_right_tire_temp_data,
+    sensor_msg.get_wss_data_front,
+    sensor_msg.get_wss_data_rear,
 
-    #0x1E - 0x27
-    #finalize sensor node here
-    # 4 tire - E
-    # 2 linear - F
-    # 2 strain - 20
-    # 1 coolant PRES
-    # 1 ther
-    # 1 coolant read
-    # 1 imu
-    # 1 gps 
-    # 1 steerring
-    # 2 wheel speed - 27
-
-    #Leaving 5 IDs for space
+    #Leaving space
 
     #0x2D - 0x2E
     dart_msg.get_measured_fan_speeds_1234,
@@ -119,8 +116,8 @@ MESSAGE_GEN_ID = [
     #LVPDB TPS
     22, 23, 24, 
 
-    #Sensor Node
-    # 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+    #Sensor Node (WSS, Tire Temp, Linear Pot)
+    30, 31, 32, 33, 34, 35, 36, 37,
 
     #DART
     45, 46,

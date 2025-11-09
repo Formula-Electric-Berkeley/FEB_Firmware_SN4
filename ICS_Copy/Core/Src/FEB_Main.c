@@ -26,17 +26,17 @@ static void FEB_Variable_Init(void) {
 
 void FEB_Main_Setup(void) {
 
-	FEB_IO_ICS_Init();
+//	FEB_IO_ICS_Init();
 
 	FEB_UI_Init();
 
-	FEB_CAN_Init();
+//	FEB_CAN_Init();
 
-	FEB_CAN_HEARTBEAT_Init();
+//	FEB_CAN_HEARTBEAT_Init();
 
-	FEB_Variable_Init();
-	bool tps2482_init_res[1];
-	TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, 1);
+//	FEB_Variable_Init();
+//	bool tps2482_init_res[1];
+//	TPS2482_Init(&hi2c1, tps2482_i2c_addresses, tps2482_configurations, tps2482_ids, tps2482_init_res, 1);
 
 	// FEB_TPS2482_Setup();
 	// memset(&bms_errors, 0xFF, sizeof(uint64_t));
@@ -45,11 +45,11 @@ void FEB_Main_Setup(void) {
 void FEB_Main_Loop(void) {
 	FEB_UI_Update();
 
-	FEB_IO_ICS_Loop();
+//	FEB_IO_ICS_Loop();
 
-	FEB_Radio_Transmit();
+//	FEB_Radio_Transmit();
 
-	FEB_CAN_TPS_Transmit();
+//	FEB_CAN_TPS_Transmit();
 
 //	FEB_CAN_HEARTBEAT_Transmit();
 

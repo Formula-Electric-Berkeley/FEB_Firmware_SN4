@@ -33,7 +33,6 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "FEB_CircularBuffer.h"
 #include "FEB_CAN.h"
-#include "FEB_XBee.h"
 #include "FEB_CAN_Heartbeat.h"
 #include "FEB_CAN_TPS.h"
 #include "TPS2482.h"

@@ -3,7 +3,6 @@
 #include "FEB_CAN.h"
 #include "FEB_CircularBuffer.h"
 #include "stdio.h"
-#include "FEB_XBee.h"
 extern CAN_HandleTypeDef hcan1;
 extern UART_HandleTypeDef huart2;
 
@@ -13,7 +12,7 @@ CAN_TxHeaderTypeDef FEB_CAN_Tx_Header;
 static CAN_RxHeaderTypeDef FEB_CAN_Rx_Header;
 
 extern circBuffer sdBuffer;
-extern circBuffer xbeeBuffer;
+extern circBuffer uartBuffer;
 extern char* buffer;
 
 uint8_t FEB_CAN_Tx_Data[8];
@@ -58,18 +57,16 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan) {
 			if (logging){
 				FEB_circBuf_write(&sdBuffer, FEB_CAN_Rx_Header.StdId, FEB_CAN_Rx_Data);
 			}
-			FEB_circBuf_addOrReplace(&xbeeBuffer, FEB_CAN_Rx_Header.StdId, FEB_CAN_Rx_Data); //xbee
+			FEB_circBuf_write(&uartBuffer, FEB_CAN_Rx_Header.StdId, FEB_CAN_Rx_Data); //uart
 
 		//Case 2: Ext Id
 		}else if(FEB_CAN_Rx_Header.IDE == CAN_ID_EXT){
 			if (logging){
 				FEB_circBuf_write(&sdBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Data);
 			}
-			FEB_circBuf_addOrReplace(&xbeeBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Data); //xbee
+			FEB_circBuf_write(&uartBuffer, FEB_CAN_Rx_Header.ExtId, FEB_CAN_Rx_Data); //uart
 		}
 	}
-
-//	FEB_xbee_transmit_can_data(&xbeeBuffer);
 }
 
 
