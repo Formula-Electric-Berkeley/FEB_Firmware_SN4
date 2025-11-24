@@ -28,10 +28,10 @@
 
 // **************************************** Functions ****************************************
 
-uint16_t StrainGaugeConversion(uint16_t adc_value);
-uint16_t ThermocoupleConversion(uint16_t adc_value);
-uint16_t LinearPotentiometerConversion(uint16_t adc_value);
+uint16_t StrainGaugeConversion(uint32_t adc_value);
+uint16_t ThermocoupleConversion(uint32_t adc_value);
 uint16_t CoolantPressureConversion(uint16_t adc_value);
+// Note: LinearPotentiometerConversion is implemented as a macro in FEB_ADC.c
 void UART_Transmit_ADC1_Readings(void);
 void UART_Transmit_ADC2_Readings(void);
 void Fill_Strain_Gauge_Data(void);

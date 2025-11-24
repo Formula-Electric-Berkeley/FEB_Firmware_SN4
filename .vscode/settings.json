@@ -1,0 +1,10 @@
+{
+	"files.associations": {
+		"limits": "c",
+		"ratio": "c",
+		"algorithm": "c",
+		"__locale": "c",
+		"string": "c",
+		"string_view": "c"
+	}
+}

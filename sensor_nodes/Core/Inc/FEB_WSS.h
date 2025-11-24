@@ -17,9 +17,10 @@
 
 #include "FEB_Main.h"
 
-// **************************************** Configuration ****************************************
+// **************************************** Debug Configuration ****************************************
 
-#define DEBUG_READ_WSS
+// Uncomment to enable debug output for wheel speed sensors
+#define DEBUG_WSS_PRINTF
 
 // **************************************** Functions ****************************************
 
